@@ -14,6 +14,11 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// API routes
+app.use(`/api/${API_VERSION}`, [
+  require('./routes/attendance_route'),
+]);
+
 // server test
 app.get('/', (req, res) => {
   res.send('OK');
