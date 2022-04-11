@@ -27,6 +27,29 @@ const createAccount = async (req, res) => {
   return res.status(200).json({ data: 'Create successfully' });
 };
 
+const getAccounts = async (req, res) => {
+  const [accounts] = await User.getAccounts();
+  if (accounts === 0) {
+    res.status(500).json({ error: 'Read failed' });
+  } else if (accounts === -1) {
+    res.status(400).json({ error: 'Read failed due to invalid input' });
+  } else {
+    res.status(200).json({ data: { accounts } });
+  }
+};
+
+const deleteAccount = async (req, res) => {
+  const { userId } = req.body;
+  const result = await User.deleteAccount(userId);
+  if (result === 0) {
+    res.status(500).json({ error: 'Delete failed' });
+  } else if (result === -1) {
+    res.status(400).json({ error: 'Delete failed due to invalid input' });
+  } else {
+    res.status(200).json({ data: 'Delete successfully' });
+  }
+};
+
 const signIn = async (req, res) => {
   const { account, password } = req.body;
   const result = await User.signIn(account, password);
@@ -60,5 +83,5 @@ const matchFingerprint = async (req, res) => {
 };
 
 module.exports = {
-  createAccount, signIn, matchFingerprint,
+  createAccount, getAccounts, deleteAccount, signIn, matchFingerprint,
 };
