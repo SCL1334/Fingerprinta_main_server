@@ -61,5 +61,20 @@ const matchFingerprint = async (userId, fingerId) => {
     await conn.release();
   }
 };
+const findByFinger = async (fingerId) => {
+  try {
+    const [users] = await promisePool.query('SELECT id FROM user WHERE finger_id = ?', [fingerId]);
+    if (users.length === 0) {
+      console.log('user not exist');
+      return -1;
+    }
+    return users[0].id;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
 
-module.exports = { createAccount, signIn, matchFingerprint };
+module.exports = {
+  createAccount, signIn, matchFingerprint, findByFinger,
+};

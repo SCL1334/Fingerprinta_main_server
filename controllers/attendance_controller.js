@@ -1,7 +1,9 @@
 const Attendance = require('../models/attendance_model');
+const User = require('../models/user_model');
 
 const setPunch = async (req, res) => {
-  const studentId = req.body.fpId;
+  const { fingerId } = req.body;
+  const studentId = await User.findByFinger(fingerId);
   const punchResult = await Attendance.setPunch(studentId);
   if (punchResult === 1) {
     res.status(200).json({ data: 'Punch in successfully' });
