@@ -17,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 // API routes
 app.use(`/api/${API_VERSION}`, [
   require('./routes/attendance_route'),
+  require('./routes/user_route'),
 ]);
 
 // server test
