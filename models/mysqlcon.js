@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   waitForConnections: false,
   connectionLimit: 10,
   queueLimit: 0,
-  timezone: 'Asia/Taipei',
+  timezone: process.env.TIMEZONE,
 });
 
 // Create promise connection from connection pool
