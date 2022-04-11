@@ -18,14 +18,27 @@ const createAccount = async (req, res) => {
   }
   const result = await User.createAccount(name, account, password, classId, roleId);
   if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
-  } else {
-    res.status(200).json({ data: 'Create successfully' });
+    return res.status(500).json({ error: 'Create failed' });
   }
+  if (result === -1) {
+    return res.status(400).json({ error: 'Create failed due to invalid input' });
+  }
+  return res.status(200).json({ data: 'Create successfully' });
+};
+
+const signIn = async (req, res) => {
+  const { account, password } = req.body;
+  const result = await User.signIn(account, password);
+  if (result === 0) {
+    return res.status(500).json({ error: 'Signin failed' });
+  }
+  if (result === -1) {
+    return res.status(400).json({ error: 'Signin failed due to invalid input' });
+  }
+  req.session.account = account;
+  return res.status(200).json({ data: 'Signin successfully' });
 };
 
 module.exports = {
-  createAccount,
+  createAccount, signIn,
 };

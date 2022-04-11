@@ -1,4 +1,5 @@
 require('dotenv').config();
+const session = require('express-session');
 
 const {
   PORT, API_VERSION,
@@ -13,6 +14,14 @@ app.set('json spaces', 2);
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 3, // 設定 session 的有效時間，單位毫秒
+  },
+}));
 
 // API routes
 app.use(`/api/${API_VERSION}`, [
