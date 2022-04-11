@@ -41,4 +41,25 @@ const signIn = async (account, password) => {
   }
 };
 
-module.exports = { createAccount, signIn };
+const matchFingerprint = async (userId, fingerId) => {
+  const conn = await promisePool.getConnection();
+  try {
+    await conn.query('START TRANSACTION');
+    const [result] = await conn.query('SELECT id FROM user WHERE id = ?', [userId]);
+    if (result.length === 0) {
+      console.log('user not exist');
+      return -1;
+    }
+    await conn.query('UPDATE user SET finger_id = ? WHERE id = ?', [fingerId, userId]);
+    await conn.query('COMMIT');
+    return 1;
+  } catch (err) {
+    await conn.query('ROLLBACK');
+    console.log(err);
+    return 0;
+  } finally {
+    await conn.release();
+  }
+};
+
+module.exports = { createAccount, signIn, matchFingerprint };

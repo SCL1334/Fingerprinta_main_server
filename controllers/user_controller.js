@@ -1,4 +1,5 @@
-const User = require('../models/user.model');
+const User = require('../models/user_model');
+const Fingerprint = require('../models/fingerprint_model');
 
 const createAccount = async (req, res) => {
   const {
@@ -39,6 +40,25 @@ const signIn = async (req, res) => {
   return res.status(200).json({ data: 'Signin successfully' });
 };
 
+const matchFingerprint = async (req, res) => {
+  const userId = req.body.user_id;
+  const fingerId = await Fingerprint.getEnrollId();
+  if (fingerId === -1) {
+    return res.status(400).json({ error: 'Match failed due to enroll failed' });
+  }
+  if (fingerId === -2) {
+    res.status(500).json({ error: 'Match failed due to sensor disconnect' });
+  }
+  const result = await User.matchFingerprint(userId, fingerId);
+  if (result === 0) {
+    return res.status(500).json({ error: 'Match failed' });
+  }
+  if (result === -1) {
+    return res.status(400).json({ error: 'Match failed due to invalid input' });
+  }
+  return res.status(200).json({ data: 'Match OK' });
+};
+
 module.exports = {
-  createAccount, signIn,
+  createAccount, signIn, matchFingerprint,
 };
