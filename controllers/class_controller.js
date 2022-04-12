@@ -72,6 +72,74 @@ const deleteGroup = async (req, res) => {
   }
 };
 
+// Routine Manage
+const getRoutines = async (req, res) => {
+  const routines = await Class.getRoutines();
+  if (routines) {
+    res.status(200).json({ data: routines });
+  } else {
+    res.status(500).json({ error: 'Read failed' });
+  }
+};
+
+const createRoutine = async (req, res) => {
+  const {
+    classTypeId, weekday, startTime, endTime,
+  } = req.body;
+  const routine = {
+    class_type_id: classTypeId, weekday, start_time: startTime, end_time: endTime,
+  };
+
+  const result = await Class.createRoutine(routine);
+  if (result === 0) {
+    res.status(500).json({ error: 'Create failed' });
+  } else if (result === -1) {
+    res.status(400).json({ error: 'Create failed due to invalid input' });
+  } else {
+    res.status(200).json({ data: 'Create successfully' });
+  }
+};
+
+const editRoutine = async (req, res) => {
+  const {
+    routineId, classTypeId, weekday, startTime, endTime,
+  } = req.body;
+  const routine = {
+    class_type_id: classTypeId, weekday, start_time: startTime, end_time: endTime,
+  };
+  // remove blank value
+  Object.keys(routine).forEach((key) => {
+    if (routine[key] === undefined) {
+      delete routine[key];
+    }
+  });
+
+  console.log(routine);
+
+  const result = await Class.editRoutine(routineId, routine);
+  if (result === 0) {
+    res.status(500).json({ error: 'Update failed' });
+  } else if (result === -1) {
+    res.status(400).json({ error: 'Update failed due to invalid input' });
+  } else {
+    res.status(200).json({ data: 'Update OK' });
+  }
+};
+
+const deleteRoutine = async (req, res) => {
+  const { routineId } = req.body;
+  const result = await Class.deleteRoutine(routineId);
+  if (result === 0) {
+    res.status(500).json({ error: 'Delete failed' });
+  } else if (result === -1) {
+    res.status(400).json({ error: 'Delete failed due to invalid input' });
+  } else if (result === -2) {
+    res.status(409).json({ error: 'Conflict' });
+  } else {
+    res.status(200).json({ data: 'Delete successfully' });
+  }
+};
+
 module.exports = {
   getTypes,
   createType,
@@ -79,4 +147,8 @@ module.exports = {
   getGroups,
   createGroup,
   deleteGroup,
+  getRoutines,
+  createRoutine,
+  editRoutine,
+  deleteRoutine,
 };
