@@ -26,7 +26,6 @@ CREATE TABLE `class` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `type_id` int unsigned DEFAULT NULL,
   `batch` int unsigned NOT NULL,
-  `class_type_id` int unsigned DEFAULT NULL,
   `teacher_id` int unsigned DEFAULT NULL,
   `start_date` datetime NOT NULL,
   `end_date` datetime NOT NULL,
@@ -126,4 +125,4 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-12 17:09:42
+-- Dump completed on 2022-04-12 17:13:05
