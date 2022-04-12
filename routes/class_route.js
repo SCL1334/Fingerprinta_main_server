@@ -5,6 +5,7 @@ const {
   getTypes, createType, deleteType,
   getGroups, createGroup, deleteGroup,
   getRoutines, createRoutine, editRoutine, deleteRoutine,
+  getClasses, createClass, editClass, deleteClass,
 } = require('../controllers/class_controller');
 
 router.route('/class/type').get(wrapAsync(getTypes));
@@ -17,5 +18,9 @@ router.route('/class/routine').get(wrapAsync(getRoutines));
 router.route('/class/routine').post(wrapAsync(createRoutine));
 router.route('/class/routine').put(wrapAsync(editRoutine));
 router.route('/class/routine').delete(wrapAsync(deleteRoutine));
+router.route('/class').get(wrapAsync(getClasses));
+router.route('/class').post(wrapAsync(createClass));
+router.route('/class').put(wrapAsync(editClass));
+router.route('/class').delete(wrapAsync(deleteClass));
 
 module.exports = router;

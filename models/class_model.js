@@ -122,23 +122,17 @@ const createRoutine = async (routine) => {
 };
 
 const editRoutine = async (routineId, routine) => {
-  const conn = await promisePool.getConnection();
   try {
-    await conn.query('START TRANSACTION');
-    const [result] = await conn.query('SELECT id FROM class_routine WHERE id = ?', [routineId]);
+    const [result] = await promisePool.query('SELECT id FROM class_routine WHERE id = ?', [routineId]);
     if (result.length === 0) {
       console.log('Target product not exist');
       return -1;
     }
-    await conn.query('UPDATE class_routine SET ? WHERE id = ?', [routine, routineId]);
-    await conn.query('COMMIT');
+    await promisePool.query('UPDATE class_routine SET ? WHERE id = ?', [routine, routineId]);
     return 1;
   } catch (error) {
-    await conn.query('ROLLBACK');
     console.log(error);
     return 0;
-  } finally {
-    await conn.release();
   }
 };
 
@@ -150,7 +144,73 @@ const deleteRoutine = async (routineId) => {
       console.log('target not exist');
       return -1;
     }
-    await promisePool.query('DELETE FROM class_type WHERE id = ?', [routineId]);
+    await promisePool.query('DELETE FROM class_routine WHERE id = ?', [routineId]);
+    return 1;
+  } catch (error) {
+    console.log(error);
+    const { errno } = error;
+    if (errno === 1451) {
+      // conflict err
+      return -2;
+    }
+    return 0;
+  }
+};
+
+// Class Manage
+const getClasses = async () => {
+  try {
+    const [classes] = await promisePool.query('SELECT * FROM class');
+    classes.map((clas) => {
+      clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
+      clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
+    });
+    return classes;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const createClass = async (clas) => {
+  try {
+    await promisePool.query('INSERT INTO class SET ?', clas);
+    return 1;
+  } catch (err) {
+    console.log(err);
+    const { errno } = err;
+    // 1062 Duplicate entry
+    if (errno === 1062) {
+      return -1;
+    }
+    return 0;
+  }
+};
+
+const editClass = async (classId, clas) => {
+  try {
+    const [result] = await promisePool.query('SELECT id FROM class WHERE id = ?', [classId]);
+    if (result.length === 0) {
+      console.log('Target product not exist');
+      return -1;
+    }
+    await promisePool.query('UPDATE class SET ? WHERE id = ?', [clas, classId]);
+    return 1;
+  } catch (error) {
+    console.log(error);
+    return 0;
+  }
+};
+
+const deleteClass = async (classId) => {
+  // delete success:1  fail case: server 0 / target not exist -1 /foreign key constraint -2
+  try {
+    const [result] = await promisePool.query('SELECT id FROM class WHERE id = ?', [classId]);
+    if (result.length === 0) {
+      console.log('target not exist');
+      return -1;
+    }
+    await promisePool.query('DELETE FROM class WHERE id = ?', [classId]);
     return 1;
   } catch (error) {
     console.log(error);
@@ -174,4 +234,8 @@ module.exports = {
   editRoutine,
   createRoutine,
   deleteRoutine,
+  getClasses,
+  createClass,
+  editClass,
+  deleteClass,
 };
