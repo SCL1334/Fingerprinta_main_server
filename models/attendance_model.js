@@ -32,7 +32,11 @@ const setPunch = async (studentId) => {
 const getPunchAll = async () => {
   try {
     // 1: one person 2: class 3: all
-    const [attendances] = await promisePool.query('SELECT student_id, punch_in, punch_out FROM student_punch');
+    const [attendances] = await promisePool.query('SELECT student_id, punch_in, punch_out FROM student_punch ORDER BY punch_in DESC');
+    attendances.map((attendance) => {
+      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+    });
     return attendances;
   } catch (err) {
     console.log(err);
