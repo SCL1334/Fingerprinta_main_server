@@ -82,7 +82,7 @@ const deleteGroup = async (groupId) => {
       console.log('target not exist');
       return -1;
     }
-    await promisePool.query('DELETE FROM class_type WHERE id = ?', [groupId]);
+    await promisePool.query('DELETE FROM class_group WHERE id = ?', [groupId]);
     return 1;
   } catch (error) {
     console.log(error);
@@ -125,7 +125,7 @@ const editRoutine = async (routineId, routine) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM class_routine WHERE id = ?', [routineId]);
     if (result.length === 0) {
-      console.log('Target product not exist');
+      console.log('target not exist');
       return -1;
     }
     await promisePool.query('UPDATE class_routine SET ? WHERE id = ?', [routine, routineId]);

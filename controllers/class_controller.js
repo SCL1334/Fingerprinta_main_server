@@ -12,7 +12,7 @@ const getTypes = async (req, res) => {
 };
 
 const createType = async (req, res) => {
-  const { typeName } = req.body;
+  const typeName = req.body.type_name;
   const result = await Class.createType(typeName);
   if (result === 0) {
     res.status(500).json({ error: 'Create failed' });
@@ -24,7 +24,7 @@ const createType = async (req, res) => {
 };
 
 const deleteType = async (req, res) => {
-  const { typeId } = req.body;
+  const typeId = req.body.type_id;
   const result = await Class.deleteType(typeId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });
@@ -48,7 +48,7 @@ const getGroups = async (req, res) => {
 };
 
 const createGroup = async (req, res) => {
-  const { groupName } = req.body;
+  const groupName = req.body.group_name;
   const result = await Class.createGroup(groupName);
   if (result === 0) {
     res.status(500).json({ error: 'Create failed' });
@@ -60,7 +60,7 @@ const createGroup = async (req, res) => {
 };
 
 const deleteGroup = async (req, res) => {
-  const { groupId } = req.body;
+  const groupId = req.body.group_id;
   const result = await Class.deleteGroup(groupId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });
@@ -85,10 +85,10 @@ const getRoutines = async (req, res) => {
 
 const createRoutine = async (req, res) => {
   const {
-    classTypeId, weekday, startTime, endTime,
+    class_type_id, weekday, start_time, end_time,
   } = req.body;
   const routine = {
-    class_type_id: classTypeId, weekday, start_time: startTime, end_time: endTime,
+    class_type_id, weekday, start_time, end_time,
   };
 
   const result = await Class.createRoutine(routine);
@@ -103,10 +103,11 @@ const createRoutine = async (req, res) => {
 
 const editRoutine = async (req, res) => {
   const {
-    routineId, classTypeId, weekday, startTime, endTime,
+    class_type_id, weekday, start_time, end_time,
   } = req.body;
+  const routineId = req.body.routine_id;
   const routine = {
-    class_type_id: classTypeId, weekday, start_time: startTime, end_time: endTime,
+    class_type_id, weekday, start_time, end_time,
   };
   // remove blank value
   Object.keys(routine).forEach((key) => {
@@ -126,7 +127,7 @@ const editRoutine = async (req, res) => {
 };
 
 const deleteRoutine = async (req, res) => {
-  const { routineId } = req.body;
+  const routineId = req.body.routine_id;
   const result = await Class.deleteRoutine(routineId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });
@@ -151,15 +152,15 @@ const getClasses = async (req, res) => {
 
 const createClass = async (req, res) => {
   const {
-    classTypeId, batch, classGroupId, teacherId, startDate, endDate,
+    class_type_id, batch, class_group_id, teacher_id, start_date, end_date,
   } = req.body;
   const clas = {
-    class_type_id: classTypeId,
+    class_type_id,
     batch,
-    class_group_id: classGroupId,
-    teacher_id: teacherId,
-    start_date: dayjs(startDate).format('YYYY-MM-DD'),
-    end_date: dayjs(endDate).format('YYYY-MM-DD'),
+    class_group_id,
+    teacher_id,
+    start_date: dayjs(start_date).format('YYYY-MM-DD'),
+    end_date: dayjs(end_date).format('YYYY-MM-DD'),
   };
 
   const result = await Class.createClass(clas);
@@ -174,16 +175,16 @@ const createClass = async (req, res) => {
 
 const editClass = async (req, res) => {
   const {
-    classId, classTypeId, batch, classGroupId, teacherId, startDate, endDate,
+    class_type_id, batch, class_group_id, teacher_id, start_date, end_date,
   } = req.body;
+  const classId = req.body.class_id;
   const clas = {
-    id: classId,
-    class_type_id: classTypeId,
+    class_type_id,
     batch,
-    class_group_id: classGroupId,
-    teacher_id: teacherId,
-    start_date: startDate,
-    end_date: endDate,
+    class_group_id,
+    teacher_id,
+    start_date,
+    end_date,
   };
 
   // remove blank value
@@ -204,7 +205,7 @@ const editClass = async (req, res) => {
 };
 
 const deleteClass = async (req, res) => {
-  const { classId } = req.body;
+  const classId = req.body.class_id;
   const result = await Class.deleteClass(classId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });

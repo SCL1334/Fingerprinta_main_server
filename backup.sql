@@ -27,11 +27,12 @@ CREATE TABLE `class` (
   `class_type_id` int unsigned DEFAULT NULL,
   `batch` int unsigned NOT NULL,
   `class_group_id` int unsigned NOT NULL,
-  `teacher_id` int unsigned DEFAULT NULL,
+  `teacher_id` int unsigned NOT NULL,
   `start_date` datetime NOT NULL,
   `end_date` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQUE` (`class_type_id`,`batch`,`class_group_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,8 +45,9 @@ DROP TABLE IF EXISTS `class_group`;
 CREATE TABLE `class_group` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(15) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -60,9 +62,10 @@ CREATE TABLE `class_routine` (
   `class_type_id` int NOT NULL,
   `weekday` int unsigned NOT NULL,
   `start_time` time NOT NULL,
-  `over_time` time NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `end_time` time NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`class_type_id`,`weekday`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -77,7 +80,7 @@ CREATE TABLE `class_type` (
   `name` varchar(15) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -127,4 +130,4 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-12 19:31:59
+-- Dump completed on 2022-04-13  1:11:36
