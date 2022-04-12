@@ -17,7 +17,19 @@ const setPunch = async (req, res) => {
 };
 
 const getPunch = async (req, res) => {
-  const attendances = await Attendance.getPunchAll();
+  let attendances;
+  const studentId = req.query.student_id;
+  const classId = req.query.class_id;
+  if (studentId && classId) { return res.status(400).json({ error: 'Invalid search' }); }
+  if (studentId) {
+    attendances = await Attendance.getPersonPunch(studentId);
+    return res.status(200).json({ data: attendances });
+  }
+  if (classId) {
+    attendances = await Attendance.getClassPunch(classId);
+    return res.status(200).json({ data: attendances });
+  }
+  attendances = await Attendance.getPunchAll();
   if (!attendances) {
     res.status(500).json({ error: 'Read failed' });
   } else {

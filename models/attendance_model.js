@@ -44,4 +44,43 @@ const getPunchAll = async () => {
   }
 };
 
-module.exports = { setPunch, getPunchAll };
+const getPersonPunch = async (studentId) => {
+  try {
+    const [attendances] = await promisePool.query(
+      'SELECT student_id, punch_in, punch_out FROM student_punch WHERE student_id = ? ORDER BY punch_in DESC',
+      [studentId],
+    );
+    attendances.map((attendance) => {
+      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+    });
+    return attendances;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const getClassPunch = async (classId) => {
+  try {
+    const [attendances] = await promisePool.query(
+      `SELECT student_id, punch_in, punch_out 
+        FROM student_punch 
+        WHERE student_id IN (SELECT id FROM user WHERE class_id = ?) 
+        ORDER BY punch_in DESC`,
+      [classId],
+    );
+    attendances.map((attendance) => {
+      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+    });
+    return attendances;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+module.exports = {
+  setPunch, getPunchAll, getPersonPunch, getClassPunch,
+};
