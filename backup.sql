@@ -24,13 +24,28 @@ DROP TABLE IF EXISTS `class`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `type_id` int unsigned DEFAULT NULL,
+  `class_type_id` int unsigned DEFAULT NULL,
   `batch` int unsigned NOT NULL,
+  `class_group_id` int unsigned NOT NULL,
   `teacher_id` int unsigned DEFAULT NULL,
   `start_date` datetime NOT NULL,
   `end_date` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `class_group`
+--
+
+DROP TABLE IF EXISTS `class_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `class_group` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(15) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -60,22 +75,9 @@ DROP TABLE IF EXISTS `class_type`;
 CREATE TABLE `class_type` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(15) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `group`
---
-
-DROP TABLE IF EXISTS `group`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `group` (
-  `id` int unsigned NOT NULL,
-  `name` varchar(15) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -125,4 +127,4 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-12 17:13:05
+-- Dump completed on 2022-04-12 19:31:59
