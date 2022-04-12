@@ -29,4 +29,15 @@ const setPunch = async (studentId) => {
   }
 };
 
-module.exports = { setPunch };
+const getPunchAll = async () => {
+  try {
+    // 1: one person 2: class 3: all
+    const [attendances] = await promisePool.query('SELECT student_id, punch_in, punch_out FROM student_punch');
+    return attendances;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+module.exports = { setPunch, getPunchAll };

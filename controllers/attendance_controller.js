@@ -16,6 +16,15 @@ const setPunch = async (req, res) => {
   }
 };
 
+const getPunch = async (req, res) => {
+  const attendances = await Attendance.getPunchAll();
+  if (!attendances) {
+    res.status(500).json({ error: 'Read failed' });
+  } else {
+    res.status(200).json({ data: attendances });
+  }
+};
+
 module.exports = {
-  setPunch,
+  setPunch, getPunch,
 };
