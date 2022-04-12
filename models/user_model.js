@@ -27,6 +27,43 @@ const createAccount = async (name, account, password, classId, roleId) => {
   }
 };
 
+const getAccounts = async () => {
+  // need to do paging optimization later
+  try {
+    const [accounts] = await promisePool.query('SELECT id, role, name, account, class_id, finger_id FROM user');
+    return accounts;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const deleteAccount = async (userId) => {
+  const conn = await promisePool.getConnection();
+  // delete success:1  fail case: server 0 / foreign key constraint -1
+  try {
+    await conn.query('START TRANSACTION');
+    const [result] = await conn.query('SELECT id FROM user WHERE id = ?', [userId]);
+    if (result.length === 0) {
+      console.error('user not exist');
+      return -1;
+    }
+    await conn.query('DELETE FROM user WHERE id = ?', [userId]);
+    await conn.query('COMMIT');
+    return 1;
+  } catch (error) {
+    await conn.query('ROLLBACK');
+    console.log(error);
+    const { errno } = error;
+    if (errno === 1452 || errno === 1062 || errno === 1264) {
+      return -1;
+    }
+    return 0;
+  } finally {
+    await conn.release();
+  }
+};
+
 const signIn = async (account, password) => {
   try {
     const [users] = await promisePool.query('SELECT account, password FROM user WHERE account = ?', [account]);
@@ -61,6 +98,7 @@ const matchFingerprint = async (userId, fingerId) => {
     await conn.release();
   }
 };
+
 const findByFinger = async (fingerId) => {
   try {
     const [users] = await promisePool.query('SELECT id FROM user WHERE finger_id = ?', [fingerId]);
@@ -76,5 +114,5 @@ const findByFinger = async (fingerId) => {
 };
 
 module.exports = {
-  createAccount, signIn, matchFingerprint, findByFinger,
+  createAccount, getAccounts, deleteAccount, signIn, matchFingerprint, findByFinger,
 };
