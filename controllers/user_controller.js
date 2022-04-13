@@ -50,15 +50,28 @@ const deleteAccount = async (req, res) => {
 
 const signIn = async (req, res) => {
   const { account, password } = req.body;
-  const result = await User.signIn(account, password);
-  if (result === 0) {
+  const userId = await User.signIn(account, password);
+  if (userId === 0) {
     return res.status(500).json({ error: 'Signin failed' });
   }
-  if (result === -1) {
+  if (userId === -1) {
     return res.status(400).json({ error: 'Signin failed due to invalid input' });
   }
   req.session.account = account;
   return res.status(200).json({ data: 'Signin successfully' });
+};
+
+// maybe put in other route
+const signOut = async (req, res) => {
+  req.session.account = null;
+  return res.redirect('/');
+};
+
+const getProfile = async (req, res) => {
+  const { account } = req.session;
+  if (!account) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const profile = await User.getProfile(account);
+  res.status(200).json({ data: profile });
 };
 
 const matchFingerprint = async (req, res) => {
@@ -81,5 +94,5 @@ const matchFingerprint = async (req, res) => {
 };
 
 module.exports = {
-  createAccount, getAccounts, deleteAccount, signIn, matchFingerprint,
+  createAccount, getAccounts, deleteAccount, signIn, signOut, getProfile, matchFingerprint,
 };

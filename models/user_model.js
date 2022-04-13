@@ -15,7 +15,7 @@ const createAccount = async (name, account, password, classId, roleId) => {
       class_id: classId,
       role: roleId,
     };
-    const [result] = await promisePool.query('INSERT INTO user SET ?', user);
+    const [result] = await promisePool.query('INSERT INTO usr SET ?', user);
     return result.insertId;
   } catch (err) {
     console.log(err);
@@ -30,7 +30,7 @@ const createAccount = async (name, account, password, classId, roleId) => {
 const getAccounts = async () => {
   // need to do paging optimization later
   try {
-    const [accounts] = await promisePool.query('SELECT id, role, name, account, class_id, finger_id FROM user');
+    const [accounts] = await promisePool.query('SELECT id, role, name, account, class_id, finger_id FROM usr');
     return accounts;
   } catch (err) {
     console.log(err);
@@ -41,12 +41,12 @@ const getAccounts = async () => {
 const deleteAccount = async (userId) => {
   // delete success:1  fail case: server 0 / foreign key constraint -1
   try {
-    const [result] = await promisePool.query('SELECT id FROM user WHERE id = ?', [userId]);
+    const [result] = await promisePool.query('SELECT id FROM usr WHERE id = ?', [userId]);
     if (result.length === 0) {
       console.error('user not exist');
       return -1;
     }
-    await promisePool.query('DELETE FROM user WHERE id = ?', [userId]);
+    await promisePool.query('DELETE FROM usr WHERE id = ?', [userId]);
     return 1;
   } catch (error) {
     console.log(error);
@@ -60,7 +60,7 @@ const deleteAccount = async (userId) => {
 
 const signIn = async (account, password) => {
   try {
-    const [users] = await promisePool.query('SELECT account, password FROM user WHERE account = ?', [account]);
+    const [users] = await promisePool.query('SELECT account, password FROM usr WHERE account = ?', [account]);
     if (users.length === 1) {
       const match = await bcrypt.compare(password, users[0].password);
       if (match) return 1;
@@ -72,16 +72,45 @@ const signIn = async (account, password) => {
   }
 };
 
+const getProfile = async (account) => {
+  try {
+    const [profiles] = await promisePool.query(`
+      SELECT u.id, u.role, u.name, u.account, c.batch, cg.name as class_group_name, ct.name as class_type_name FROM usr as u 
+      LEFT OUTER JOIN class as c ON u.class_id = c.id 
+      LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+      LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id 
+      WHERE u.account = ?;
+      `, [account]);
+    const profile = profiles[0];
+    // roleTable 0: 'admin', 1: 'teacher', 2: 'student'
+    console.log(profile);
+    const { id, role } = profile;
+
+    let actions = {};
+    if (role === 2) {
+      actions = {
+        searchAttendance: `api/1.0/attendances/punches?student_id=${id}`,
+        test: '/',
+      };
+    }
+    profile.actions = actions;
+    return profile;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const matchFingerprint = async (userId, fingerId) => {
   const conn = await promisePool.getConnection();
   try {
     await conn.query('START TRANSACTION');
-    const [result] = await conn.query('SELECT id FROM user WHERE id = ?', [userId]);
+    const [result] = await conn.query('SELECT id FROM usr WHERE id = ?', [userId]);
     if (result.length === 0) {
       console.log('user not exist');
       return -1;
     }
-    await conn.query('UPDATE user SET finger_id = ? WHERE id = ?', [fingerId, userId]);
+    await conn.query('UPDATE usr SET finger_id = ? WHERE id = ?', [fingerId, userId]);
     await conn.query('COMMIT');
     return 1;
   } catch (err) {
@@ -95,7 +124,7 @@ const matchFingerprint = async (userId, fingerId) => {
 
 const findByFinger = async (fingerId) => {
   try {
-    const [users] = await promisePool.query('SELECT id FROM user WHERE finger_id = ?', [fingerId]);
+    const [users] = await promisePool.query('SELECT id FROM usr WHERE finger_id = ?', [fingerId]);
     if (users.length === 0) {
       console.log('user not exist');
       return -1;
@@ -108,5 +137,5 @@ const findByFinger = async (fingerId) => {
 };
 
 module.exports = {
-  createAccount, getAccounts, deleteAccount, signIn, matchFingerprint, findByFinger,
+  createAccount, getAccounts, deleteAccount, signIn, getProfile, matchFingerprint, findByFinger,
 };
