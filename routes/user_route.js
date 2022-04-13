@@ -7,8 +7,8 @@ const {
 
 router.route('/users/signin').post(wrapAsync(signIn));
 router.route('/users/fingerprints').post(wrapAsync(matchFingerprint));
-router.route('/users/account').post(wrapAsync(createAccount));
-router.route('/users/account').get(wrapAsync(getAccounts));
-router.route('/users/account/:id').delete(wrapAsync(deleteAccount));
+router.route('/users/accounts').post(wrapAsync(createAccount));
+router.route('/users/accounts').get(wrapAsync(getAccounts));
+router.route('/users/accounts/:id').delete(wrapAsync(deleteAccount));
 
 module.exports = router;
