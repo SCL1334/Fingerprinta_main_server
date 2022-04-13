@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <title>Sign In</title>
 </head>
 <body>
   <h1>This is test</h1>
   <div class="signin">
-    <form class="signin_form "method="post" action="/api/1.0/user/signin">
+    <form class="signin_form "method="post" action="/api/1.0/users/signin">
       <label for="account">Account</label>
       <input id="account" name="account" type="email" placeholder="Account" required>
       <label for="password">Password</label>
@@ -18,36 +19,6 @@
     </form>
   </div>
   <div class="result"></div>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script>
-    const signInForm = document.querySelector('.signin_form');
-
-    signInForm.addEventListener('submit', handleFromSubmit)
-    async function handleFromSubmit(event) {
-      try {
-        const account = document.getElementById('account').value;
-        const password = document.getElementById('password').value;
-        event.preventDefault();
-        const form = event.target;
-        const url = form.action;
-        const user = {account, password}
-        const responseData = await axios(url, {
-          method: 'POST',
-          data: {
-            account,
-            password
-          },
-          headers: {
-            'content-type': 'application/json',
-          },
-        });
-        const { data } = await responseData
-        console.log(data);
-      } catch(err) {
-        console.log(err);
-        console.log(err.response.data);
-      }
-    };
-  </script>
+  <script src="./js/signin.js"></script>
 </body>
 </html>
