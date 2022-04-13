@@ -8,19 +8,19 @@ const {
   getClasses, createClass, editClass, deleteClass,
 } = require('../controllers/class_controller');
 
-router.route('/class/type').get(wrapAsync(getTypes));
-router.route('/class/type').post(wrapAsync(createType));
-router.route('/class/type').delete(wrapAsync(deleteType));
-router.route('/class/group').get(wrapAsync(getGroups));
-router.route('/class/group').post(wrapAsync(createGroup));
-router.route('/class/group').delete(wrapAsync(deleteGroup));
-router.route('/class/routine').get(wrapAsync(getRoutines));
-router.route('/class/routine').post(wrapAsync(createRoutine));
-router.route('/class/routine').put(wrapAsync(editRoutine));
-router.route('/class/routine').delete(wrapAsync(deleteRoutine));
-router.route('/class').get(wrapAsync(getClasses));
-router.route('/class').post(wrapAsync(createClass));
-router.route('/class').put(wrapAsync(editClass));
-router.route('/class').delete(wrapAsync(deleteClass));
+router.route('/classes/types').get(wrapAsync(getTypes));
+router.route('/classes/types').post(wrapAsync(createType));
+router.route('/classes/types/:id').delete(wrapAsync(deleteType));
+router.route('/classes/groups').get(wrapAsync(getGroups));
+router.route('/classes/groups').post(wrapAsync(createGroup));
+router.route('/classes/groups/:id').delete(wrapAsync(deleteGroup));
+router.route('/classes/routines').get(wrapAsync(getRoutines));
+router.route('/classes/routines').post(wrapAsync(createRoutine));
+router.route('/classes/routines/:id').put(wrapAsync(editRoutine));
+router.route('/classes/routines/:id').delete(wrapAsync(deleteRoutine));
+router.route('/classes').get(wrapAsync(getClasses));
+router.route('/classes').post(wrapAsync(createClass));
+router.route('/classes/:id').put(wrapAsync(editClass));
+router.route('/classes/:id').delete(wrapAsync(deleteClass));
 
 module.exports = router;

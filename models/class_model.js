@@ -20,7 +20,7 @@ const createType = async (typeName) => {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
-    if (errno === 1062) {
+    if (errno === 1062 || errno === 1048) {
       return -1;
     }
     return 0;
@@ -66,8 +66,8 @@ const createGroup = async (groupName) => {
   } catch (err) {
     console.log(err);
     const { errno } = err;
-    // 1062 Duplicate entry
-    if (errno === 1062) {
+    // 1062 Duplicate entry, 1048 ER_BAD_NULL_ERROR
+    if (errno === 1062 || errno === 1048) {
       return -1;
     }
     return 0;
@@ -114,7 +114,7 @@ const createRoutine = async (routine) => {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
-    if (errno === 1062) {
+    if (errno === 1062 || errno === 1048) {
       return -1;
     }
     return 0;
@@ -180,7 +180,7 @@ const createClass = async (clas) => {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
-    if (errno === 1062) {
+    if (errno === 1062 || errno === 1048) {
       return -1;
     }
     return 0;
@@ -191,7 +191,7 @@ const editClass = async (classId, clas) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM class WHERE id = ?', [classId]);
     if (result.length === 0) {
-      console.log('Target product not exist');
+      console.log('target not exist');
       return -1;
     }
     await promisePool.query('UPDATE class SET ? WHERE id = ?', [clas, classId]);
