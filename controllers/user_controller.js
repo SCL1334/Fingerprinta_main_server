@@ -37,7 +37,7 @@ const getAccounts = async (req, res) => {
 };
 
 const deleteAccount = async (req, res) => {
-  const userId = req.body.user_id;
+  const userId = req.params.id;
   const result = await User.deleteAccount(userId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });
