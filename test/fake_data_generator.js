@@ -6,14 +6,14 @@ const salt = parseInt(process.env.BCRYPT_SALT, 10);
 const { promisePool } = require('../models/mysqlcon');
 
 // name, email, password, class_id, finger_id
-const createFakeUser = async (num, roleId, classId = null) => {
+const createFakeUser = async (roleId, startId, num, classId = null) => {
   try {
     const role = { 1: 'student', 2: 'teacher' };
     const password = 'test';
     // gen fake data
     const users = [];
-    for (let i = 0; i < num; i += 1) {
-      const name = `test_${role[roleId]}_${i + 1}`;
+    for (let i = startId; i < startId + num; i += 1) {
+      const name = `test_${role[roleId]}_${i}`;
       const email = `${name}@test.com`;
       const hashedPassword = await bcrypt.hash(password, salt);
       if (classId) {
@@ -36,9 +36,9 @@ const createFakeUser = async (num, roleId, classId = null) => {
 
 // 1: 'student', 2: 'teacher'
 // gen 15 students first, same class
-// createFakeUser(15, 1, 1);
+// createFakeUser(1, 16, 15, 1);
 // gen 5 teacher
-// createFakeUser(5, 2);
+// createFakeUser(2, 1, 5);
 
 const truncatePunch = async () => {
   await promisePool.query('TRUNCATE student_punch;');
@@ -48,24 +48,23 @@ const truncatePunch = async () => {
 // student_id, punch_in, punch_out
 const createFakePunch = async (days) => {
   try {
-    await truncatePunch();
-    const today = dayjs().format('YYYY-MM-DD');
-    const punchInInit = dayjs(`${today} 09:00:00`);
-    const punchOutInit = dayjs(`${today} 18:00:00`);
+    // await truncatePunch();
+    const today = dayjs();
+    const punchInInit = dayjs(`${today.format('YYYY-MM-DD')} 09:00:00`);
+    const punchOutInit = dayjs(`${today.format('YYYY-MM-DD')} 18:00:00`);
     const [students] = await promisePool.query('SELECT id FROM student');
     const randomMin = () => Math.floor(Math.random() * 60) - 30;
     const attendance = [];
     for (let i = days - 1; i >= 0; i -= 1) {
-      const punchInDate = punchInInit.subtract(i, 'day');
-      const punchOutDate = punchOutInit.subtract(i, 'day');
+      const punchDate = today.subtract(i, 'day');
       students.forEach((student) => {
-        const punchIn = punchInDate.add(randomMin(), 'minute');
-        const punchOut = punchOutDate.add(randomMin(), 'minute');
-        attendance.push([student.id, punchIn.format(), punchOut.format()]);
+        const punchIn = punchInInit.add(randomMin(), 'minute');
+        const punchOut = punchOutInit.add(randomMin(), 'minute');
+        attendance.push([student.id, punchDate.format('YYYY-MM-DD'), punchIn.format('HH:mm:ss'), punchOut.format('HH:mm:ss')]);
       });
     }
     console.log(attendance);
-    await promisePool.query('INSERT INTO student_punch (student_id, punch_in, punch_out) VALUES ?', [attendance]);
+    await promisePool.query('INSERT INTO student_punch (student_id, punch_date, punch_in, punch_out) VALUES ?', [attendance]);
     console.log('completed');
   } catch (err) {
     console.log(err);
@@ -73,4 +72,4 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(30);
+createFakePunch(2);

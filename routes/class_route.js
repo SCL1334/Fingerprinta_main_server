@@ -8,6 +8,9 @@ const {
   getClasses, createClass, editClass, deleteClass,
 } = require('../controllers/class_controller');
 
+const { getClassPunch } = require('../controllers/attendance_controller');
+
+router.route('/classes/:id/attendances').get(wrapAsync(getClassPunch));
 router.route('/classes/types').get(wrapAsync(getTypes));
 router.route('/classes/types').post(wrapAsync(createType));
 router.route('/classes/types/:id').delete(wrapAsync(deleteType));

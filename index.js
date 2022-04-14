@@ -25,7 +25,6 @@ app.use(session({
 
 // API routes
 app.use(`/api/${API_VERSION}`, [
-  require('./routes/attendance_route'),
   require('./routes/user_route'),
   require('./routes/class_route'),
 ]);

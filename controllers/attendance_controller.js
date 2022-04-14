@@ -16,27 +16,35 @@ const setPunch = async (req, res) => {
   }
 };
 
-const getPunch = async (req, res) => {
-  let attendances;
-  const studentId = req.query.student_id;
-  const classId = req.query.class_id;
-  if (studentId && classId) { return res.status(400).json({ error: 'Invalid search' }); }
-  if (studentId) {
-    attendances = await Attendance.getPersonPunch(studentId);
-    return res.status(200).json({ data: attendances });
-  }
-  if (classId) {
-    attendances = await Attendance.getClassPunch(classId);
-    return res.status(200).json({ data: attendances });
-  }
-  attendances = await Attendance.getPunchAll();
-  if (!attendances) {
+const getAllPunch = async (req, res) => {
+  const punches = await Attendance.getAllPunch();
+  if (!punches) {
     res.status(500).json({ error: 'Read failed' });
   } else {
-    res.status(200).json({ data: attendances });
+    res.status(200).json({ data: punches });
+  }
+};
+
+const getClassPunch = async (req, res) => {
+  const classId = req.params.id;
+  const punches = await Attendance.getClassPunch(classId);
+  if (!punches) {
+    res.status(500).json({ error: 'Read failed' });
+  } else {
+    res.status(200).json({ data: punches });
+  }
+};
+
+const getPersonPunch = async (req, res) => {
+  const studentId = req.params.id;
+  const punches = await Attendance.getPersonPunch(studentId);
+  if (!punches) {
+    res.status(500).json({ error: 'Read failed' });
+  } else {
+    res.status(200).json({ data: punches });
   }
 };
 
 module.exports = {
-  setPunch, getPunch,
+  setPunch, getAllPunch, getClassPunch, getPersonPunch,
 };

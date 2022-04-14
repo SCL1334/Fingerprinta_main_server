@@ -16,10 +16,12 @@ const {
 } = require('../controllers/user_controller');
 
 const {
-  setPunch,
+  setPunch, getAllPunch, getPersonPunch,
 } = require('../controllers/attendance_controller');
 
 router.route('students/profile').get(wrapAsync(getProfile));
+router.route('/students/attendances').get(wrapAsync(getAllPunch));
+router.route('/students/:id/attendances').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
 router.route('/students/signin').post(wrapAsync(studentSignIn));

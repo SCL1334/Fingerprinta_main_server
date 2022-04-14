@@ -32,13 +32,18 @@ const setPunch = async (studentId) => {
   }
 };
 
-const getPunchAll = async () => {
+const getAllPunch = async () => {
   try {
     // 1: one person 2: class 3: all
-    const [attendances] = await promisePool.query('SELECT student_id, punch_in, punch_out FROM student_punch ORDER BY punch_in DESC');
+    const [attendances] = await promisePool.query(
+      `
+      SELECT student_id, punch_date, punch_in, punch_out 
+      FROM student_punch 
+      ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
+      `,
+    );
     attendances.map((attendance) => {
-      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
-      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
   } catch (err) {
@@ -50,12 +55,16 @@ const getPunchAll = async () => {
 const getPersonPunch = async (studentId) => {
   try {
     const [attendances] = await promisePool.query(
-      'SELECT student_id, punch_in, punch_out FROM student_punch WHERE student_id = ? ORDER BY punch_in DESC',
+      `
+      SELECT student_id, punch_date, punch_in, punch_out 
+      FROM student_punch 
+      WHERE student_id = ? 
+      ORDER BY punch_date DESC, punch_in ASC;
+      `,
       [studentId],
     );
     attendances.map((attendance) => {
-      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
-      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
   } catch (err) {
@@ -67,15 +76,16 @@ const getPersonPunch = async (studentId) => {
 const getClassPunch = async (classId) => {
   try {
     const [attendances] = await promisePool.query(
-      `SELECT student_id, punch_in, punch_out 
-        FROM student_punch 
-        WHERE student_id IN (SELECT id FROM usr WHERE class_id = ?) 
-        ORDER BY punch_in DESC`,
+      `
+      SELECT student_id, punch_date, punch_in, punch_out 
+      FROM student_punch 
+      WHERE student_id IN (SELECT id FROM student WHERE class_id = ?) 
+      ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
+      `,
       [classId],
     );
     attendances.map((attendance) => {
-      attendance.punch_in = dayjs(attendance.punch_in).format('YYYY-MM-DDTHH:mm:ss');
-      attendance.punch_out = dayjs(attendance.punch_out).format('YYYY-MM-DDTHH:mm:ss');
+      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
   } catch (err) {
@@ -85,5 +95,5 @@ const getClassPunch = async (classId) => {
 };
 
 module.exports = {
-  setPunch, getPunchAll, getPersonPunch, getClassPunch,
+  setPunch, getAllPunch, getPersonPunch, getClassPunch,
 };
