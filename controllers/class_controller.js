@@ -75,7 +75,8 @@ const deleteGroup = async (req, res) => {
 
 // Routine Manage
 const getRoutines = async (req, res) => {
-  const routines = await Class.getRoutines();
+  const classTypeId = req.params.id;
+  const routines = await Class.getRoutines(classTypeId);
   if (routines) {
     res.status(200).json({ data: routines });
   } else {
@@ -139,6 +140,30 @@ const deleteRoutine = async (req, res) => {
     res.status(200).json({ data: 'Delete successfully' });
   }
 };
+// Class teacher manage
+const addTeacher = async (req, res) => {
+  const { classId, teacherId } = req.params;
+  const result = await Class.addTeacher(classId, teacherId);
+  if (result === 0) {
+    res.status(500).json({ error: 'Create failed' });
+  } else {
+    res.status(200).json({ data: 'Create successfully' });
+  }
+};
+
+const removeTeacher = async (req, res) => {
+  const { classId, teacherId } = req.params;
+  const result = await Class.removeTeacher(classId, teacherId);
+  if (result === 0) {
+    res.status(500).json({ error: 'Delete failed' });
+  } else if (result === -1) {
+    res.status(400).json({ error: 'Delete failed due to invalid input' });
+  } else if (result === -2) {
+    res.status(409).json({ error: 'Conflict' });
+  } else {
+    res.status(200).json({ data: 'Delete successfully' });
+  }
+};
 
 // Class Manage
 const getClasses = async (req, res) => {
@@ -152,13 +177,12 @@ const getClasses = async (req, res) => {
 
 const createClass = async (req, res) => {
   const {
-    class_type_id, batch, class_group_id, teacher_id, start_date, end_date,
+    class_type_id, batch, class_group_id, start_date, end_date,
   } = req.body;
   const clas = {
     class_type_id,
     batch,
     class_group_id,
-    teacher_id,
     start_date: dayjs(start_date).format('YYYY-MM-DD'),
     end_date: dayjs(end_date).format('YYYY-MM-DD'),
   };
@@ -229,6 +253,8 @@ module.exports = {
   createRoutine,
   editRoutine,
   deleteRoutine,
+  addTeacher,
+  removeTeacher,
   getClasses,
   createClass,
   editClass,

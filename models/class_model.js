@@ -96,9 +96,10 @@ const deleteGroup = async (groupId) => {
 };
 
 // Routine Manage
-const getRoutines = async () => {
+const getRoutines = async (classTypeId = null) => {
   try {
-    const [routines] = await promisePool.query('SELECT * FROM class_routine');
+    const sqlFilter = (classTypeId) ? ' WHERE class_type_id = ?' : '';
+    const [routines] = await promisePool.query(`SELECT * FROM class_routine${sqlFilter}`, [classTypeId]);
     return routines;
   } catch (err) {
     console.log(err);
@@ -145,6 +146,38 @@ const deleteRoutine = async (routineId) => {
       return -1;
     }
     await promisePool.query('DELETE FROM class_routine WHERE id = ?', [routineId]);
+    return 1;
+  } catch (error) {
+    console.log(error);
+    const { errno } = error;
+    if (errno === 1451) {
+      // conflict err
+      return -2;
+    }
+    return 0;
+  }
+};
+
+// Teacher - Class pair
+const addTeacher = async (classId, teacherId) => {
+  try {
+    await promisePool.query('INSERT INTO class_teacher (class_id, teacher_id) VALUES (?, ?) ', [classId, teacherId]);
+    return 1;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+};
+
+const removeTeacher = async (classId, teacherId) => {
+  // delete success:1  fail case: server 0 / target not exist -1 /foreign key constraint -2
+  try {
+    const [result] = await promisePool.query('SELECT * FROM class_teacher WHERE class_id = ? AND teacher_id = ?', [classId, teacherId]);
+    if (result.length === 0) {
+      console.log('target not exist');
+      return -1;
+    }
+    await promisePool.query('DELETE FROM class_teacher WHERE class_id = ? AND teacher_id = ?', [classId, teacherId]);
     return 1;
   } catch (error) {
     console.log(error);
@@ -234,6 +267,8 @@ module.exports = {
   editRoutine,
   createRoutine,
   deleteRoutine,
+  addTeacher,
+  removeTeacher,
   getClasses,
   createClass,
   editClass,

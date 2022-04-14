@@ -6,7 +6,6 @@ const { promisePool } = require('./mysqlcon');
 
 // account manage
 const createStudent = async (name, email, password, classId) => {
-  // Admin: 0, Teacher: 1, Student:2
   try {
     const hashedPassword = await bcrypt.hash(password, salt);
     const student = {
@@ -27,10 +26,11 @@ const createStudent = async (name, email, password, classId) => {
   }
 };
 
-const getStudents = async () => {
+const getStudents = async (classId = null) => {
   // need to do paging optimization later
   try {
-    const [students] = await promisePool.query('SELECT id, name, email, class_id, finger_id FROM student');
+    const sqlFilter = (classId) ? ' WHERE class_id = ?' : '';
+    const [students] = await promisePool.query(`SELECT id, name, email, class_id, finger_id FROM student ${sqlFilter}`, [classId]);
     return students;
   } catch (err) {
     console.log(err);
@@ -59,7 +59,6 @@ const deleteStudent = async (studentId) => {
 };
 
 const createStaff = async (name, email, password) => {
-  // Admin: 0, Teacher: 1, Student:2
   try {
     const hashedPassword = await bcrypt.hash(password, salt);
     const staff = {
@@ -84,6 +83,21 @@ const getStaffs = async () => {
   try {
     const [staffs] = await promisePool.query('SELECT id, name, email FROM staff');
     return staffs;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const getClassTeachers = async (classId) => {
+  try {
+    const [teachers] = await promisePool.query(`
+    SELECT id, name, email 
+    FROM staff 
+    WHERE id IN 
+    (SELECT teacher_id FROM class_teacher WHERE class_id = ?);
+    `, [classId]);
+    return teachers;
   } catch (err) {
     console.log(err);
     return null;
@@ -208,6 +222,7 @@ module.exports = {
   deleteStudent,
   createStaff,
   getStaffs,
+  getClassTeachers,
   deleteStaff,
   studentSignIn,
   staffSignIn,

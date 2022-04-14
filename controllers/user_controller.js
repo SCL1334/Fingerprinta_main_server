@@ -17,7 +17,8 @@ const createStudent = async (req, res) => {
 };
 
 const getStudents = async (req, res) => {
-  const students = await User.getStudents();
+  const classId = req.params.id;
+  const students = await User.getStudents(classId);
   if (students) {
     res.status(200).json({ data: students });
   } else {
@@ -56,6 +57,16 @@ const getStaffs = async (req, res) => {
   const staffs = await User.getStaffs();
   if (staffs) {
     res.status(200).json({ data: staffs });
+  } else {
+    res.status(500).json({ error: 'Read failed' });
+  }
+};
+
+const getClassTeachers = async (req, res) => {
+  const classId = req.params.id;
+  const teachers = await User.getClassTeachers(classId);
+  if (teachers) {
+    res.status(200).json({ data: teachers });
   } else {
     res.status(500).json({ error: 'Read failed' });
   }
@@ -137,6 +148,7 @@ module.exports = {
   deleteStudent,
   createStaff,
   getStaffs,
+  getClassTeachers,
   deleteStaff,
   studentSignIn,
   staffSignIn,

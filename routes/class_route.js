@@ -5,12 +5,14 @@ const {
   getTypes, createType, deleteType,
   getGroups, createGroup, deleteGroup,
   getRoutines, createRoutine, editRoutine, deleteRoutine,
+  addTeacher, removeTeacher,
   getClasses, createClass, editClass, deleteClass,
 } = require('../controllers/class_controller');
 
+const { getStudents, getClassTeachers } = require('../controllers/user_controller');
+
 const { getClassPunch } = require('../controllers/attendance_controller');
 
-router.route('/classes/:id/attendances').get(wrapAsync(getClassPunch));
 router.route('/classes/types').get(wrapAsync(getTypes));
 router.route('/classes/types').post(wrapAsync(createType));
 router.route('/classes/types/:id').delete(wrapAsync(deleteType));
@@ -18,9 +20,16 @@ router.route('/classes/groups').get(wrapAsync(getGroups));
 router.route('/classes/groups').post(wrapAsync(createGroup));
 router.route('/classes/groups/:id').delete(wrapAsync(deleteGroup));
 router.route('/classes/routines').get(wrapAsync(getRoutines));
+router.route('/classes/types/:id/routines').get(wrapAsync(getRoutines));
 router.route('/classes/routines').post(wrapAsync(createRoutine));
 router.route('/classes/routines/:id').put(wrapAsync(editRoutine));
 router.route('/classes/routines/:id').delete(wrapAsync(deleteRoutine));
+
+router.route('/classes/:id/attendances').get(wrapAsync(getClassPunch));
+router.route('/classes/:id/students').get(wrapAsync(getStudents));
+router.route('/classes/:id/teachers').get(wrapAsync(getClassTeachers));
+router.route('/classes/:classId/teachers/:teacherId').post(wrapAsync(addTeacher));
+router.route('/classes/:classId/teachers/:teacherId').delete(wrapAsync(removeTeacher));
 router.route('/classes').get(wrapAsync(getClasses));
 router.route('/classes').post(wrapAsync(createClass));
 router.route('/classes/:id').put(wrapAsync(editClass));
