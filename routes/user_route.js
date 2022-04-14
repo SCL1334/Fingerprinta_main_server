@@ -2,16 +2,10 @@ const router = require('express').Router();
 
 const { wrapAsync } = require('../util/util');
 const {
-  createStudent,
-  getStudents,
-  deleteStudent,
-  createStaff,
-  getStaffs,
-  deleteStaff,
-  studentSignIn,
-  staffSignIn,
+  createStudent, getStudents, deleteStudent, studentSignIn,
+  createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
-  getProfile,
+  getStudentProfile,
   matchFingerprint,
 } = require('../controllers/user_controller');
 
@@ -21,7 +15,7 @@ const {
 
 const { getClasses } = require('../controllers/class_controller');
 
-router.route('students/profile').get(wrapAsync(getProfile));
+router.route('/students/profile').get(wrapAsync(getStudentProfile));
 router.route('/students/attendances').get(wrapAsync(getAllPunch));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));

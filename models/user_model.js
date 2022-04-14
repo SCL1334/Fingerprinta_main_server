@@ -152,28 +152,17 @@ const staffSignIn = async (email, password) => {
   }
 };
 
-const getProfile = async (account) => {
+const getStudentProfile = async (email) => {
   try {
     const [profiles] = await promisePool.query(`
-      SELECT u.id, u.role, u.name, u.account, c.batch, cg.name as class_group_name, ct.name as class_type_name FROM usr as u 
+      SELECT u.id, u.name, u.email, c.batch, cg.name as class_group_name, ct.name as class_type_name 
+      FROM student as u 
       LEFT OUTER JOIN class as c ON u.class_id = c.id 
       LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
       LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id 
-      WHERE u.account = ?;
-      `, [account]);
+      WHERE u.email = ?;
+      `, [email]);
     const profile = profiles[0];
-    // roleTable 0: 'admin', 1: 'teacher', 2: 'student'
-    console.log(profile);
-    const { id, role } = profile;
-
-    let actions = {};
-    if (role === 2) {
-      actions = {
-        searchAttendance: `api/1.0/attendances/punches?student_id=${id}`,
-        test: '/',
-      };
-    }
-    profile.actions = actions;
     return profile;
   } catch (err) {
     console.log(err);
@@ -226,7 +215,7 @@ module.exports = {
   deleteStaff,
   studentSignIn,
   staffSignIn,
-  getProfile,
+  getStudentProfile,
   matchFingerprint,
   findByFinger,
 };

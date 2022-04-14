@@ -116,10 +116,10 @@ const signOut = async (req, res) => {
   return res.json({ data: 'delete session' });
 };
 
-const getProfile = async (req, res) => {
-  const { account } = req.session;
-  if (!account) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const profile = await User.getProfile(account);
+const getStudentProfile = async (req, res) => {
+  const { email } = req.session;
+  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const profile = await User.getStudentProfile(email);
   res.status(200).json({ data: profile });
 };
 
@@ -153,6 +153,6 @@ module.exports = {
   studentSignIn,
   staffSignIn,
   signOut,
-  getProfile,
+  getStudentProfile,
   matchFingerprint,
 };
