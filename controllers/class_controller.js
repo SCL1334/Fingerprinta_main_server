@@ -167,7 +167,8 @@ const removeTeacher = async (req, res) => {
 
 // Class Manage
 const getClasses = async (req, res) => {
-  const classes = await Class.getClasses();
+  const teacherId = req.params.id;
+  const classes = await Class.getClasses(teacherId);
   if (classes) {
     res.status(200).json({ data: classes });
   } else {
