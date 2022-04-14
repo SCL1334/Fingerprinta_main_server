@@ -2,7 +2,7 @@ const Attendance = require('../models/attendance_model');
 const User = require('../models/user_model');
 
 const setPunch = async (req, res) => {
-  const { fingerId } = req.body;
+  const { fingerId } = req.params;
   const studentId = await User.findByFinger(fingerId);
   const punchResult = await Attendance.setPunch(studentId);
   if (punchResult === 1) {

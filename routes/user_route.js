@@ -15,9 +15,13 @@ const {
   matchFingerprint,
 } = require('../controllers/user_controller');
 
+const {
+  setPunch,
+} = require('../controllers/attendance_controller');
+
 router.route('students/profile').get(wrapAsync(getProfile));
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
-
+router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
 router.route('/students/signin').post(wrapAsync(studentSignIn));
 router.route('/students').post(wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));
