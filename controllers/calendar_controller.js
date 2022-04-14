@@ -1,5 +1,5 @@
 const dayjs = require('dayjs');
-const Calendar = require('../models/calender_model');
+const Calendar = require('../models/calendar_model');
 
 const getMonthHolidays = async (req, res) => {
   const targetMonth = dayjs(req.params.monthWithYear);
