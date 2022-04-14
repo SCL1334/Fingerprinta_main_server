@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.28, for macos11 (x86_64)
 --
--- Host: practice.c0qussuqjj2n.us-east-1.rds.amazonaws.com    Database: personal
+-- Host: fingerprinta.cg3mzhfsibey.ap-northeast-1.rds.amazonaws.com    Database: fingerprinta
 -- ------------------------------------------------------
 -- Server version	8.0.28
 
@@ -14,14 +14,20 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
--- SET @MYSQLDUMP_TEMP_LOG_BIN = @@SESSION.SQL_LOG_BIN;
--- SET @@SESSION.SQL_LOG_BIN= 0;
 
 --
--- GTID state at the beginning of the backup 
+-- Table structure for table `calendar`
 --
 
--- SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '';
+DROP TABLE IF EXISTS `calendar`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `calendar` (
+  `date` datetime NOT NULL,
+  `need_punch` tinyint NOT NULL,
+  PRIMARY KEY (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `class`
@@ -31,15 +37,64 @@ DROP TABLE IF EXISTS `class`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `training_type` int DEFAULT NULL,
-  `batch` int unsigned NOT NULL,
-  `category` varchar(45) DEFAULT NULL,
-  `teacher` int DEFAULT NULL,
-  `start_date` datetime DEFAULT NULL,
-  `end_date` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `class_type_id` tinyint unsigned NOT NULL,
+  `batch` smallint unsigned NOT NULL,
+  `class_group_id` tinyint unsigned NOT NULL,
+  `teacher_id` smallint unsigned NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UNIQUE` (`class_type_id`,`batch`,`class_group_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `class_group`
+--
+
+DROP TABLE IF EXISTS `class_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `class_group` (
+  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `class_routine`
+--
+
+DROP TABLE IF EXISTS `class_routine`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `class_routine` (
+  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `class_type_id` tinyint unsigned NOT NULL,
+  `weekday` tinyint unsigned NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique` (`class_type_id`,`weekday`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `class_type`
+--
+
+DROP TABLE IF EXISTS `class_type`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `class_type` (
+  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -51,51 +106,34 @@ DROP TABLE IF EXISTS `student_punch`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `student_punch` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `student_id` int unsigned NOT NULL,
+  `student_id` smallint unsigned NOT NULL,
   `punch_in` datetime DEFAULT NULL,
   `punch_out` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=933 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `training`
+-- Table structure for table `usr`
 --
 
-DROP TABLE IF EXISTS `training`;
+DROP TABLE IF EXISTS `usr`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `training` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) DEFAULT NULL,
-  `at_day` json DEFAULT NULL,
-  `at_in_time` time DEFAULT NULL,
-  `at_out_time` time DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `user`
---
-
-DROP TABLE IF EXISTS `user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `role` smallint NOT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `account` varchar(45) DEFAULT NULL,
-  `password` varchar(70) DEFAULT NULL,
-  `class_id` int unsigned DEFAULT NULL,
-  `finger_id` int unsigned DEFAULT NULL,
+CREATE TABLE `usr` (
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
+  `role` tinyint unsigned NOT NULL,
+  `name` varchar(30) DEFAULT NULL,
+  `account` varchar(50) DEFAULT NULL,
+  `password` char(60) DEFAULT NULL,
+  `class_id` smallint unsigned DEFAULT NULL,
+  `finger_id` tinyint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_UNIQUE` (`account`),
-  UNIQUE KEY `finger_id_UNIQUE` (`finger_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `finger_id_UNIQUE` (`finger_id`),
+  KEY `account_INDEX` (`account`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
--- SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -106,4 +144,4 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-11 19:06:53
+-- Dump completed on 2022-04-14 10:37:30
