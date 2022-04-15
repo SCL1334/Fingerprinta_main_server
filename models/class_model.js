@@ -195,7 +195,7 @@ const getClasses = async (teacherId = null) => {
   try {
     const sqlFilter = (teacherId) ? ' WHERE id IN (SELECT class_id FROM class_teacher WHERE teacher_id = ?)' : '';
     const [classes] = await promisePool.query(`SELECT * FROM class${sqlFilter}`, [teacherId]);
-    classes.map((clas) => {
+    classes.forEach((clas) => {
       clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
       clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
     });

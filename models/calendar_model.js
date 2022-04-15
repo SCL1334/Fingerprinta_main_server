@@ -7,7 +7,7 @@ const getMonthHolidays = async (year, month) => {
       'SELECT * FROM calendar WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
       [year, month],
     );
-    calendar.map((date) => {
+    calendar.forEach((date) => {
       date.date = dayjs(date.date).format('YYYY-MM-DD');
     });
     return calendar;

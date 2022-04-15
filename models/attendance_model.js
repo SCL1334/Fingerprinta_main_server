@@ -42,7 +42,7 @@ const getAllPunch = async (from = null, to = null) => {
       ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
       `, [from, to]);
-    attendances.map((attendance) => {
+    attendances.forEach((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
@@ -65,7 +65,7 @@ const getPersonPunch = async (studentId, from = null, to = null) => {
       `,
       [studentId, from, to],
     );
-    attendances.map((attendance) => {
+    attendances.forEach((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
@@ -88,7 +88,7 @@ const getClassPunch = async (classId, from = null, to = null) => {
       `,
       [classId, from, to],
     );
-    attendances.map((attendance) => {
+    attendances.forEach((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
     return attendances;
