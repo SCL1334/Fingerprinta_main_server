@@ -32,16 +32,16 @@ const setPunch = async (studentId) => {
   }
 };
 
-const getAllPunch = async () => {
+const getAllPunch = async (from = null, to = null) => {
   try {
+    const sqlFilter = (from !== null || to !== null) ? 'WHERE punch_date >= ? AND punch_date <= ?' : '';
     // 1: one person 2: class 3: all
-    const [attendances] = await promisePool.query(
-      `
+    const [attendances] = await promisePool.query(`
       SELECT student_id, punch_date, punch_in, punch_out 
-      FROM student_punch 
+      FROM student_punch
+      ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
-      `,
-    );
+      `, [from, to]);
     attendances.map((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
     });
@@ -52,16 +52,18 @@ const getAllPunch = async () => {
   }
 };
 
-const getPersonPunch = async (studentId) => {
+const getPersonPunch = async (studentId, from = null, to = null) => {
   try {
+    const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
     const [attendances] = await promisePool.query(
       `
       SELECT student_id, punch_date, punch_in, punch_out 
       FROM student_punch 
       WHERE student_id = ? 
+      ${sqlFilter} 
       ORDER BY punch_date DESC, punch_in ASC;
       `,
-      [studentId],
+      [studentId, from, to],
     );
     attendances.map((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
@@ -73,16 +75,18 @@ const getPersonPunch = async (studentId) => {
   }
 };
 
-const getClassPunch = async (classId) => {
+const getClassPunch = async (classId, from = null, to = null) => {
   try {
+    const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
     const [attendances] = await promisePool.query(
       `
       SELECT student_id, punch_date, punch_in, punch_out 
       FROM student_punch 
       WHERE student_id IN (SELECT id FROM student WHERE class_id = ?) 
+      ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
       `,
-      [classId],
+      [classId, from, to],
     );
     attendances.map((attendance) => {
       attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');

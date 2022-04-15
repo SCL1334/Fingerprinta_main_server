@@ -48,7 +48,7 @@ const truncatePunch = async () => {
 // student_id, punch_in, punch_out
 const createFakePunch = async (days) => {
   try {
-    // await truncatePunch();
+    await truncatePunch();
     const today = dayjs();
     const punchInInit = dayjs(`${today.format('YYYY-MM-DD')} 09:00:00`);
     const punchOutInit = dayjs(`${today.format('YYYY-MM-DD')} 18:00:00`);
@@ -72,4 +72,4 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(2);
+createFakePunch(30);

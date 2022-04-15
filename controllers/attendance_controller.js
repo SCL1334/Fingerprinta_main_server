@@ -1,3 +1,4 @@
+const dayjs = require('dayjs');
 const Attendance = require('../models/attendance_model');
 const User = require('../models/user_model');
 
@@ -17,7 +18,14 @@ const setPunch = async (req, res) => {
 };
 
 const getAllPunch = async (req, res) => {
-  const punches = await Attendance.getAllPunch();
+  let { from, to } = req.query;
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  }
+  const punches = await Attendance.getAllPunch(from, to);
   if (!punches) {
     res.status(500).json({ error: 'Read failed' });
   } else {
@@ -27,7 +35,14 @@ const getAllPunch = async (req, res) => {
 
 const getClassPunch = async (req, res) => {
   const classId = req.params.id;
-  const punches = await Attendance.getClassPunch(classId);
+  let { from, to } = req.query;
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  }
+  const punches = await Attendance.getClassPunch(classId, from, to);
   if (!punches) {
     res.status(500).json({ error: 'Read failed' });
   } else {
@@ -37,7 +52,14 @@ const getClassPunch = async (req, res) => {
 
 const getPersonPunch = async (req, res) => {
   const studentId = req.params.id;
-  const punches = await Attendance.getPersonPunch(studentId);
+  let { from, to } = req.query;
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  }
+  const punches = await Attendance.getPersonPunch(studentId, from, to);
   if (!punches) {
     res.status(500).json({ error: 'Read failed' });
   } else {
