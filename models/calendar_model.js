@@ -19,7 +19,7 @@ const getMonthHolidays = async (year, month) => {
 
 const initYearHolidays = async (year) => {
   try {
-    const rawCalendar = require(`../public/calender_initial/${year}_calendar.json`);
+    const rawCalendar = require(`../public/calendar_initial/${year}_calendar.json`);
     const initCalendar = rawCalendar.reduce((acc, cur) => {
       const needPunch = cur['是否放假'] === '2' ? 0 : 1;
       acc.push([cur['西元日期'], needPunch]);
