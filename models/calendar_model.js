@@ -57,8 +57,8 @@ const deleteYearHolidays = async (year) => {
     }
     await promisePool.query('DELETE FROM calendar WHERE YEAR(date(date)) = ?', [year]);
     return 1;
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    console.log(err);
     return 0;
   }
 };

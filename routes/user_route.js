@@ -15,8 +15,12 @@ const {
 
 const { getClasses } = require('../controllers/class_controller');
 
+const { applyLeave, getPersonLeaves } = require('../controllers/leave_controller');
+
 router.route('/students/profile').get(wrapAsync(getStudentProfile));
 router.route('/students/attendances').get(wrapAsync(getAllPunch));
+router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
+router.route('/students/:id/leaves').post(wrapAsync(applyLeave));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
