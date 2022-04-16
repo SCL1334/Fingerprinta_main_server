@@ -7,43 +7,49 @@ const getMonthHolidays = async (req, res) => {
   const month = targetMonth.month() + 1;
   const calendar = await Calendar.getMonthHolidays(year, month);
   if (calendar) {
-    res.status(200).json({ data: calendar });
+    res.status(200).json({ code: 1000, data: calendar });
   } else {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ code: 2000, error: { message: 'Read failed Due to server error' } });
   }
 };
 
 const initYearHolidays = async (req, res) => {
   const { year } = req.params;
-  const result = await Calendar.initYearHolidays(year);
-  if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
+  const status = await Calendar.initYearHolidays(year);
+  if (status < 2000) {
+    res.status(200).json({ code: status, data: { message: 'Create successfully' } });
+  } else if (status < 3000) {
+    res.status(500).json({ code: status, error: { message: 'Create failed' } });
   } else {
-    res.status(200).json({ data: 'Create successfully' });
+    res.status(400).json({ code: status, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
 const editHoliday = async (req, res) => {
-  const { date } = req.params;
-  const result = Calendar.editHoliday(date);
-  if (result === 0) {
-    res.status(500).json({ error: 'Update failed' });
+  let { date } = req.params;
+  date = dayjs(date);
+  let status = 3021;
+  if (date.isValid()) {
+    status = await Calendar.editHoliday(date.format('YYYY-MM-DD'));
+  }
+  if (status < 2000) {
+    res.status(200).json({ code: status, data: { message: 'Update successfully' } });
+  } else if (status < 3000) {
+    res.status(500).json({ code: status, error: { message: 'Update failed' } });
   } else {
-    res.status(200).json({ data: 'Update OK' });
+    res.status(400).json({ code: status, error: { message: 'Update failed due to invalid input' } });
   }
 };
 
 const deleteYearHolidays = async (req, res) => {
   const { year } = req.params;
-  const result = await Calendar.deleteYearHolidays(year);
-  if (result === 0) {
-    res.status(500).json({ error: 'Delete failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Delete failed due to invalid input' });
+  const status = await Calendar.deleteYearHolidays(year);
+  if (status < 2000) {
+    res.status(200).json({ code: status, data: { message: 'Delete successfully' } });
+  } else if (status < 3000) {
+    res.status(500).json({ code: status, error: { message: 'Delete failed' } });
   } else {
-    res.status(200).json({ data: 'Delete successfully' });
+    res.status(400).json({ code: status, error: { message: 'Delete failed due to invalid input' } });
   }
 };
 

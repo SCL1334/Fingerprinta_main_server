@@ -26,24 +26,31 @@ const initYearHolidays = async (year) => {
       return acc;
     }, []);
     await promisePool.query('INSERT INTO calendar (date, need_punch) VALUES ?', [initCalendar]);
-    return 1;
+    return 1010;
   } catch (err) {
     console.log(err);
     const { errno } = err;
     if (errno === 1062) {
-      return -1;
+      return 3010;
     }
-    return 0;
+    if (errno === 1045) {
+      return 3011;
+    }
+    return 2010;
   }
 };
 
 const editHoliday = async (date) => {
   try {
+    const [dates] = await promisePool.query('SELECT date FROM calendar WHERE date = ?', [date]);
+    if (dates.length === 0) {
+      return 3020;
+    }
     await promisePool.query('UPDATE calendar SET need_punch = !need_punch WHERE date = ?', [date]);
-    return 1;
+    return 1020;
   } catch (err) {
     console.log(err);
-    return 0;
+    return 2020;
   }
 };
 
@@ -53,13 +60,13 @@ const deleteYearHolidays = async (year) => {
     const [result] = await promisePool.query('SELECT date FROM calendar WHERE YEAR(date(date)) = ?', [year]);
     if (result.length === 0) {
       console.log('target not exist');
-      return -1;
+      return 3030;
     }
     await promisePool.query('DELETE FROM calendar WHERE YEAR(date(date)) = ?', [year]);
-    return 1;
+    return 1030;
   } catch (error) {
     console.log(error);
-    return 0;
+    return 2030;
   }
 };
 
