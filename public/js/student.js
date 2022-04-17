@@ -1,5 +1,7 @@
 $(document).ready(async () => {
+  const leaveTypeTable = { 1: '事假', 2: '病假' };
   try {
+    // init page, check if valid signin
     const profile = await axios.get('/api/1.0/students/profile');
     if (profile.error) { throw new Error('aioxs fail'); }
     const { data } = await profile;
@@ -9,6 +11,7 @@ $(document).ready(async () => {
     $('.userName').text(`你好 ${data.data.name}`);
     $('.content').text(`培訓內容:${class_type_name} 梯次:${batch} 班別:${class_group_name}`);
 
+    // sign out btn
     $('.signout').click(async () => {
       try {
         const responseData = await axios.post('/api/1.0/signout');
@@ -21,6 +24,7 @@ $(document).ready(async () => {
       }
     });
 
+    // get attendance
     $('.get_attendances').click(async () => {
       $('.content').text('');
 
@@ -59,6 +63,72 @@ $(document).ready(async () => {
           });
         } catch (err) {
           console.log(err);
+        }
+      });
+    });
+
+    // apply leave page
+    $('.apply_leave').click(async () => {
+      let leaveForm = '';
+      try {
+        const leaveTypesRaw = await axios.get('/api/1.0/leaves/types');
+        const leaveTypes = leaveTypesRaw.data.data;
+        console.log(leaveTypes);
+        const options = leaveTypes.reduce((acc, cur) => {
+          acc += `<option value=${cur.id}>${leaveTypeTable[cur.id]}</option>`;
+          return acc;
+        }, '');
+        $('.content').text('');
+        leaveForm = `
+        <div class="leave_form">請假申請
+          <form action="/api/1.0/students/${id}/leaves" method="POST">
+            <select id='leave_type'>
+              <option>請選擇請假類型</option>
+              ${options}
+            </select>
+            <input id='leave_date' name='date' type="date" value="請假日期">
+            <input id='leave_start' name='start' type="time" value="請假時間(開始)">
+            <input id='leave_end' name='end' type="time" value="請假時間(結束)">
+            <input id='leave_reason' name='description' type="text" value="請假事由">
+            <button type="submit">送出</button>
+          </form>
+        </div>
+        `;
+      } catch (err) {
+        console.log(err);
+        console.log(err.response.data);
+        return;
+      }
+
+      $('.content').append(leaveForm);
+      $('.leave_form form').submit(async (event) => {
+        try {
+          event.preventDefault();
+          const leaveTypeTd = $('#leave_type').val();
+          const leaveDate = $('#leave_date').val();
+          const leaveStart = $('#leave_start').val();
+          const leaveEnd = $('#leave_end').val();
+          const leaveReason = $('#leave_reason').val();
+          const responseData = await axios($('.leave_form form').attr('action'), {
+            method: $('.leave_form form').attr('method'),
+            data: {
+              leave_type_id: leaveTypeTd,
+              date: leaveDate,
+              start: leaveStart,
+              end: leaveEnd,
+              description: leaveReason,
+            },
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+          const { data } = await responseData;
+          if (data) {
+            $('.leave_form').text('已提交請假申請，請等候校務人員審核');
+          }
+        } catch (err) {
+          console.log(err);
+          console.log(err.response.data);
         }
       });
     });
