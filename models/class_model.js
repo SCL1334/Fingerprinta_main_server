@@ -193,7 +193,11 @@ const removeTeacher = async (classId, teacherId) => {
 // Class Manage
 const getClasses = async () => {
   try {
-    const [classes] = await promisePool.query('SELECT * FROM class');
+    const [classes] = await promisePool.query(`
+    SELECT c.*, ct.name as class_type_name, cg.name as class_group_name FROM class as c
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id 
+    `);
     classes.map((clas) => {
       clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
       clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
