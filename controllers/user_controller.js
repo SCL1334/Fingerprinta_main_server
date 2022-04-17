@@ -93,7 +93,7 @@ const studentSignIn = async (req, res) => {
   if (result === -1) {
     return res.status(400).json({ error: 'Signin failed due to invalid input' });
   }
-  req.session.email = email;
+  req.session.user = { role: 'student', email };
   return res.status(200).json({ data: 'Signin successfully' });
 };
 
@@ -106,7 +106,7 @@ const staffSignIn = async (req, res) => {
   if (result === -1) {
     return res.status(400).json({ error: 'Signin failed due to invalid input' });
   }
-  req.session.email = email;
+  req.session.user = { role: 'staff', email };
   return res.status(200).json({ data: 'Signin successfully' });
 };
 
@@ -117,9 +117,20 @@ const signOut = async (req, res) => {
 };
 
 const getStudentProfile = async (req, res) => {
-  const { email } = req.session;
+  const { user } = req.session;
+  const { email } = user;
   if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
   const profile = await User.getStudentProfile(email);
+  res.status(200).json({ data: profile });
+};
+
+const getStaffProfile = async (req, res) => {
+  const { user } = req.session;
+  const { email } = user;
+  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  if (user.role !== 'staff') { return res.status(403).json({ error: { message: 'Forbidden' } }); }
+
+  const profile = await User.getStaffProfile(email);
   res.status(200).json({ data: profile });
 };
 
@@ -154,5 +165,6 @@ module.exports = {
   staffSignIn,
   signOut,
   getStudentProfile,
+  getStaffProfile,
   matchFingerprint,
 };

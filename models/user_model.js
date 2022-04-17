@@ -170,6 +170,19 @@ const getStudentProfile = async (email) => {
   }
 };
 
+const getStaffProfile = async (email) => {
+  try {
+    const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE email = ?;', [email]);
+    const profile = profiles[0];
+    const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);
+    profile.classes = classes;
+    return profile;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const matchFingerprint = async (studentId, fingerId) => {
   const conn = await promisePool.getConnection();
   try {
@@ -216,6 +229,7 @@ module.exports = {
   studentSignIn,
   staffSignIn,
   getStudentProfile,
+  getStaffProfile,
   matchFingerprint,
   findByFinger,
 };

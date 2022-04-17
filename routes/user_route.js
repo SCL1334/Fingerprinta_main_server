@@ -5,7 +5,7 @@ const {
   createStudent, getStudents, deleteStudent, studentSignIn,
   createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
-  getStudentProfile,
+  getStudentProfile, getStaffProfile,
   matchFingerprint,
 } = require('../controllers/user_controller');
 
@@ -31,6 +31,7 @@ router.route('/students/:id').delete(wrapAsync(deleteStudent));
 
 router.route('/teachers/:id/classes').get(wrapAsync(getClasses));
 
+router.route('/staffs/profile').get(wrapAsync(getStaffProfile));
 router.route('/staffs/signin').post(wrapAsync(staffSignIn));
 router.route('/staffs').post(wrapAsync(createStaff));
 router.route('/staffs').get(wrapAsync(getStaffs));
