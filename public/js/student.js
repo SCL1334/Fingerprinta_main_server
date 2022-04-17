@@ -1,5 +1,6 @@
 $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
+  const leaveStatusTable = { 0: '審核中', 1: '已審核' };
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/students/profile');
@@ -73,7 +74,6 @@ $(document).ready(async () => {
       try {
         const leaveTypesRaw = await axios.get('/api/1.0/leaves/types');
         const leaveTypes = leaveTypesRaw.data.data;
-        console.log(leaveTypes);
         const options = leaveTypes.reduce((acc, cur) => {
           acc += `<option value=${cur.id}>${leaveTypeTable[cur.id]}</option>`;
           return acc;
@@ -86,9 +86,9 @@ $(document).ready(async () => {
               <option>請選擇請假類型</option>
               ${options}
             </select>
-            <input id='leave_date' name='date' type="date" value="請假日期">
-            <input id='leave_start' name='start' type="time" value="請假時間(開始)">
-            <input id='leave_end' name='end' type="time" value="請假時間(結束)">
+            <input id='leave_date' name='date' type="date">
+            <input id='leave_start' name='start' type="time">
+            <input id='leave_end' name='end' type="time">
             <input id='leave_reason' name='description' type="text" value="請假事由">
             <button type="submit">送出</button>
           </form>
@@ -131,6 +131,55 @@ $(document).ready(async () => {
           console.log(err.response.data);
         }
       });
+    });
+
+    // search leave application
+    $('.check_leave').click(async () => {
+      try {
+        $('.content').empty();
+        const leave = $('<div></div>').attr('class', 'leave').text('請假記錄');
+        const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
+        const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+        const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
+        leave.append(searchFrom, searchTo, searchBtn);
+        $('.content').append(leave);
+        $('.search_btn').click(async () => {
+          try {
+            let table = $('.leave_result');
+            if (table) { table.empty(); }
+            const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
+            const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
+            const responseData = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
+            const { data } = responseData;
+            table = $('<table></table>').attr('class', 'leave_result');
+            const tr = $('<tr></tr>');
+            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            heads.forEach((head) => {
+              const th = $('<th></th>').text(head);
+              tr.append(th);
+            });
+            table.append(tr);
+
+            $('.leave').append(table);
+            data.data.forEach((leave) => {
+              const tr = $('<tr></tr>');
+              const td_date = $('<td></td>').text(leave.date);
+              const td_type = $('<td></td>').text(leaveTypeTable[leave.leave_type_id]);
+              const td_start = $('<td></td>').text(leave.start);
+              const td_end = $('<td></td>').text(leave.end);
+              const td_reason = $('<td></td>').text(leave.description);
+              const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
+              tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
+              table.append(tr);
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      } catch (err) {
+        console.log(err);
+        location.href = location.href.replace('.html', '_signin.html');
+      }
     });
   } catch (err) {
     console.log(err);
