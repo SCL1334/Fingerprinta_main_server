@@ -37,8 +37,9 @@ const getAllPunch = async (from = null, to = null) => {
     const sqlFilter = (from !== null || to !== null) ? 'WHERE punch_date >= ? AND punch_date <= ?' : '';
     // 1: one person 2: class 3: all
     const [attendances] = await promisePool.query(`
-      SELECT student_id, punch_date, punch_in, punch_out 
-      FROM student_punch
+      SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
+      FROM student_punch AS sp 
+      LEFT OUTER JOIN student as s ON sp.student_id = s.id 
       ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
       `, [from, to]);
@@ -57,8 +58,9 @@ const getPersonPunch = async (studentId, from = null, to = null) => {
     const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
     const [attendances] = await promisePool.query(
       `
-      SELECT student_id, punch_date, punch_in, punch_out 
-      FROM student_punch 
+      SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
+      FROM student_punch AS sp 
+      LEFT OUTER JOIN student as s ON sp.student_id = s.id 
       WHERE student_id = ? 
       ${sqlFilter} 
       ORDER BY punch_date DESC, punch_in ASC;
@@ -80,8 +82,9 @@ const getClassPunch = async (classId, from = null, to = null) => {
     const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
     const [attendances] = await promisePool.query(
       `
-      SELECT student_id, punch_date, punch_in, punch_out 
-      FROM student_punch 
+      SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
+      FROM student_punch AS sp 
+      LEFT OUTER JOIN student as s ON sp.student_id = s.id 
       WHERE student_id IN (SELECT id FROM student WHERE class_id = ?) 
       ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
