@@ -193,9 +193,14 @@ const removeTeacher = async (classId, teacherId) => {
 // Class Manage
 const getClasses = async (teacherId = null) => {
   try {
-    const sqlFilter = (teacherId) ? ' WHERE id IN (SELECT class_id FROM class_teacher WHERE teacher_id = ?)' : '';
-    const [classes] = await promisePool.query(`SELECT * FROM class${sqlFilter}`, [teacherId]);
-    classes.forEach((clas) => {
+    const sqlFilter = (teacherId) ? ' WHERE c.id IN (SELECT class_id FROM class_teacher WHERE teacher_id = ?)' : '';
+    const [classes] = await promisePool.query(`
+    SELECT c.*, ct.name as class_type_name, cg.name as class_group_name FROM class as c
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}
+    `, [teacherId]);
+    classes.map((clas) => {
       clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
       clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
     });
