@@ -1,6 +1,7 @@
 $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
   const leaveStatusTable = { 0: '審核中', 1: '已審核' };
+  const sensorUrl = 'http://127.0.0.1:5000';
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
@@ -23,18 +24,40 @@ $(document).ready(async () => {
         console.log(err);
       }
     });
+
+    // sensor operation
+    $('#sensor_identify').click(async () => {
+      const sensorIdentifyRes = await axios.post(`${sensorUrl}/identify`);
+      const sensorIdentifyResult = sensorIdentifyRes.data;
+      if (sensorIdentifyResult) {
+        alert('指紋機：正在切換到打卡模式');
+      } else {
+        alert('指紋機：打卡模式啟動失敗');
+      }
+    });
+
+    $('#sensor_stop').click(async () => {
+      const sensorStopRes = await axios.post(`${sensorUrl}/turnoff`);
+      const sensorStopResult = sensorStopRes.data;
+      if (sensorStopResult) {
+        alert('指紋機：切換到待機模式');
+      } else {
+        alert('指紋機：待機模式啟動失敗');
+      }
+    });
+
     // accounts manage
     $('.account_manage').click(async () => {
       $('.content').empty();
 
       const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
-      const student_accounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
-      const staff_accounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
+      const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
+      const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
       const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
-      accountCompenents.append(student_accounts, staff_accounts, accountManageBoard);
+      accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
       $('.content').append(accountCompenents);
       // student account part
-      student_accounts.click(async () => {
+      studentAccounts.click(async () => {
         const studentUrl = '/api/1.0/students';
         let studentAddForm = '';
         try {
@@ -93,17 +116,27 @@ $(document).ready(async () => {
               const td_student_name = $('<td></td>').text(addStudentName);
               const td_student_email = $('<td></td>').text(addStudentEmail);
               const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
-              const td_student_finger = $('<td></td>').text(null);
+              const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
               const td_delete = $('<td></td>');
+              const td_enroll = $('<td></td>');
               const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
                 const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
-                const deleteStudentResult = deleteClassRes.data;
+                const deleteStudentResult = deleteStudentRes.data;
                 if (deleteStudentResult) {
                   $(deleteButtonEvent.target).parent().parent().remove();
                 }
               });
+              const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+                const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
+                const enrollFingerResult = enrollFingerRes.data.data;
+                if (enrollFingerResult) {
+                  console.log($(enrollButtonEvent.target).parent().siblings('.finger_id'));
+                  $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
+                }
+              });
+              td_enroll.append(enroll_btn);
               td_delete.append(delete_btn);
-              tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_delete);
+              tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
               table.append(tr);
             }
           } catch (err) {
@@ -132,7 +165,7 @@ $(document).ready(async () => {
             const td_student_name = $('<td></td>').text(student.name);
             const td_student_email = $('<td></td>').text(student.email);
             const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
-            const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id);
+            const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
             const td_delete = $('<td></td>');
             const td_enroll = $('<td></td>');
             const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
@@ -144,11 +177,10 @@ $(document).ready(async () => {
             });
             const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
               const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
-              const enrollFingerResult = enrollFingerRes.data;
+              const enrollFingerResult = enrollFingerRes.data.data;
               if (enrollFingerResult) {
-                console.log($(enrollButtonEvent.target));
                 console.log($(enrollButtonEvent.target).parent().siblings('.finger_id'));
-                $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.fpId);
+                $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
               }
             });
             td_enroll.append(enroll_btn);
