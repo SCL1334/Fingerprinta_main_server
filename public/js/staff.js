@@ -1,6 +1,6 @@
 $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
-  const leaveStatusTable = { 0: '審核中', 1: '已審核' };
+  const leaveStatusTable = { 0: '待審核', 1: '已審核' };
   const sensorUrl = 'http://127.0.0.1:5000';
   try {
     // init page, check if valid signin
@@ -130,7 +130,6 @@ $(document).ready(async () => {
                 const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
                 const enrollFingerResult = enrollFingerRes.data.data;
                 if (enrollFingerResult) {
-                  console.log($(enrollButtonEvent.target).parent().siblings('.finger_id'));
                   $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
                 }
               });
@@ -179,7 +178,6 @@ $(document).ready(async () => {
               const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
               const enrollFingerResult = enrollFingerRes.data.data;
               if (enrollFingerResult) {
-                console.log($(enrollButtonEvent.target).parent().siblings('.finger_id'));
                 $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
               }
             });
@@ -642,13 +640,12 @@ $(document).ready(async () => {
             const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
             const url = `/api/1.0/${studentPath || classPath || ''}leaves${from}${to}`;
-            console.log(url);
             const leaveSearchRes = await axios.get(url);
             const leaveSearchResult = leaveSearchRes.data.data;
             // error handle
             table = $('<table></table>').attr('class', 'leave_result');
             const tr = $('<tr></tr>');
-            const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態', ''];
             heads.forEach((head) => {
               const th = $('<th></th>').text(head);
               tr.append(th);
@@ -665,8 +662,21 @@ $(document).ready(async () => {
               const td_start = $('<td></td>').text(leaveSearch.start);
               const td_end = $('<td></td>').text(leaveSearch.end);
               const td_reason = $('<td></td>').text(leaveSearch.description);
-              const td_status = $('<td></td>').text(leaveStatusTable[leaveSearch.approval]);
-              tr.append(td_date, td_student, td_class, td_type, td_start, td_end, td_reason, td_status);
+              const td_status = $('<td></td>').attr('class', 'leave_status').text(leaveStatusTable[leaveSearch.approval]);
+              const td_approve = $('<td></td>');
+              const approve_btn = $('<button></button>').text('核准申請').click(async (approveButtonEvent) => {
+                // approve leave API path may be different
+                const approveLeaveRes = await axios.put(`/api/1.0/leaves/${leaveSearch.id}`);
+                const approveLeaveResult = approveLeaveRes.data;
+                if (approveLeaveResult) {
+                  $(approveButtonEvent.target).parent().siblings('.leave_status').text(leaveStatusTable[1]);
+                  $(approveButtonEvent.target).remove();
+                }
+              });
+              // if has been approved no need approve btn
+              if (leaveSearch.approval === 0) { td_approve.append(approve_btn); }
+
+              tr.append(td_date, td_student, td_class, td_type, td_start, td_end, td_reason, td_status, td_approve);
               table.append(tr);
             });
           } catch (err) {
