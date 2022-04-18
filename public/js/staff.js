@@ -73,8 +73,9 @@ $(document).ready(async () => {
             const addStudentName = $('#student_name').val();
             const addStudentEmail = $('#student_email').val();
             const addStudentPassword = $('#student_password').val();
-            const addStudentClass = $('$student_class').vla();
+            const addStudentClass = $('#student_class').val();
             const addStudentRes = await axios(studentUrl, {
+              method: 'POST',
               data: {
                 name: addStudentName,
                 email: addStudentEmail,
@@ -130,7 +131,7 @@ $(document).ready(async () => {
             const td_id = $('<td></td>').text(student.id);
             const td_student_name = $('<td></td>').text(student.name);
             const td_student_email = $('<td></td>').text(student.email);
-            const td_student_class = $('<td></td>').text(student.class);
+            const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
             const td_student_finger = $('<td></td>').text(student.finger_id);
             const td_delete = $('<td></td>');
             const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
@@ -244,7 +245,6 @@ $(document).ready(async () => {
                 const deleteClassRes = await axios.delete(`${classesUrl}/${addClassResult.insert_id}`);
                 const deleteClassResult = deleteClassRes.data;
                 if (deleteClassResult) {
-                  console.log(deleteButtonEvent.target);
                   $(deleteButtonEvent.target).parent().parent().remove();
                 }
               });
