@@ -35,9 +35,9 @@ $(document).ready(async () => {
     $('.class_manage').click(async () => {
       $('.content').empty();
       const classCompenents = $('<div></div>').attr('class', 'class_compenent');
-      const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式');
-      const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別');
-      const classes = $('<div></div>').attr('class', 'classes').text('班級管理');
+      const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式設定');
+      const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別設定');
+      const classes = $('<div></div>').attr('class', 'classes').text('班級基礎資訊設定');
       const classManageBoard = $('<div></div>').attr('class', 'class_manage_board');
       classCompenents.append(classes, classTypes, classGroups, classManageBoard);
       $('.content').append(classCompenents);
