@@ -42,6 +42,140 @@ $(document).ready(async () => {
       classCompenents.append(classes, classTypes, classGroups, classManageBoard);
       $('.content').append(classCompenents);
 
+      // classes manage
+      classes.click(async () => {
+        const classesUrl = '/api/1.0/classes';
+
+        // class Add form building
+        let classAddForm = '';
+        try {
+          const classTypesRaw = await axios.get(`${classesUrl}/types`);
+          const classGroupsRaw = await axios.get(`${classesUrl}/groups`);
+          const classTypes = classTypesRaw.data.data;
+          const classGroups = classGroupsRaw.data.data;
+          const classTypesOptions = classTypes.reduce((acc, cur) => {
+            acc += `<option value=${cur.id}>${cur.name}</option>`;
+            return acc;
+          }, '');
+          const classGroupsOptions = classGroups.reduce((acc, cur) => {
+            acc += `<option value=${cur.id}>${cur.name}</option>`;
+            return acc;
+          }, '');
+          classManageBoard.empty();
+          classAddForm = `
+          <div class="class_form">新增班級
+            <form action="${classesUrl}" method="POST">
+              <select id='class_type'>
+                <option value=null>請選擇班級培訓形式</option>
+                ${classTypesOptions}
+              </select>
+              <input id='class_batch' name='batch' type="number">
+              <select id='class_group'>
+                <option value=null>請選擇班級培訓班別</option>
+                ${classGroupsOptions}
+              </select>
+              <input id='class_start_date' name='start_date' type="date">
+              <input id='class_end_date' name='end_date' type="date">
+              <button type="submit">送出</button>
+            </form>
+          </div>
+          `;
+        } catch (err) {
+          console.log(err);
+          console.log(err.response.data);
+          return;
+        }
+        classManageBoard.append(classAddForm);
+
+        // Add new class trigger
+        $('.class_form form').submit(async (newClassSubmitEvent) => {
+          try {
+            newClassSubmitEvent.preventDefault();
+            const addClassType = $('#class_type').val();
+            const addClassBatch = $('#class_batch').val();
+            const addClassGroup = $('#class_group').val();
+            const addClassStart = $('#class_start_date').val();
+            const addClassEnd = $('#class_end_date').val();
+            const addClassRes = await axios(classesUrl, {
+              method: $('.class_form form').attr('method'),
+              data: {
+                class_type_id: addClassType,
+                batch: addClassBatch,
+                class_group_id: addClassGroup,
+                start_date: addClassStart,
+                end_date: addClassEnd,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const addClassResult = addClassRes.data.data;
+            if (addClassResult) {
+              const tr = $('<tr></tr>');
+              const td_id = $('<td></td>').text(addClassResult.insert_id);
+              const td_class_type = $('<td></td>').text($('#class_type option:selected').text());
+              const td_class_batch = $('<td></td>').text(addClassBatch);
+              const td_class_group = $('<td></td>').text($('#class_group option:selected').text());
+              const td_class_start = $('<td></td>').text(addClassStart);
+              const td_class_end = $('<td></td>').text(addClassEnd);
+              const td_delete = $('<td></td>');
+              const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+                const deleteClassRes = await axios.delete(`${classesUrl}/${addClassResult.insert_id}`);
+                const deleteClassResult = deleteClassRes.data;
+                if (deleteClassResult) {
+                  console.log(deleteButtonEvent.target);
+                  $(deleteButtonEvent.target).parent().parent().remove();
+                }
+              });
+              td_delete.append(delete_btn);
+              tr.append(td_id, td_class_type, td_class_batch, td_class_group, td_class_start, td_class_end, td_delete);
+              table.append(tr);
+            }
+          } catch (err) {
+            console.log(err);
+            console.log(err.response.data);
+          }
+        });
+
+        const table = $('<table></table>').attr('class', 'classes_result');
+        const tr = $('<tr></tr>');
+        const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', ''];
+        heads.forEach((head) => {
+          const th = $('<th></th>').text(head);
+          tr.append(th);
+        });
+        table.append(tr);
+
+        // show all exist classes
+        try {
+          const classesDetail = await axios.get(classesUrl);
+          const classesData = classesDetail.data;
+          classesData.data.forEach((clas) => {
+            const tr = $('<tr></tr>');
+            const td_id = $('<td></td>').text(clas.id);
+            const td_class_type = $('<td></td>').text(clas.class_type_name);
+            const td_class_batch = $('<td></td>').text(clas.batch);
+            const td_class_group = $('<td></td>').text(clas.class_group_name);
+            const td_class_start = $('<td></td>').text(clas.start_date);
+            const td_class_end = $('<td></td>').text(clas.end_date);
+            const td_delete = $('<td></td>');
+            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+              const deleteClassRes = await axios.delete(`${classesUrl}/${clas.id}`);
+              const deleteClassResult = deleteClassRes.data;
+              if (deleteClassResult) {
+                $(event.target).parent().parent().remove();
+              }
+            });
+            td_delete.append(delete_btn);
+            tr.append(td_id, td_class_type, td_class_batch, td_class_group, td_class_start, td_class_end, td_delete);
+            table.append(tr);
+          });
+          classManageBoard.append(table);
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
       // class type manage
       classTypes.click(async () => {
         const classTypeUrl = '/api/1.0/classes/types';
@@ -101,7 +235,6 @@ $(document).ready(async () => {
             const td_name = $('<td></td>').text(classType.name);
             const td_delete = $('<td></td>');
             const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-              console.log(classType.id);
               const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
               const deleteTypeResult = deleteTypeRes.data;
               if (deleteTypeResult) {
@@ -176,7 +309,6 @@ $(document).ready(async () => {
             const td_name = $('<td></td>').text(classGroup.name);
             const td_delete = $('<td></td>');
             const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-              console.log(classGroup.id);
               const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
               const deleteGroupResult = deleteGroupRes.data;
               if (deleteGroupResult) {
