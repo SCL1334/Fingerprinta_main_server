@@ -24,12 +24,50 @@ $(document).ready(async () => {
       }
     });
     // accounts manage
-    // ${'.account_manage'}.click(async () => {
-    //   $('.content').empty();
-    //   const account = $('<div></div>').attr('class', 'account').text('帳號管理');
-    //   const search
+    $('.account_manage').click(async () => {
+      $('.content').empty();
 
-    // })
+      const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
+      const student_accounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
+      const staff_accounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
+      const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
+      accountCompenents.append(student_accounts, staff_accounts, accountManageBoard);
+      $('.content').append(accountCompenents);
+      // student account part
+      student_accounts.click(async () => {
+        const studentUrl = '/api/1.0/students';
+        let studentAddForm = '';
+        try {
+          const classesRaw = await axios.get('/api/1.0/classes');
+          const classes = classesRaw.data.data;
+          const classesOptions = classes.reduce((acc, cur) => {
+            acc += `<option value=${cur.id}>${cur.class_type_name}-${cur.batch}-${cur.class_group_name}</option>`;
+            return acc;
+          }, '');
+          accountManageBoard.empty();
+          studentAddForm = `
+          <div class="student_form">新增學生帳號
+          <form action="${studentUrl}" method="POST">
+            <select id='student_class'>
+              <option value=null>請選擇學生班級</option>
+              ${classesOptions}
+            </select>
+            <input id='student_email' name='email' type="email">
+            <input id='student_password' name='password' type="password">
+            <input id='student_name' name='name' type="text">
+            <button type="submit">送出</button>
+          </form>
+        </div>
+          `;
+        } catch (err) {
+          console.log(err);
+          console.log(err.response.data);
+          return;
+        }
+        accountManageBoard.append(studentAddForm);
+      });
+      // staff account part
+    });
 
     // class manage
     $('.class_manage').click(async () => {
