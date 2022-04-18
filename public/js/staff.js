@@ -522,6 +522,7 @@ $(document).ready(async () => {
         console.log(err);
       }
 
+      // get student option by class
       classOptions.change(async () => {
         try {
           studentOptions.empty();
@@ -552,8 +553,8 @@ $(document).ready(async () => {
           const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
           const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
           const url = `/api/1.0/${studentPath || classPath || 'students/'}attendances${from}${to}`;
-          const responseData = await axios.get(url);
-          const { data } = responseData;
+          const attendanceSearchRes = await axios.get(url);
+          const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
           const heads = ['姓名', '打卡日期', '上課打卡', '下課打卡'];
@@ -564,12 +565,12 @@ $(document).ready(async () => {
           table.append(tr);
 
           $('.attendance').append(table);
-          data.data.forEach((attendance) => {
+          attendanceSearchResult.forEach((attendanceRearch) => {
             const tr = $('<tr></tr>');
-            const td_name = $('<td></td>').text(attendance.student_name);
-            const td_date = $('<td></td>').text(attendance.punch_date);
-            const td_punch_in = $('<td></td>').text(attendance.punch_in);
-            const td_punch_out = $('<td></td>').text(attendance.punch_out);
+            const td_name = $('<td></td>').text(attendanceRearch.student_name);
+            const td_date = $('<td></td>').text(attendanceRearch.punch_date);
+            const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in);
+            const td_punch_out = $('<td></td>').text(attendanceRearch.punch_out);
             tr.append(td_name, td_date, td_punch_in, td_punch_out);
             table.append(tr);
           });
@@ -583,23 +584,71 @@ $(document).ready(async () => {
     $('.approve_leave_application').click(async () => {
       try {
         $('.content').empty();
-        const leave = $('<div></div>').attr('class', 'leave').text('請假記錄');
+        const leave = $('<div></div>').attr('class', 'leave').text('請假申請');
         const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
         const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
         const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
-        leave.append(searchFrom, searchTo, searchBtn);
+        const classOptions = $('<select></select>').attr('class', 'class_options');
+        const classInitOption = $('<option value=0>全部班級</option>');
+        classOptions.append(classInitOption);
+        const studentOptions = $('<select></select>').attr('class', 'student_options');
+        const studentInitOption = $('<option value=0>全部學生</option>');
+        studentOptions.append(studentInitOption);
+
+        // get init class options
+        try {
+          const classDetail = await axios.get('/api/1.0/classes');
+          const classData = classDetail.data;
+          classData.data.forEach((clas) => {
+            classOptions.append(`
+          <option value=${clas.id}>
+            ${clas.class_type_name} -
+            batch ${clas.batch} -
+            ${clas.class_group_name}
+          </option>`);
+          });
+        } catch (err) {
+          console.log(err);
+        }
+
+        // get student option by class
+        classOptions.change(async () => {
+          try {
+            studentOptions.empty();
+            studentOptions.append(studentInitOption);
+            if ($('.class_options').val() === '0') {
+              return;
+            }
+            const studentDetail = await axios.get(`/api/1.0/classes/${$('.class_options').val()}/students`);
+            const studentData = studentDetail.data;
+            studentData.data.forEach((student) => {
+              studentOptions.append(`<option value=${student.id}>${student.name}</option>`);
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+
+        leave.append(classOptions, studentOptions, searchFrom, searchTo, searchBtn);
         $('.content').append(leave);
         $('.search_btn').click(async () => {
           try {
             let table = $('.leave_result');
             if (table) { table.empty(); }
+            const classOption = $('.class_options').val();
+            const classPath = (classOption === '0' || !classOption) ? '' : `classes/${classOption}/`;
+            const studentOption = $('.student_options').val();
+            const studentPath = (studentOption === '0' || !studentOption) ? '' : `students/${studentOption}/`;
             const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-            const responseData = await axios.get(`/api/1.0/leaves${from}${to}`);
-            const { data } = responseData;
+            const url = `/api/1.0/${studentPath || classPath || ''}leaves${from}${to}`;
+            console.log(url);
+            const leaveSearchRes = await axios.get(url);
+            const leaveSearchResult = leaveSearchRes.data.data;
+            // error handle
             table = $('<table></table>').attr('class', 'leave_result');
             const tr = $('<tr></tr>');
-            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
             heads.forEach((head) => {
               const th = $('<th></th>').text(head);
               tr.append(th);
@@ -607,15 +656,17 @@ $(document).ready(async () => {
             table.append(tr);
 
             $('.leave').append(table);
-            data.data.forEach((leave) => {
+            leaveSearchResult.forEach((leaveSearch) => {
               const tr = $('<tr></tr>');
-              const td_date = $('<td></td>').text(leave.date);
-              const td_type = $('<td></td>').text(leaveTypeTable[leave.leave_type_id]);
-              const td_start = $('<td></td>').text(leave.start);
-              const td_end = $('<td></td>').text(leave.end);
-              const td_reason = $('<td></td>').text(leave.description);
-              const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
-              tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
+              const td_date = $('<td></td>').text(leaveSearch.date);
+              const td_student = $('<td></td>').text(leaveSearch.student_name);
+              const td_class = $('<td></td>').text(`${leaveSearch.class_type_name}-${leaveSearch.batch}-${leaveSearch.class_group_name}`);
+              const td_type = $('<td></td>').text(leaveTypeTable[leaveSearch.leave_type_id]);
+              const td_start = $('<td></td>').text(leaveSearch.start);
+              const td_end = $('<td></td>').text(leaveSearch.end);
+              const td_reason = $('<td></td>').text(leaveSearch.description);
+              const td_status = $('<td></td>').text(leaveStatusTable[leaveSearch.approval]);
+              tr.append(td_date, td_student, td_class, td_type, td_start, td_end, td_reason, td_status);
               table.append(tr);
             });
           } catch (err) {
