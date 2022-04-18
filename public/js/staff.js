@@ -7,7 +7,7 @@ $(document).ready(async () => {
     if (profile.error) { throw new Error('aioxs fail'); }
     const { data } = await profile;
     const {
-      id, name, email, classes,
+      id, name, email, leadClasses,
     } = data.data;
     $('.userName').text(`你好 ${data.data.name}`);
 
@@ -34,15 +34,16 @@ $(document).ready(async () => {
     // class manage
     $('.class_manage').click(async () => {
       $('.content').empty();
-      const classCompenent = $('<div></div>').attr('class', 'class_compenent');
-      const classType = $('<div></div>').attr('class', 'class_type').text('培訓形式');
-      const classGroup = $('<div></div>').attr('class', 'class_group').text('培訓班別');
+      const classCompenents = $('<div></div>').attr('class', 'class_compenent');
+      const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式');
+      const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別');
       const classes = $('<div></div>').attr('class', 'classes').text('班級管理');
       const classManageBoard = $('<div></div>').attr('class', 'class_manage_board');
-      classCompenent.append(classes, classType, classGroup, classManageBoard);
-      $('.content').append(classCompenent);
+      classCompenents.append(classes, classTypes, classGroups, classManageBoard);
+      $('.content').append(classCompenents);
 
-      classType.click(async () => {
+      // class type manage
+      classTypes.click(async () => {
         const classTypeUrl = '/api/1.0/classes/types';
         classManageBoard.empty();
 
@@ -50,7 +51,7 @@ $(document).ready(async () => {
         const addBtn = $('<button></button>').attr('class', 'add_class_type_btn').text('新增');
         const table = $('<table></table>').attr('class', 'class_type_result');
         const tr = $('<tr></tr>');
-        const heads = ['培訓形式名稱'];
+        const heads = ['ID', '培訓形式名稱', ''];
         heads.forEach((head) => {
           const th = $('<th></th>').text(head);
           tr.append(th);
@@ -61,7 +62,7 @@ $(document).ready(async () => {
         addBtn.click(async () => {
           const newType = $('.add_class_type').val();
           try {
-            const addTypeResult = await axios(classTypeUrl, {
+            const addTypeRes = await axios(classTypeUrl, {
               method: 'POST',
               data: {
                 type_name: newType,
@@ -70,11 +71,21 @@ $(document).ready(async () => {
                 'content-type': 'application/json',
               },
             });
-            const { data } = await addTypeResult;
-            if (data) {
+            const addTypeResult = addTypeRes.data;
+            if (addTypeResult) {
               const tr = $('<tr></tr>');
+              const td_id = $('<td></td>').text(addTypeResult.data.insert_id);
               const td_name = $('<td></td>').text(newType);
-              tr.append(td_name);
+              const td_delete = $('<td></td>');
+              const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+                const deleteTypeRes = await axios.delete(`${classTypeUrl}/${addTypeResult.data.insert_id}`);
+                const deleteTypeResult = deleteTypeRes.data;
+                if (deleteTypeResult) {
+                  $(event.target).parent().parent().remove();
+                }
+              });
+              td_delete.append(delete_btn);
+              tr.append(td_id, td_name, td_delete);
               table.append(tr);
             }
           } catch (err) {
@@ -86,8 +97,94 @@ $(document).ready(async () => {
           const classTypeData = classTypeDetail.data;
           classTypeData.data.forEach((classType) => {
             const tr = $('<tr></tr>');
+            const td_id = $('<td></td>').text(classType.id);
             const td_name = $('<td></td>').text(classType.name);
-            tr.append(td_name);
+            const td_delete = $('<td></td>');
+            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+              console.log(classType.id);
+              const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
+              const deleteTypeResult = deleteTypeRes.data;
+              if (deleteTypeResult) {
+                $(event.target).parent().parent().remove();
+              }
+            });
+            td_delete.append(delete_btn);
+            tr.append(td_id, td_name, td_delete);
+            table.append(tr);
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      });
+
+      // class group manage
+      classGroups.click(async () => {
+        const classGroupUrl = '/api/1.0/classes/groups';
+        classManageBoard.empty();
+
+        const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').val('請輸入培訓班別名稱');
+        const addBtn = $('<button></button>').attr('class', 'add_class_group_btn').text('新增');
+        const table = $('<table></table>').attr('class', 'class_group_result');
+        const tr = $('<tr></tr>');
+        const heads = ['ID', '培訓班別名稱', ''];
+        heads.forEach((head) => {
+          const th = $('<th></th>').text(head);
+          tr.append(th);
+        });
+        table.append(tr);
+        classManageBoard.append(add, addBtn, table);
+
+        addBtn.click(async () => {
+          const newGroup = $('.add_class_group').val();
+          try {
+            const addGroupRes = await axios(classGroupUrl, {
+              method: 'POST',
+              data: {
+                group_name: newGroup,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const addGroupResult = addGroupRes.data;
+            if (addGroupResult) {
+              const tr = $('<tr></tr>');
+              const td_id = $('<td></td>').text(addGroupResult.data.insert_id);
+              const td_name = $('<td></td>').text(newGroup);
+              const td_delete = $('<td></td>');
+              const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+                const deleteGroupRes = await axios.delete(`${classGroupUrl}/${addGroupResult.data.insert_id}`);
+                const deleteGroupResult = deleteGroupRes.data;
+                if (deleteGroupResult) {
+                  $(event.target).parent().parent().remove();
+                }
+              });
+              td_delete.append(delete_btn);
+              tr.append(td_id, td_name, td_delete);
+              table.append(tr);
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+        try {
+          const classGroupDetail = await axios.get(classGroupUrl);
+          const classGroupData = classGroupDetail.data;
+          classGroupData.data.forEach((classGroup) => {
+            const tr = $('<tr></tr>');
+            const td_id = $('<td></td>').text(classGroup.id);
+            const td_name = $('<td></td>').text(classGroup.name);
+            const td_delete = $('<td></td>');
+            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+              console.log(classGroup.id);
+              const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
+              const deleteGroupResult = deleteGroupRes.data;
+              if (deleteGroupResult) {
+                $(event.target).parent().parent().remove();
+              }
+            });
+            td_delete.append(delete_btn);
+            tr.append(td_id, td_name, td_delete);
             table.append(tr);
           });
         } catch (err) {
