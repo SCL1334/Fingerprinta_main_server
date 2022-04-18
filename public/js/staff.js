@@ -73,8 +73,9 @@ $(document).ready(async () => {
             const addStudentName = $('#student_name').val();
             const addStudentEmail = $('#student_email').val();
             const addStudentPassword = $('#student_password').val();
-            const addStudentClass = $('$student_class').vla();
+            const addStudentClass = $('#student_class').val();
             const addStudentRes = await axios(studentUrl, {
+              method: 'POST',
               data: {
                 name: addStudentName,
                 email: addStudentEmail,
@@ -95,10 +96,9 @@ $(document).ready(async () => {
               const td_student_finger = $('<td></td>').text(null);
               const td_delete = $('<td></td>');
               const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-                const deleteClassRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
-                const deleteClassResult = deleteClassRes.data;
-                if (deleteClassResult) {
-                  console.log(deleteButtonEvent.target);
+                const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
+                const deleteStudentResult = deleteClassRes.data;
+                if (deleteStudentResult) {
                   $(deleteButtonEvent.target).parent().parent().remove();
                 }
               });
@@ -111,7 +111,56 @@ $(document).ready(async () => {
             console.log(err.response.data);
           }
         });
+
+        // init table
+        const table = $('<table></table>').attr('class', 'students_result');
+        const tr = $('<tr></tr>');
+        const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
+        heads.forEach((head) => {
+          const th = $('<th></th>').text(head);
+          tr.append(th);
+        });
+        table.append(tr);
+        accountManageBoard.append(table);
+        // show all exists students
+        try {
+          const studentsDetail = await axios.get(studentUrl);
+          const studentsData = studentsDetail.data.data;
+          studentsData.forEach((student) => {
+            const tr = $('<tr></tr>');
+            const td_id = $('<td></td>').text(student.id);
+            const td_student_name = $('<td></td>').text(student.name);
+            const td_student_email = $('<td></td>').text(student.email);
+            const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
+            const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id);
+            const td_delete = $('<td></td>');
+            const td_enroll = $('<td></td>');
+            const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+              const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
+              const deleteStudentResult = deleteStudentRes.data;
+              if (deleteStudentResult) {
+                $(deleteButtonEvent.target).parent().parent().remove();
+              }
+            });
+            const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+              const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
+              const enrollFingerResult = enrollFingerRes.data;
+              if (enrollFingerResult) {
+                console.log($(enrollButtonEvent.target));
+                console.log($(enrollButtonEvent.target).parent().siblings('.finger_id'));
+                $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.fpId);
+              }
+            });
+            td_enroll.append(enroll_btn);
+            td_delete.append(delete_btn);
+            tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
+            table.append(tr);
+          });
+        } catch (err) {
+          console.log(err);
+        }
       });
+
       // staff account part
     });
 
@@ -207,7 +256,6 @@ $(document).ready(async () => {
                 const deleteClassRes = await axios.delete(`${classesUrl}/${addClassResult.insert_id}`);
                 const deleteClassResult = deleteClassRes.data;
                 if (deleteClassResult) {
-                  console.log(deleteButtonEvent.target);
                   $(deleteButtonEvent.target).parent().parent().remove();
                 }
               });
@@ -221,6 +269,7 @@ $(document).ready(async () => {
           }
         });
 
+        // init table
         const table = $('<table></table>').attr('class', 'classes_result');
         const tr = $('<tr></tr>');
         const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', ''];
