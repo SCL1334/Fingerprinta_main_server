@@ -15,14 +15,14 @@ const createStudent = async (name, email, password, classId) => {
       class_id: classId,
     };
     const [result] = await promisePool.query('INSERT INTO student SET ?', student);
-    return result.insertId;
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -67,14 +67,14 @@ const createStaff = async (name, email, password) => {
       password: hashedPassword,
     };
     const [result] = await promisePool.query('INSERT INTO staff SET ?', staff);
-    return result.insertId;
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 

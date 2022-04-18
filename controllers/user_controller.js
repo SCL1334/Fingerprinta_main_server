@@ -7,13 +7,13 @@ const createStudent = async (req, res) => {
   } = req.body;
 
   const result = await User.createStudent(name, email, password, class_id);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Create failed' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Create failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Create successfully' });
 };
 
 const getStudents = async (req, res) => {
@@ -44,13 +44,13 @@ const createStaff = async (req, res) => {
   } = req.body;
 
   const result = await User.createStaff(name, email, password);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Create failed' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Create failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Create successfully' });
 };
 
 const getStaffs = async (req, res) => {
