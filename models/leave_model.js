@@ -55,10 +55,15 @@ const getAllLeaves = async (from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT * FROM student_leave
+        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        FROM student_leave AS sl
+        LEFT OUTER JOIN student AS s ON s.id = sl.student_id
+        LEFT OUTER JOIN class AS c ON c.id = s.class_id
+        LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+        LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
         ${sqlFilter}
         ${sqlSort}
-        `,
+      `,
       [from, to],
     );
     leaves.forEach((leave) => {
@@ -77,11 +82,15 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT * FROM student_leave
-        WHERE student_id = ?
+        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        FROM student_leave AS sl
+        LEFT OUTER JOIN student AS s ON s.id = sl.student_id
+        LEFT OUTER JOIN class AS c ON c.id = s.class_id
+        LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+        LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
         ${sqlFilter}
         ${sqlSort}
-        `,
+      `,
       [studentId, from, to],
     );
     leaves.forEach((leave) => {
@@ -100,11 +109,16 @@ const getClassLeaves = async (classId, from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT * FROM student_leave
+        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        FROM student_leave AS sl
+        LEFT OUTER JOIN student AS s ON s.id = sl.student_id
+        LEFT OUTER JOIN class AS c ON c.id = s.class_id
+        LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+        LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
         WHERE student_id IN (SELECT id FROM student WHERE class_id = ?)
         ${sqlFilter}
         ${sqlSort}
-        `,
+      `,
       [classId, from, to],
     );
     leaves.forEach((leave) => {
