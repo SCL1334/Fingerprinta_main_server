@@ -14,12 +14,12 @@ const getTypes = async (req, res) => {
 const createType = async (req, res) => {
   const typeName = req.body.type_name;
   const result = await Class.createType(typeName);
-  if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(200).json({ data: 'Create successfully' });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
@@ -50,12 +50,12 @@ const getGroups = async (req, res) => {
 const createGroup = async (req, res) => {
   const groupName = req.body.group_name;
   const result = await Class.createGroup(groupName);
-  if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(200).json({ data: 'Create successfully' });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
@@ -93,12 +93,12 @@ const createRoutine = async (req, res) => {
   };
 
   const result = await Class.createRoutine(routine);
-  if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(200).json({ data: 'Create successfully' });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
@@ -188,12 +188,12 @@ const createClass = async (req, res) => {
   };
 
   const result = await Class.createClass(clas);
-  if (result === 0) {
-    res.status(500).json({ error: 'Create failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Create failed due to invalid input' });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(200).json({ data: 'Create successfully' });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
