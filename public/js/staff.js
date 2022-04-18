@@ -578,6 +578,54 @@ $(document).ready(async () => {
         }
       });
     });
+
+    // approve leave application
+    $('.approve_leave_application').click(async () => {
+      try {
+        $('.content').empty();
+        const leave = $('<div></div>').attr('class', 'leave').text('請假記錄');
+        const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
+        const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+        const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
+        leave.append(searchFrom, searchTo, searchBtn);
+        $('.content').append(leave);
+        $('.search_btn').click(async () => {
+          try {
+            let table = $('.leave_result');
+            if (table) { table.empty(); }
+            const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
+            const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
+            const responseData = await axios.get(`/api/1.0/leaves${from}${to}`);
+            const { data } = responseData;
+            table = $('<table></table>').attr('class', 'leave_result');
+            const tr = $('<tr></tr>');
+            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            heads.forEach((head) => {
+              const th = $('<th></th>').text(head);
+              tr.append(th);
+            });
+            table.append(tr);
+
+            $('.leave').append(table);
+            data.data.forEach((leave) => {
+              const tr = $('<tr></tr>');
+              const td_date = $('<td></td>').text(leave.date);
+              const td_type = $('<td></td>').text(leaveTypeTable[leave.leave_type_id]);
+              const td_start = $('<td></td>').text(leave.start);
+              const td_end = $('<td></td>').text(leave.end);
+              const td_reason = $('<td></td>').text(leave.description);
+              const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
+              tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
+              table.append(tr);
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    });
   } catch (err) {
     console.log(err);
     location.href = location.href.replace('.html', '_signin.html');
