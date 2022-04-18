@@ -98,7 +98,6 @@ $(document).ready(async () => {
                 const deleteClassRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
                 const deleteClassResult = deleteClassRes.data;
                 if (deleteClassResult) {
-                  console.log(deleteButtonEvent.target);
                   $(deleteButtonEvent.target).parent().parent().remove();
                 }
               });
@@ -111,7 +110,45 @@ $(document).ready(async () => {
             console.log(err.response.data);
           }
         });
+
+        // init table
+        const table = $('<table></table>').attr('class', 'students_result');
+        const tr = $('<tr></tr>');
+        const heads = ['ID', '名稱', 'email', '班級', '指紋ID', ''];
+        heads.forEach((head) => {
+          const th = $('<th></th>').text(head);
+          tr.append(th);
+        });
+        table.append(tr);
+        accountManageBoard.append(table);
+        // show all exists students
+        try {
+          const studentsDetail = await axios.get(studentUrl);
+          const studentsData = studentsDetail.data.data;
+          studentsData.forEach((student) => {
+            const tr = $('<tr></tr>');
+            const td_id = $('<td></td>').text(student.id);
+            const td_student_name = $('<td></td>').text(student.name);
+            const td_student_email = $('<td></td>').text(student.email);
+            const td_student_class = $('<td></td>').text(student.class);
+            const td_student_finger = $('<td></td>').text(student.finger_id);
+            const td_delete = $('<td></td>');
+            const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+              const deleteClassRes = await axios.delete(`${studentUrl}/${student.id}`);
+              const deleteClassResult = deleteClassRes.data;
+              if (deleteClassResult) {
+                $(deleteButtonEvent.target).parent().parent().remove();
+              }
+            });
+            td_delete.append(delete_btn);
+            tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_delete);
+            table.append(tr);
+          });
+        } catch (err) {
+          console.log(err);
+        }
       });
+
       // staff account part
     });
 
@@ -221,6 +258,7 @@ $(document).ready(async () => {
           }
         });
 
+        // init table
         const table = $('<table></table>').attr('class', 'classes_result');
         const tr = $('<tr></tr>');
         const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', ''];
