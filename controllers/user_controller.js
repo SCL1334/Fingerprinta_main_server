@@ -3,10 +3,10 @@ const Fingerprint = require('../models/fingerprint_model');
 
 const createStudent = async (req, res) => {
   const {
-    name, account, password, class_id,
+    name, email, password, class_id,
   } = req.body;
 
-  const result = await User.createStudent(name, account, password, class_id);
+  const result = await User.createStudent(name, email, password, class_id);
   if (result === 0) {
     return res.status(500).json({ error: 'Create failed' });
   }
@@ -40,10 +40,10 @@ const deleteStudent = async (req, res) => {
 
 const createStaff = async (req, res) => {
   const {
-    name, account, password,
+    name, email, password,
   } = req.body;
 
-  const result = await User.createStaff(name, account, password);
+  const result = await User.createStaff(name, email, password);
   if (result === 0) {
     return res.status(500).json({ error: 'Create failed' });
   }
