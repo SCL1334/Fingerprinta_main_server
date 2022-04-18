@@ -196,15 +196,15 @@ const matchFingerprint = async (studentId, fingerId) => {
     const [result] = await conn.query('SELECT id FROM student WHERE id = ?', [studentId]);
     if (result.length === 0) {
       console.log('student not exist');
-      return -1;
+      return { code: 4020 };
     }
     await conn.query('UPDATE student SET finger_id = ? WHERE id = ?', [fingerId, studentId]);
     await conn.query('COMMIT');
-    return 1;
+    return { code: 1020, finger_id: fingerId };
   } catch (err) {
     await conn.query('ROLLBACK');
     console.log(err);
-    return 0;
+    return { code: 2020 };
   } finally {
     await conn.release();
   }
