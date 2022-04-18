@@ -146,7 +146,7 @@ const matchFingerprint = async (req, res) => {
   const result = await User.matchFingerprint(studentId, fingerId);
 
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { insert_id: result.finger_id, message: 'Match successfully' } });
+    res.status(200).json({ code: result.code, data: { finger_id: result.finger_id, message: 'Match successfully' } });
   } else if (result.code < 3000) {
     res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
   } else {
