@@ -52,9 +52,9 @@ $(document).ready(async () => {
               <option value=null>請選擇學生班級</option>
               ${classesOptions}
             </select>
-            <input id='student_email' name='email' type="email">
-            <input id='student_password' name='password' type="password">
-            <input id='student_name' name='name' type="text">
+            <input id='student_name' name='name' type='text' value='username'>
+            <input id='student_email' name='email' type='email' value='example@test.com'>
+            <input id='student_password' name='password' type='password' value='1234'>
             <button type="submit">送出</button>
           </form>
         </div>
@@ -65,6 +65,52 @@ $(document).ready(async () => {
           return;
         }
         accountManageBoard.append(studentAddForm);
+
+        // Add new student trigger
+        $('.student_form form').submit(async (newStudentSubmitEvent) => {
+          try {
+            newStudentSubmitEvent.preventDefault();
+            const addStudentName = $('#student_name').val();
+            const addStudentEmail = $('#student_email').val();
+            const addStudentPassword = $('#student_password').val();
+            const addStudentClass = $('$student_class').vla();
+            const addStudentRes = await axios(studentUrl, {
+              data: {
+                name: addStudentName,
+                email: addStudentEmail,
+                password: addStudentPassword,
+                class_id: addStudentClass,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const addStudentResult = addStudentRes.data.data;
+            if (addStudentResult) {
+              const tr = $('<tr></tr>');
+              const td_id = $('<td></td>').text(addStudentResult.insert_id);
+              const td_student_name = $('<td></td>').text(addStudentName);
+              const td_student_email = $('<td></td>').text(addStudentEmail);
+              const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
+              const td_student_finger = $('<td></td>').text(null);
+              const td_delete = $('<td></td>');
+              const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+                const deleteClassRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
+                const deleteClassResult = deleteClassRes.data;
+                if (deleteClassResult) {
+                  console.log(deleteButtonEvent.target);
+                  $(deleteButtonEvent.target).parent().parent().remove();
+                }
+              });
+              td_delete.append(delete_btn);
+              tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_delete);
+              table.append(tr);
+            }
+          } catch (err) {
+            console.log(err);
+            console.log(err.response.data);
+          }
+        });
       });
       // staff account part
     });
