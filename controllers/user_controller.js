@@ -138,19 +138,20 @@ const matchFingerprint = async (req, res) => {
   const studentId = req.params.id;
   const fingerId = await Fingerprint.getEnrollId();
   if (fingerId === -1) {
-    return res.status(400).json({ error: 'Match failed due to enroll failed' });
+    return res.status(400).json({ error: { message: 'Match failed due to enroll failed' } });
   }
   if (fingerId === -2) {
-    res.status(500).json({ error: 'Match failed due to sensor disconnect' });
+    res.status(500).json({ error: { message: 'Match failed due to sensor disconnect' } });
   }
   const result = await User.matchFingerprint(studentId, fingerId);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Match failed' });
+
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.finger_id, message: 'Match successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Match failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Match failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Match OK' });
 };
 
 module.exports = {
