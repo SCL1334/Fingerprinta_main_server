@@ -30,7 +30,13 @@ const getStudents = async (classId = null) => {
   // need to do paging optimization later
   try {
     const sqlFilter = (classId) ? ' WHERE class_id = ?' : '';
-    const [students] = await promisePool.query(`SELECT id, name, email, class_id, finger_id FROM student ${sqlFilter}`, [classId]);
+    const [students] = await promisePool.query(`
+    SELECT s.id, s.name, s.email, s.class_id, s.finger_id, c.batch, cg.name AS class_group_name, ct.name AS class_type_name 
+    FROM student AS s
+    LEFT OUTER JOIN class AS c ON s.class_id = c.id
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}`, [classId]);
     return students;
   } catch (err) {
     console.log(err);
