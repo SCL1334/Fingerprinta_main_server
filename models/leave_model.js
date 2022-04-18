@@ -88,6 +88,7 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        WHERE sl.student_id = ?
         ${sqlFilter}
         ${sqlSort}
       `,
@@ -115,7 +116,7 @@ const getClassLeaves = async (classId, from = null, to = null) => {
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
-        WHERE student_id IN (SELECT id FROM student WHERE class_id = ?)
+        WHERE sl.student_id IN (SELECT id FROM student WHERE class_id = ?)
         ${sqlFilter}
         ${sqlSort}
       `,
