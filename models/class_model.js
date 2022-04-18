@@ -14,16 +14,16 @@ const getTypes = async () => {
 
 const createType = async (typeName) => {
   try {
-    await promisePool.query('INSERT INTO class_type SET ?', { name: typeName });
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_type SET ?', { name: typeName });
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -61,16 +61,16 @@ const getGroups = async () => {
 
 const createGroup = async (groupName) => {
   try {
-    await promisePool.query('INSERT INTO class_group SET ?', { name: groupName });
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_group SET ?', { name: groupName });
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry, 1048 ER_BAD_NULL_ERROR
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -109,16 +109,16 @@ const getRoutines = async (classTypeId = null) => {
 
 const createRoutine = async (routine) => {
   try {
-    await promisePool.query('INSERT INTO class_routine SET ?', routine);
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_routine SET ?', routine);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -213,16 +213,16 @@ const getClasses = async (teacherId = null) => {
 
 const createClass = async (clas) => {
   try {
-    await promisePool.query('INSERT INTO class SET ?', clas);
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class SET ?', clas);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
