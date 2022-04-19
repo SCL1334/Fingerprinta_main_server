@@ -18,7 +18,7 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
     // gen fake data
     const users = [];
     for (let i = startId; i < startId + num; i += 1) {
-      const name = `test_${role[roleId]}_${i}`;
+      const name = `${role[roleId]}_${i}`;
       const email = `${name}@test.com`;
       const hashedPassword = await bcrypt.hash(password, salt);
       if (classId) {
@@ -41,7 +41,10 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
 
 // 1: 'student', 2: 'teacher'
 // gen 15 students first, same class
-// createFakeUser(1, 16, 15, 1);
+// roleId startId num classId
+// truncateTable('student');
+// createFakeUser(1, 1, 7, 1);
+// createFakeUser(1, 8, 7, 2);
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
 
@@ -72,7 +75,7 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-// createFakePunch(30);
+createFakePunch(15);
 
 const createLeaveTypes = async () => {
   try {
@@ -119,4 +122,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-createFakeLeaveApplications(15, 15);
+// createFakeLeaveApplications(15, 15);

@@ -75,8 +75,8 @@ $(document).ready(async () => {
               <option value=null>請選擇學生班級</option>
               ${classesOptions}
             </select>
-            <input id='student_name' name='name' type='text' value='username'>
-            <input id='student_email' name='email' type='email' value='example@test.com'>
+            <input id='student_name' name='name' type='text' value='葉承彥'>
+            <input id='student_email' name='email' type='email' value='sean@test.com'>
             <input id='student_password' name='password' type='password' value='1234'>
             <button type="submit">送出</button>
           </form>
@@ -494,8 +494,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance').text('出勤查詢');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').attr('value', '2022-04-18');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').attr('value', '2022-04-19');
       const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');
@@ -567,8 +567,8 @@ $(document).ready(async () => {
             const tr = $('<tr></tr>');
             const td_name = $('<td></td>').text(attendanceRearch.student_name);
             const td_date = $('<td></td>').text(attendanceRearch.punch_date);
-            const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in);
-            const td_punch_out = $('<td></td>').text(attendanceRearch.punch_out);
+            const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in || '未打卡');
+            const td_punch_out = $('<td></td>').text((!attendanceRearch.punch_out || attendanceRearch.punch_out === '00:00:00') ? '未打卡' : attendanceRearch.punch_out);
             tr.append(td_name, td_date, td_punch_in, td_punch_out);
             table.append(tr);
           });
