@@ -86,10 +86,10 @@ $(document).ready(async () => {
               <option>請選擇請假類型</option>
               ${options}
             </select>
-            <input id='leave_date' name='date' type="date">
-            <input id='leave_start' name='start' type="time">
-            <input id='leave_end' name='end' type="time">
-            <input id='leave_reason' name='description' type="text" value="請假事由">
+            <input id='leave_date' name='date' type="date" value="2022-04-20">
+            <input id='leave_start' name='start' type="time" value="13:00">
+            <input id='leave_end' name='end' type="time" value="16:00">
+            <input id='leave_reason' name='description' type="text" value="看牙醫">
             <button type="submit">送出</button>
           </form>
         </div>
