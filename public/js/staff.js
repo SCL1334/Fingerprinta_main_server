@@ -639,7 +639,7 @@ $(document).ready(async () => {
             const studentPath = (studentOption === '0' || !studentOption) ? '' : `students/${studentOption}/`;
             const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-            const url = `/api/1.0/${studentPath || classPath || ''}leaves${from}${to}`;
+            const url = `/api/1.0/${studentPath || classPath || 'students/'}leaves${from}${to}`;
             const leaveSearchRes = await axios.get(url);
             const leaveSearchResult = leaveSearchRes.data.data;
             // error handle
@@ -666,7 +666,7 @@ $(document).ready(async () => {
               const td_approve = $('<td></td>');
               const approve_btn = $('<button></button>').text('核准申請').click(async (approveButtonEvent) => {
                 // approve leave API path may be different
-                const approveLeaveRes = await axios.put(`/api/1.0/students/leaves/${leaveSearch.id}`);
+                const approveLeaveRes = await axios.put(`/api/1.0/leaves/${leaveSearch.id}`);
                 const approveLeaveResult = approveLeaveRes.data;
                 if (approveLeaveResult) {
                   $(approveButtonEvent.target).parent().siblings('.leave_status').text(leaveStatusTable[1]);
