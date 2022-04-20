@@ -7,6 +7,12 @@ const wrapAsync = (fn) => function (req, res, next) {
   fn(req, res, next).catch(next);
 };
 
+const timeStringToMinutes = (timeString) => {
+  const time = timeString.split(':');
+  const minutes = parseInt(time[0], 10) * 60 + parseInt(time[1], 10);
+  return minutes;
+};
+
 module.exports = {
-  wrapAsync,
+  wrapAsync, timeStringToMinutes,
 };

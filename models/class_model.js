@@ -211,6 +211,26 @@ const getClasses = async (teacherId = null) => {
   }
 };
 
+const getOneClass = async (classId) => {
+  try {
+    const sqlFilter = ' WHERE c.id = ?';
+    const [classes] = await promisePool.query(`
+    SELECT c.*, ct.name as class_type_name, cg.name as class_group_name FROM class as c
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}
+    `, [classId]);
+    classes.map((clas) => {
+      clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
+      clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
+    });
+    return classes[0];
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const createClass = async (clas) => {
   try {
     const [result] = await promisePool.query('INSERT INTO class SET ?', clas);
@@ -276,6 +296,7 @@ module.exports = {
   addTeacher,
   removeTeacher,
   getClasses,
+  getOneClass,
   createClass,
   editClass,
   deleteClass,

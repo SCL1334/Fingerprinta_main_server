@@ -10,7 +10,7 @@ const {
 } = require('../controllers/user_controller');
 
 const {
-  setPunch, getAllPunch, getPersonPunch,
+  setPunch, getAllPunch, getPersonPunch, getPersonAttendances,
 } = require('../controllers/attendance_controller');
 
 const { getClasses } = require('../controllers/class_controller');
@@ -22,7 +22,7 @@ router.route('/students/attendances').get(wrapAsync(getAllPunch));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
 router.route('/students/:id/leaves').post(wrapAsync(applyLeave));
-router.route('/students/:id/attendances').get(wrapAsync(getPersonPunch));
+router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
 router.route('/students/signin').post(wrapAsync(studentSignIn));

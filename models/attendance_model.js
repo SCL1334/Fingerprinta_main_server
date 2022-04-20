@@ -1,5 +1,7 @@
 const dayjs = require('dayjs');
 const { promisePool } = require('./mysqlcon');
+const User = require('./user_model');
+const Class = require('./class_model');
 
 const setPunch = async (studentId) => {
   try {
@@ -101,6 +103,58 @@ const getClassPunch = async (classId, from = null, to = null) => {
   }
 };
 
+const getPersonAttendance = async (studentId, from, to) => {
+  try {
+    // 1. find students info and get class_id
+    const studentBasic = await User.getOneStudent(studentId);
+
+    // 2. Use class_id to get class_detail
+    const classDetail = await Class.getOneClass(studentBasic.class_id);
+
+    // 3. compare from / to : class start / end and today
+    let searchTo = dayjs(classDetail.end_date).format('YYYY-MM-DD');
+    const today = dayjs();
+    if (to && dayjs(classDetail.end_date) > dayjs(to) && dayjs(to) <= today) {
+      searchTo = to;
+    } else if (!to || dayjs(to) > today) {
+      searchTo = today.format('YYYY-MM-DD');
+    }
+    let searchFrom = dayjs(classDetail.start_date).format('YYYY-MM-DD');
+    if (from && dayjs(classDetail.start_date) < dayjs(from)) { searchFrom = from; }
+
+    // 4. search exception day for this class with class_type_id and batch with current range
+    const [exceptionDays] = await promisePool.query(`
+      SELECT date, start, end FROM punch_exception 
+      WHERE class_type_id = ? AND batch = ? AND date >= ? AND date <= ?; 
+    `, [classDetail.class_type_id, classDetail.batch, searchFrom, searchTo]);
+    exceptionDays.map((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
+
+    // 5. get school day during current range
+    const [schoolDays] = await promisePool.query(`
+      SELECT date FROM calendar
+      WHERE need_punch = 1 AND date >= ? AND date <= ?;
+    `, [searchFrom, searchTo]);
+    schoolDays.map((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
+
+    // 6. get class_routine by class_type_id
+    const routines = await Class.getRoutines(classDetail.class_type_id);
+
+    // 7. generate attendance template
+    //
+
+    // 8. get student punch recording
+
+    // 9. tranfer punch recording to object (dictionary)
+
+    // 10. from template, fill in punch recording from 9
+    //     check attendance at the same time
+    return routines;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 module.exports = {
-  setPunch, getAllPunch, getPersonPunch, getClassPunch,
+  setPunch, getAllPunch, getPersonPunch, getClassPunch, getPersonAttendance,
 };

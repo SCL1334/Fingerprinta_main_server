@@ -67,6 +67,28 @@ const getPersonPunch = async (req, res) => {
   }
 };
 
+const getPersonAttendances = async (req, res) => {
+  const studentId = req.params.id;
+  let { from, to } = req.query;
+
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  } else {
+    from = null;
+    to = null;
+  }
+
+  const punches = await Attendance.getPersonAttendance(studentId, from, to);
+  if (!punches) {
+    res.status(500).json({ error: 'Read failed' });
+  } else {
+    res.status(200).json({ data: punches });
+  }
+};
+
 module.exports = {
-  setPunch, getAllPunch, getClassPunch, getPersonPunch,
+  setPunch, getAllPunch, getClassPunch, getPersonPunch, getPersonAttendances,
 };

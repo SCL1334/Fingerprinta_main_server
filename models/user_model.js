@@ -44,6 +44,20 @@ const getStudents = async (classId = null) => {
   }
 };
 
+const getOneStudent = async (studentId) => {
+  try {
+    const [profilesBasic] = await promisePool.query(`
+      SELECT name, class_id FROM student WHERE id = ?
+      `, [studentId]);
+    const profileBasic = profilesBasic[0];
+
+    return profileBasic;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const deleteStudent = async (studentId) => {
   // delete success:1  fail case: server 0 / foreign key constraint -1
   try {
@@ -227,6 +241,7 @@ const findByFinger = async (fingerId) => {
 module.exports = {
   createStudent,
   getStudents,
+  getOneStudent,
   deleteStudent,
   createStaff,
   getStaffs,
