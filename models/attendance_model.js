@@ -38,17 +38,19 @@ const getAllPunch = async (from = null, to = null) => {
   try {
     const sqlFilter = (from !== null || to !== null) ? 'WHERE punch_date >= ? AND punch_date <= ?' : '';
     // 1: one person 2: class 3: all
-    const [attendances] = await promisePool.query(`
+    const [punches] = await promisePool.query(`
       SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
       FROM student_punch AS sp 
       LEFT OUTER JOIN student as s ON sp.student_id = s.id 
       ${sqlFilter} 
       ORDER BY punch_date DESC, student_id ASC, punch_in ASC;
       `, [from, to]);
-    attendances.forEach((attendance) => {
-      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
+    punches.forEach((punch) => {
+      punch.punch_date = dayjs(punch.punch_date).format('YYYY-MM-DD');
+      if (punch.punch_in === '00:00:00') { punch.punch_in = null; }
+      if (punch.punch_out === '00:00:00') { punch.punch_out = null; }
     });
-    return attendances;
+    return punches;
   } catch (err) {
     console.log(err);
     return null;
@@ -58,7 +60,7 @@ const getAllPunch = async (from = null, to = null) => {
 const getPersonPunch = async (studentId, from = null, to = null) => {
   try {
     const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
-    const [attendances] = await promisePool.query(
+    const [punches] = await promisePool.query(
       `
       SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
       FROM student_punch AS sp 
@@ -69,10 +71,12 @@ const getPersonPunch = async (studentId, from = null, to = null) => {
       `,
       [studentId, from, to],
     );
-    attendances.forEach((attendance) => {
-      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
+    punches.forEach((punch) => {
+      punch.punch_date = dayjs(punch.punch_date).format('YYYY-MM-DD');
+      if (punch.punch_in === '00:00:00') { punch.punch_in = null; }
+      if (punch.punch_out === '00:00:00') { punch.punch_out = null; }
     });
-    return attendances;
+    return punches;
   } catch (err) {
     console.log(err);
     return null;
@@ -82,7 +86,7 @@ const getPersonPunch = async (studentId, from = null, to = null) => {
 const getClassPunch = async (classId, from = null, to = null) => {
   try {
     const sqlFilter = (from !== null || to !== null) ? 'AND punch_date >= ? AND punch_date <= ?' : '';
-    const [attendances] = await promisePool.query(
+    const [punches] = await promisePool.query(
       `
       SELECT sp.student_id, sp.punch_date, sp.punch_in, sp.punch_out, s.name AS student_name
       FROM student_punch AS sp 
@@ -93,10 +97,12 @@ const getClassPunch = async (classId, from = null, to = null) => {
       `,
       [classId, from, to],
     );
-    attendances.forEach((attendance) => {
-      attendance.punch_date = dayjs(attendance.punch_date).format('YYYY-MM-DD');
+    punches.forEach((punch) => {
+      punch.punch_date = dayjs(punch.punch_date).format('YYYY-MM-DD');
+      if (punch.punch_in === '00:00:00') { punch.punch_in = null; }
+      if (punch.punch_out === '00:00:00') { punch.punch_out = null; }
     });
-    return attendances;
+    return punches;
   } catch (err) {
     console.log(err);
     return null;
@@ -127,14 +133,14 @@ const getPersonAttendance = async (studentId, from, to) => {
       SELECT date, start, end FROM punch_exception 
       WHERE class_type_id = ? AND batch = ? AND date >= ? AND date <= ?; 
     `, [classDetail.class_type_id, classDetail.batch, searchFrom, searchTo]);
-    exceptionDays.map((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
+    exceptionDays.forEach((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
 
     // 5. get school day during current range
     const [schoolDays] = await promisePool.query(`
       SELECT date FROM calendar
       WHERE need_punch = 1 AND date >= ? AND date <= ?;
     `, [searchFrom, searchTo]);
-    schoolDays.map((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
+    schoolDays.forEach((day) => day.date = dayjs(day.date).format('YYYY-MM-DD'));
 
     // 6. get class_routine by class_type_id
     const routines = await Class.getRoutines(classDetail.class_type_id);
@@ -143,12 +149,15 @@ const getPersonAttendance = async (studentId, from, to) => {
     //
 
     // 8. get student punch recording
-
+    const studentPunchesRaw = await getPersonPunch(studentId, searchFrom, searchTo);
     // 9. tranfer punch recording to object (dictionary)
-
+    const studentPunches = studentPunchesRaw.reduce((acc, cur) => {
+      acc[cur.punch_date] = cur;
+      return acc;
+    }, {});
     // 10. from template, fill in punch recording from 9
     //     check attendance at the same time
-    return routines;
+    return schoolDays;
   } catch (err) {
     console.log(err);
     return null;
