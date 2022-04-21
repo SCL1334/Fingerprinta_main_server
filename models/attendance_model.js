@@ -172,7 +172,7 @@ const getPersonAttendance = async (studentId, from, to) => {
       }
     });
     // due to exception day, need to sort by date
-    attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(a.date) - dayjs(b.date)));
+    attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(b.date) - dayjs(a.date)));
 
     // 9. get student punch recording
     const studentPunchesRaw = await getPersonPunch(studentId, searchFrom, searchTo);
@@ -305,7 +305,7 @@ const getClassAttendance = async (classId, from, to) => {
     });
 
     // due to exception day, need to sort by date
-    attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(a.date) - dayjs(b.date)));
+    attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(b.date) - dayjs(a.date)));
 
     // 9. get student punch recording
     // {punch_date: stident_id: {student_id, punch_date, punch_in, punch_out, student_name}}
@@ -459,7 +459,7 @@ const getAllAttendances = async (from, to) => {
       });
 
       // due to exception day, need to sort by date || can sort at the end?
-      attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(a.date) - dayjs(b.date)));
+      attendanceTemplates = attendanceTemplates.sort((a, b) => (dayjs(b.date) - dayjs(a.date)));
 
       // 10. get student punch recording
       // {punch_date: stident_id: {student_id, punch_date, punch_in, punch_out, student_name}}
@@ -509,7 +509,7 @@ const getAllAttendances = async (from, to) => {
     }));
     // 展開及排序
     allAttendances = allAttendances.flat();
-    allAttendances = allAttendances.sort((a, b) => (dayjs(a.date) - dayjs(b.date)));
+    allAttendances = allAttendances.sort((b, a) => (dayjs(a.date) - dayjs(b.date)));
 
     return allAttendances;
   } catch (err) {
