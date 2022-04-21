@@ -57,13 +57,26 @@ const createFakePunch = async (days) => {
     const punchOutInit = dayjs(`${today.format('YYYY-MM-DD')} 18:00:00`);
     const [students] = await promisePool.query('SELECT id FROM student');
     const randomMin = () => Math.floor(Math.random() * 60) - 30;
+    const getRandom = (n) => Math.ceil(Math.random() * n);
     const attendance = [];
     for (let i = days - 1; i >= 0; i -= 1) {
       const punchDate = today.subtract(i, 'day');
       students.forEach((student) => {
-        const punchIn = punchInInit.add(randomMin(), 'minute');
-        const punchOut = punchOutInit.add(randomMin(), 'minute');
-        attendance.push([student.id, punchDate.format('YYYY-MM-DD'), punchIn.format('HH:mm:ss'), punchOut.format('HH:mm:ss')]);
+        const random = getRandom(50);
+        let punchIn = punchInInit.add(randomMin(), 'minute');
+        let punchOut = punchOutInit.add(randomMin(), 'minute');
+        if (random <= 5) {
+          punchIn = null;
+          punchOut = null;
+        } else if (random <= 20) {
+          punchOut = null;
+        }
+
+        attendance.push([
+          student.id, punchDate.format('YYYY-MM-DD'),
+          (punchIn) ? punchIn.format('HH:mm:ss') : null,
+          (punchOut) ? punchOut.format('HH:mm:ss') : null,
+        ]);
       });
     }
     console.log(attendance);
@@ -75,7 +88,7 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(15);
+createFakePunch(80);
 
 const createLeaveTypes = async () => {
   try {
