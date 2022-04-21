@@ -10,7 +10,7 @@ const {
 } = require('../controllers/user_controller');
 
 const {
-  setPunch, getAllPunch, getPersonPunch, getPersonAttendances,
+  setPunch, getAllPunch, getPersonPunch, getPersonAttendances, getAllAttendances,
 } = require('../controllers/attendance_controller');
 
 const { getClasses } = require('../controllers/class_controller');
@@ -18,7 +18,7 @@ const { getClasses } = require('../controllers/class_controller');
 const { applyLeave, getAllLeaves, getPersonLeaves } = require('../controllers/leave_controller');
 
 router.route('/students/profile').get(wrapAsync(getStudentProfile));
-router.route('/students/attendances').get(wrapAsync(getAllPunch));
+router.route('/students/attendances').get(wrapAsync(getAllAttendances));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
 router.route('/students/:id/leaves').post(wrapAsync(applyLeave));

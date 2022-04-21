@@ -111,6 +111,33 @@ const getClassAttendances = async (req, res) => {
   }
 };
 
+const getAllAttendances = async (req, res) => {
+  let { from, to } = req.query;
+
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  } else {
+    from = null;
+    to = null;
+  }
+
+  const attendances = await Attendance.getAllAttendances(from, to);
+  if (!attendances) {
+    res.status(500).json({ error: 'Read failed' });
+  } else {
+    res.status(200).json({ data: attendances });
+  }
+};
+
 module.exports = {
-  setPunch, getAllPunch, getClassPunch, getPersonPunch, getPersonAttendances, getClassAttendances,
+  setPunch,
+  getAllPunch,
+  getClassPunch,
+  getPersonPunch,
+  getPersonAttendances,
+  getClassAttendances,
+  getAllAttendances,
 };
