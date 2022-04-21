@@ -574,7 +574,7 @@ $(document).ready(async () => {
             `);
             const td_name = $('<td></td>').text(attendanceRearch.student_name);
             const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in || '無紀錄');
-            const td_punch_out = $('<td></td>').text((!attendanceRearch.punch_out || attendanceRearch.punch_out === '00:00:00') ? '未打卡' : attendanceRearch.punch_out);
+            const td_punch_out = $('<td></td>').text((!attendanceRearch.punch_out || attendanceRearch.punch_out === '00:00:00') ? '無紀錄' : attendanceRearch.punch_out);
             const td_punch_rule = $('<td></td>').text(`${attendanceRearch.start}-${attendanceRearch.end}`);
             const td_status = $('<td></td>').text(AttendanceStatus[attendanceRearch.status]);
             const td_note = $('<td></td>').text(attendanceRearch.note || null);
