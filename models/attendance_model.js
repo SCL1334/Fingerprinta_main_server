@@ -201,6 +201,17 @@ const getPersonAttendance = async (studentId, from, to) => {
         status = 4; // 早退
       }
       dateRule.status = status;
+
+      // add personal detail
+      dateRule.student_id = studentBasic.id;
+      dateRule.student_name = studentBasic.name;
+
+      // add class detail
+      dateRule.class_type_id = classDetail.class_type_id;
+      dateRule.class_type_name = classDetail.class_type_name;
+      dateRule.class_group_id = classDetail.class_group_id;
+      dateRule.class_group_name = classDetail.class_group_name;
+      dateRule.batch = classDetail.batch;
       return dateRule;
     });
 
@@ -253,6 +264,7 @@ const getClassAttendance = async (classId, from, to) => {
       return acc;
     }, {});
 
+    console.log(classDetail);
     // 8-1. generate attendance template(rules)
     // 8-2 according rule build a whole list including each students
     // need to record each student name => use studentList
@@ -333,6 +345,14 @@ const getClassAttendance = async (classId, from, to) => {
         status = 4; // 早退
       }
       dateRule.status = status;
+
+      // add class detail
+      dateRule.class_type_id = classDetail.class_type_id;
+      dateRule.class_type_name = classDetail.class_type_name;
+      dateRule.class_group_id = classDetail.class_group_id;
+      dateRule.class_group_name = classDetail.class_group_name;
+      dateRule.batch = classDetail.batch;
+
       return dateRule;
     });
 
@@ -367,7 +387,7 @@ const getAllAttendances = async (from, to) => {
     }, {});
 
     // _____search each class_____
-    const allAttendances = await Promise.all(classesRaw.map(async (clas) => {
+    let allAttendances = await Promise.all(classesRaw.map(async (clas) => {
       // 4. get a class's students list
       const studentList = await User.getStudents(clas.id);
 
@@ -487,6 +507,10 @@ const getAllAttendances = async (from, to) => {
       });
       return classAttendances;
     }));
+    // 展開及排序
+    allAttendances = allAttendances.flat();
+    allAttendances = allAttendances.sort((a, b) => (dayjs(a.date) - dayjs(b.date)));
+
     return allAttendances;
   } catch (err) {
     console.log(err);

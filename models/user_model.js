@@ -47,7 +47,7 @@ const getStudents = async (classId = null) => {
 const getOneStudent = async (studentId) => {
   try {
     const [profilesBasic] = await promisePool.query(`
-      SELECT name, class_id FROM student WHERE id = ?
+      SELECT id, name, class_id FROM student WHERE id = ?
       `, [studentId]);
     const profileBasic = profilesBasic[0];
 
