@@ -1,6 +1,9 @@
 $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
   const leaveStatusTable = { 0: '審核中', 1: '已審核' };
+  const AttendanceStatus = {
+    0: '正常', 1: '未打卡', 2: '下課未打卡', 3: '遲到', 4: '早退',
+  };
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/students/profile');
@@ -46,7 +49,7 @@ $(document).ready(async () => {
           const { data } = responseData;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['打卡日期', '上課打卡', '下課打卡'];
+          const heads = ['打卡日期', '上課打卡', '下課打卡', '應出席時間', '狀態', '備註'];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -56,10 +59,13 @@ $(document).ready(async () => {
           $('.attendance').append(table);
           data.data.forEach((attendance) => {
             const tr = $('<tr></tr>');
-            const td_date = $('<td></td>').text(attendance.punch_date);
-            const td_punch_in = $('<td></td>').text(attendance.punch_in);
-            const td_punch_out = $('<td></td>').text(attendance.punch_out);
-            tr.append(td_date, td_punch_in, td_punch_out);
+            const td_date = $('<td></td>').text(attendance.date);
+            const td_punch_in = $('<td></td>').text(attendance.punch_in || '無紀錄');
+            const td_punch_out = $('<td></td>').text(attendance.punch_out || '無紀錄');
+            const td_punch_rule = $('<td></td>').text(`${attendance.start}-${attendance.end}`);
+            const td_status = $('<td></td>').text(AttendanceStatus[attendance.status]);
+            const td_note = $('<td></td>').text(attendance.note || null);
+            tr.append(td_date, td_punch_in, td_punch_out, td_punch_rule, td_status, td_note);
             table.append(tr);
           });
         } catch (err) {

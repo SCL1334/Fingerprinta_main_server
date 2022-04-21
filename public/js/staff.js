@@ -1,6 +1,9 @@
 $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
   const leaveStatusTable = { 0: '待審核', 1: '已審核' };
+  const AttendanceStatus = {
+    0: '正常', 1: '未打卡', 2: '下課未打卡', 3: '遲到', 4: '早退',
+  };
   const sensorUrl = 'http://127.0.0.1:5000';
   try {
     // init page, check if valid signin
@@ -494,8 +497,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance').text('出勤查詢');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').attr('value', '2022-04-18');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').attr('value', '2022-04-19');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
       const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');
@@ -555,7 +558,7 @@ $(document).ready(async () => {
           const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['姓名', '打卡日期', '上課打卡', '下課打卡'];
+          const heads = ['打卡日期', '班級', '姓名', '上課打卡', '下課打卡', '應出席時間', '狀態', '備註'];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -565,11 +568,17 @@ $(document).ready(async () => {
           $('.attendance').append(table);
           attendanceSearchResult.forEach((attendanceRearch) => {
             const tr = $('<tr></tr>');
+            const td_date = $('<td></td>').text(attendanceRearch.date);
+            const td_class = $('<td></td>').text(`
+              ${attendanceRearch.class_type_name}-${attendanceRearch.batch}-${attendanceRearch.class_group_name}
+            `);
             const td_name = $('<td></td>').text(attendanceRearch.student_name);
-            const td_date = $('<td></td>').text(attendanceRearch.punch_date);
-            const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in || '未打卡');
+            const td_punch_in = $('<td></td>').text(attendanceRearch.punch_in || '無紀錄');
             const td_punch_out = $('<td></td>').text((!attendanceRearch.punch_out || attendanceRearch.punch_out === '00:00:00') ? '未打卡' : attendanceRearch.punch_out);
-            tr.append(td_name, td_date, td_punch_in, td_punch_out);
+            const td_punch_rule = $('<td></td>').text(`${attendanceRearch.start}-${attendanceRearch.end}`);
+            const td_status = $('<td></td>').text(AttendanceStatus[attendanceRearch.status]);
+            const td_note = $('<td></td>').text(attendanceRearch.note || null);
+            tr.append(td_date, td_class, td_name, td_punch_in, td_punch_out, td_punch_rule, td_status, td_note);
             table.append(tr);
           });
         } catch (err) {
