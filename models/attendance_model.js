@@ -4,6 +4,41 @@ const User = require('./user_model');
 const Class = require('./class_model');
 const { timeStringToMinutes } = require('../util/util');
 
+const getAttendanceStatus = (punchIn, punchOut, start, end, breakStart, breakEnd) => {
+  let status;
+  const errorDetail = [];
+  const application = [];
+
+  if (!punchIn && !punchOut) {
+    status = 1; // 未打卡
+    errorDetail.push(1);
+    application.push({ start, end });
+  } else {
+    if (timeStringToMinutes(start) + 5 < timeStringToMinutes(punchIn)) {
+      status = 1; // 遲到
+      errorDetail.push(3);
+      if (timeStringToMinutes(punchIn) >= timeStringToMinutes(breakStart)) {
+        application.push({ start, breakStart });
+      }
+    }
+    if (!punchOut) {
+      status = 1; // 下課沒打卡
+      errorDetail.push(2);
+      return { status, error: errorDetail };
+    }
+    if (timeStringToMinutes(end) > timeStringToMinutes(punchOut)) {
+      status = 1; // 早退
+      errorDetail.push(4);
+      return { status, error: errorDetail };
+    }
+    if (errorDetail.length === 0) { // 正常
+      status = 0;
+      return { status };
+    }
+  }
+  return { status, error: errorDetail };
+};
+
 const setPunch = async (studentId) => {
   try {
     const punch = dayjs();
@@ -119,13 +154,16 @@ const getPersonAttendance = async (studentId, from, to) => {
     const classDetail = await Class.getOneClass(studentBasic.class_id);
 
     // 3. compare from / to : class start / end and today
-    let searchTo = dayjs(classDetail.end_date).format('YYYY-MM-DD');
     const today = dayjs();
+    let searchTo = (today > dayjs(classDetail.end_date)) ? dayjs(classDetail.end_date).format('YYYY-MM-DD') : today.format('YYYY-MM-DD'); // default
+
     if (to && dayjs(classDetail.end_date) > dayjs(to) && dayjs(to) <= today) {
       searchTo = to;
-    } else if (!to && dayjs(classDetail.end_date) > today) {
-      searchTo = today.format('YYYY-MM-DD');
     }
+    // else if (!to && dayjs(classDetail.end_date) > today) {
+    //   searchTo = today.format('YYYY-MM-DD');
+    // }
+
     let searchFrom = dayjs(classDetail.start_date).format('YYYY-MM-DD');
     if (from && dayjs(classDetail.start_date) < dayjs(from)) { searchFrom = from; }
 
@@ -176,44 +214,55 @@ const getPersonAttendance = async (studentId, from, to) => {
 
     // 9. get student punch recording
     const studentPunchesRaw = await getPersonPunch(studentId, searchFrom, searchTo);
-    // 10. tranfer punch recording to object (dictionary)
+    // 10. tranfer punch recording to array (multi punches in one day)
     const studentPunches = studentPunchesRaw.reduce((acc, cur) => {
-      acc[cur.punch_date] = cur;
+      if (!acc[cur.punch_date]) { acc[cur.punch_date] = []; }
+      acc[cur.punch_date].push(cur);
       return acc;
-    }, {});
+    }, []);
+
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
-    const studentAttendances = attendanceTemplates.map((dateRule) => {
-      const punchDate = (studentPunches[dateRule.date]);
+    const studentAttendances = attendanceTemplates.reduce((acc, dateRule) => {
+      const oneDatePunches = (studentPunches[dateRule.date]);
+
       // studentPunches要先處理沒打卡資料為null
-      dateRule.punch_in = punchDate ? punchDate.punch_in : null;
-      dateRule.punch_out = punchDate ? punchDate.punch_out : null;
+      oneDatePunches.forEach((oneDatePunch) => {
+        // deep copy
+        const temp = JSON.parse(JSON.stringify(dateRule));
+        temp.punch_in = oneDatePunch ? oneDatePunch.punch_in : null;
+        temp.punch_out = oneDatePunch ? oneDatePunch.punch_out : null;
 
-      // 判斷出席狀態
-      let status = 0; // 正常
-      if (!dateRule.punch_in && !dateRule.punch_out) {
-        status = 1; // 未打卡
-      } else if (!dateRule.punch_out) {
-        status = 2; // 下課沒打卡
-      } else if (timeStringToMinutes(dateRule.start) + 5 < timeStringToMinutes(dateRule.punch_in)) {
-        status = 3; // 遲到
-      } else if (timeStringToMinutes(dateRule.end) > timeStringToMinutes(dateRule.punch_out)) {
-        status = 4; // 早退
-      }
-      dateRule.status = status;
+        // 判斷出席狀態
+        const breakStart = '12:00';
+        const breakEnd = '13:00';
+        // check status
+        const state = getAttendanceStatus(
+          temp.punch_in,
+          temp.punch_out,
+          temp.start,
+          temp.end,
+          breakStart,
+          breakEnd,
+        );
 
-      // add personal detail
-      dateRule.student_id = studentBasic.id;
-      dateRule.student_name = studentBasic.name;
+        temp.status = state.status;
+        temp.error = state.error;
 
-      // add class detail
-      dateRule.class_type_id = classDetail.class_type_id;
-      dateRule.class_type_name = classDetail.class_type_name;
-      dateRule.class_group_id = classDetail.class_group_id;
-      dateRule.class_group_name = classDetail.class_group_name;
-      dateRule.batch = classDetail.batch;
-      return dateRule;
-    });
+        // add personal detail
+        temp.student_id = studentBasic.id;
+        temp.student_name = studentBasic.name;
+
+        // add class detail
+        temp.class_type_id = classDetail.class_type_id;
+        temp.class_type_name = classDetail.class_type_name;
+        temp.class_group_id = classDetail.class_group_id;
+        temp.class_group_name = classDetail.class_group_name;
+        temp.batch = classDetail.batch;
+        acc.push(temp);
+      });
+      return acc;
+    }, []);
 
     return studentAttendances;
   } catch (err) {
@@ -231,12 +280,11 @@ const getClassAttendance = async (classId, from, to) => {
     const studentList = await User.getStudents(classId);
 
     // 3. compare from / to : class start / end and today
-    let searchTo = dayjs(classDetail.end_date).format('YYYY-MM-DD');
     const today = dayjs();
+    let searchTo = (today > dayjs(classDetail.end_date)) ? dayjs(classDetail.end_date).format('YYYY-MM-DD') : today.format('YYYY-MM-DD'); // default
+
     if (to && dayjs(classDetail.end_date) > dayjs(to) && dayjs(to) <= today) {
       searchTo = to;
-    } else if (!to && dayjs(classDetail.end_date) > today) {
-      searchTo = today.format('YYYY-MM-DD');
     }
     let searchFrom = dayjs(classDetail.start_date).format('YYYY-MM-DD');
     if (from && dayjs(classDetail.start_date) < dayjs(from)) { searchFrom = from; }
@@ -264,7 +312,6 @@ const getClassAttendance = async (classId, from, to) => {
       return acc;
     }, {});
 
-    console.log(classDetail);
     // 8-1. generate attendance template(rules)
     // 8-2 according rule build a whole list including each students
     // need to record each student name => use studentList
@@ -314,48 +361,91 @@ const getClassAttendance = async (classId, from, to) => {
     // 10. tranfer punch recording to object (dictionary)
     const classPunches = classPunchesRaw.reduce((acc, cur) => {
       if (!acc[cur.punch_date]) { acc[cur.punch_date] = {}; }
-      acc[cur.punch_date][cur.student_id] = cur;
+      if (!acc[cur.punch_date][cur.student_id]) { acc[cur.punch_date][cur.student_id] = []; }
+      acc[cur.punch_date][cur.student_id].push(cur);
       return acc;
     }, {});
-
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
 
-    const classAttendances = attendanceTemplates.map((dateRule) => {
+    const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
       // dateRule {student_id, student_name, date, start, end}
       // studentsPunchOneDate {student_id: {detail}}
       const studentsPunchOneDate = classPunches[dateRule.date];
-      dateRule.punch_in = null;
-      dateRule.punch_out = null;
       if (studentsPunchOneDate) {
-        const studentPunch = studentsPunchOneDate[dateRule.student_id] || null;
-        dateRule.punch_in = studentPunch ? studentPunch.punch_in : null;
-        dateRule.punch_out = studentPunch ? studentPunch.punch_out : null;
+        const studentPunches = studentsPunchOneDate[dateRule.student_id] || null;
+        if (studentPunches) {
+          studentPunches.forEach((oneDatePunch) => {
+            // deep copy
+            const temp = JSON.parse(JSON.stringify(dateRule));
+            temp.punch_in = oneDatePunch.punch_in || null;
+            temp.punch_out = oneDatePunch.punch_out || null;
+
+            // 判斷出席狀態
+            const breakStart = '12:00';
+            const breakEnd = '13:00';
+            // check status
+            const state = getAttendanceStatus(
+              temp.punch_in,
+              temp.punch_out,
+              temp.start,
+              temp.end,
+              breakStart,
+              breakEnd,
+            );
+
+            temp.status = state.status;
+            temp.error = state.error;
+
+            // add personal detail
+            temp.student_id = dateRule.student_id;
+            temp.student_name = dateRule.student_id;
+
+            // add class detail
+            temp.class_type_id = classDetail.class_type_id;
+            temp.class_type_name = classDetail.class_type_name;
+            temp.class_group_id = classDetail.class_group_id;
+            temp.class_group_name = classDetail.class_group_name;
+            temp.batch = classDetail.batch;
+            acc.push(temp);
+          });
+        } else { // if one student no data on that date
+          // deep copy
+          const temp = JSON.parse(JSON.stringify(dateRule));
+          temp.punch_in = null;
+          temp.punch_out = null;
+
+          // 判斷出席狀態
+          const breakStart = '12:00';
+          const breakEnd = '13:00';
+          // check status
+          const state = getAttendanceStatus(
+            temp.punch_in,
+            temp.punch_out,
+            temp.start,
+            temp.end,
+            breakStart,
+            breakEnd,
+          );
+
+          temp.status = state.status;
+          temp.error = state.error;
+
+          // add personal detail
+          temp.student_id = dateRule.student_id;
+          temp.student_name = dateRule.student_id;
+
+          // add class detail
+          temp.class_type_id = classDetail.class_type_id;
+          temp.class_type_name = classDetail.class_type_name;
+          temp.class_group_id = classDetail.class_group_id;
+          temp.class_group_name = classDetail.class_group_name;
+          temp.batch = classDetail.batch;
+          acc.push(temp);
+        }
       }
-
-      // 判斷出席狀態
-      let status = 0; // 正常
-      if (!dateRule.punch_in && !dateRule.punch_out) {
-        status = 1; // 未打卡
-      } else if (!dateRule.punch_out) {
-        status = 2; // 下課沒打卡
-      } else if (timeStringToMinutes(dateRule.start) + 5 < timeStringToMinutes(dateRule.punch_in)) {
-        status = 3; // 遲到
-      } else if (timeStringToMinutes(dateRule.end) > timeStringToMinutes(dateRule.punch_out)) {
-        status = 4; // 早退
-      }
-      dateRule.status = status;
-
-      // add class detail
-      dateRule.class_type_id = classDetail.class_type_id;
-      dateRule.class_type_name = classDetail.class_type_name;
-      dateRule.class_group_id = classDetail.class_group_id;
-      dateRule.class_group_name = classDetail.class_group_name;
-      dateRule.batch = classDetail.batch;
-
-      return dateRule;
-    });
-
+      return acc;
+    }, []);
     return classAttendances;
   } catch (err) {
     console.log(err);
@@ -392,12 +482,11 @@ const getAllAttendances = async (from, to) => {
       const studentList = await User.getStudents(clas.id);
 
       // 5. compare from / to : class start / end and today
-      let searchTo = dayjs(clas.end_date).format('YYYY-MM-DD');
       const today = dayjs();
+      let searchTo = (today > dayjs(clas.end_date)) ? dayjs(clas.end_date).format('YYYY-MM-DD') : today.format('YYYY-MM-DD'); // default
+
       if (to && dayjs(clas.end_date) > dayjs(to) && dayjs(to) <= today) {
         searchTo = to;
-      } else if (!to && dayjs(clas.end_date) > today) {
-        searchTo = today.format('YYYY-MM-DD');
       }
       let searchFrom = dayjs(clas.start_date).format('YYYY-MM-DD');
       if (from && dayjs(clas.start_date) < dayjs(from)) { searchFrom = from; }
