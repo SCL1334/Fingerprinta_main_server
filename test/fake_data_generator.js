@@ -88,7 +88,7 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(80);
+// createFakePunch(80);
 
 const createLeaveTypes = async () => {
   try {
@@ -122,12 +122,27 @@ const createFakeLeaveApplications = async (days, rate) => {
         }
         const start = startInit.add(randomHour(), 'hour');
         const end = endInit.subtract(randomHour(), 'hour');
+        let hours;
+        const restStart = startInit.add(3, 'hour');
+        const restEnd = startInit.add(4, 'hour');
+        if (start <= restStart && end >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+          hours = restStart - start + end - restEnd;
+        } else if (start >= restEnd || end <= restStart) { // 沒有重疊到Rest
+          hours = end - start;
+        } else if (start <= restStart && end < restEnd) { // end 在 Rest中
+          hours = restStart - start;
+        } else if (start >= restStart && end <= restEnd) { // start end 皆落在Rest範圍
+          hours = 0;
+        } else if (start >= restStart && end > restEnd) { // start 在Rest中
+          hours = end - restEnd;
+        }
+        console.log(hours);
         const type = types[random(types.length)].id;
-        applications.push([student.id, type, description, date.format('YYYY-MM-DD'), start.format('HH:mm:ss'), end.format('HH:mm:ss')]);
+        applications.push([student.id, type, description, date.format('YYYY-MM-DD'), start.format('HH:mm:ss'), end.format('HH:mm:ss'), hours / 60 / 60 / 1000]);
       });
     }
     console.log(applications);
-    await promisePool.query('INSERT INTO student_leave (student_id, leave_type_id, description, date, start, end) VALUES ?', [applications]);
+    await promisePool.query('INSERT INTO student_leave (student_id, leave_type_id, description, date, start, end, hours) VALUES ?', [applications]);
     console.log('completed');
   } catch (err) {
     console.log(err);
@@ -135,4 +150,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-// createFakeLeaveApplications(15, 15);
+createFakeLeaveApplications(15, 15);
