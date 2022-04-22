@@ -1,3 +1,4 @@
+require('dotenv').config();
 const dayjs = require('dayjs');
 const Leave = require('../models/leave_model');
 const { timeStringToMinutes } = require('../util/util');
@@ -104,13 +105,19 @@ const applyLeave = async (req, res) => {
   const {
     leave_type_id, description, date, start, end,
   } = req.body;
+  const accLeaveHours = await (await Leave.countLeavesHours(studentId)).leaves_hours;
 
   let { hours } = req.body;
 
   const { user } = req.session;
   const { email } = user;
   if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  if (user.role !== 'staff') { hours = null; }
+  if (user.role !== 'staff') {
+    if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || 0) {
+      return res.status(403).json({ error: { message: 'Leave Hours over limit' } });
+    }
+    hours = null;
+  }
 
   let leaveHours;
   const startMin = timeStringToMinutes(start);
