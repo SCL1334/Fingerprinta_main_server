@@ -89,6 +89,16 @@ const getPersonLeaves = async (req, res) => {
   }
 };
 
+const countLeavesHours = async (req, res) => {
+  const studentId = req.params.id;
+  const leavesHours = await Leave.countLeavesHours(studentId);
+  if (leavesHours !== 0 && !leavesHours) {
+    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
+  } else {
+    res.status(200).json({ code: 1000, data: leavesHours });
+  }
+};
+
 const applyLeave = async (req, res) => {
   const studentId = req.params.id;
   const {
@@ -225,6 +235,7 @@ module.exports = {
   getAllLeaves,
   getClassLeaves,
   getPersonLeaves,
+  countLeavesHours,
   applyLeave,
   approveLeave,
   updateLeave,

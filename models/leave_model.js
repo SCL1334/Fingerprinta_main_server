@@ -132,6 +132,20 @@ const getClassLeaves = async (classId, from = null, to = null) => {
   }
 };
 
+const countLeavesHours = async (studentId) => {
+  try {
+    const [hours] = await promisePool.query('SELECT hours FROM student_leave WHERE student_id = ? AND approval = 1', [studentId]);
+    const totalHours = hours.reduce((acc, cur) => {
+      acc += cur.hours;
+      return acc;
+    }, 0);
+    return { leaves_hours: totalHours };
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const applyLeave = async (leave) => {
   try {
     await promisePool.query('INSERT INTO student_leave SET ?', leave);
@@ -181,6 +195,7 @@ module.exports = {
   getAllLeaves,
   getClassLeaves,
   getPersonLeaves,
+  countLeavesHours,
   applyLeave,
   updateLeave,
   deleteLeave,
