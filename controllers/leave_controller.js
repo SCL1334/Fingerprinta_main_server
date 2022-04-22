@@ -98,6 +98,8 @@ const applyLeave = async (req, res) => {
   let { hours } = req.body;
 
   const { user } = req.session;
+  const { email } = user;
+  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
   if (user.role !== 'staff') { hours = null; }
 
   let leaveHours;
@@ -142,9 +144,61 @@ const applyLeave = async (req, res) => {
 
 const approveLeave = async (req, res) => {
   const leaveId = req.params.id;
-  const status = await Leave.approveLeave(leaveId);
+  const status = await Leave.updateLeave(leaveId, { approval: 1 });
   if (status < 2000) {
     res.status(200).json({ code: status, data: 'Approve successfully' });
+  } else if (status < 3000) {
+    res.status(500).json({ code: status, error: { message: 'Approve failed' } });
+  } else {
+    res.status(400).json({ code: status, error: { message: 'Approve failed due to invalid input' } });
+  }
+};
+
+const updateLeave = async (req, res) => {
+  const leaveId = req.params.id;
+  const {
+    leave_type_id, description, date, start, end, approval, hours,
+  } = req.body;
+  const { user } = req.session;
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
+
+  if (user.role !== 'staff') {
+    hours = null;
+    approval = null;
+  }
+
+  let leaveHours;
+  const startMin = timeStringToMinutes(start);
+  const endMin = timeStringToMinutes(end);
+  const restStart = timeStringToMinutes('12:00:00');
+  const restEnd = timeStringToMinutes('13:00:00');
+
+  const minToHours = (min) => Math.ceil(min / 60);
+
+  if (start <= restStart && end >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+    leaveHours = minToHours(restStart - startMin + endMin - restEnd);
+  } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
+    leaveHours = minToHours(endMin - startMin);
+  } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
+    leaveHours = minToHours(restStart - startMin);
+  } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
+    leaveHours = 0;
+  } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
+    leaveHours = minToHours(endMin - restEnd);
+  }
+
+  const leave = {
+    leave_type_id,
+    description,
+    date: dayjs(date).format('YYYY-MM-DD'),
+    start,
+    end,
+    approval,
+    hours: hours || leaveHours,
+  };
+  const status = await Leave.updateLeave(leaveId, leave);
+  if (status < 2000) {
+    res.status(200).json({ code: status, data: 'Update successfully' });
   } else if (status < 3000) {
     res.status(500).json({ code: status, error: { message: 'Approve failed' } });
   } else {
@@ -173,5 +227,6 @@ module.exports = {
   getPersonLeaves,
   applyLeave,
   approveLeave,
+  updateLeave,
   deleteLeave,
 };

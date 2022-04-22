@@ -146,13 +146,13 @@ const applyLeave = async (leave) => {
   }
 };
 
-const approveLeave = async (leaveId) => {
+const updateLeave = async (leaveId, leave) => {
   try {
     const [check] = await promisePool.query('SELECT id FROM student_leave WHERE id = ?', [leaveId]);
     if (check.length === 0) {
       return 3050;
     }
-    await promisePool.query('UPDATE student_leave SET approval = 1 WHERE id = ?', [leaveId]);
+    await promisePool.query('UPDATE student_leave SET ? WHERE id = ?', [leave, leaveId]);
     return 1020;
   } catch (err) {
     console.log(err);
@@ -182,6 +182,6 @@ module.exports = {
   getClassLeaves,
   getPersonLeaves,
   applyLeave,
-  approveLeave,
+  updateLeave,
   deleteLeave,
 };
