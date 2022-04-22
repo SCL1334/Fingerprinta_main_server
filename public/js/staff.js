@@ -675,7 +675,7 @@ $(document).ready(async () => {
               const td_approve = $('<td></td>');
               const approve_btn = $('<button></button>').text('核准申請').click(async (approveButtonEvent) => {
                 // approve leave API path may be different
-                const approveLeaveRes = await axios.put(`/api/1.0/leaves/${leaveSearch.id}`);
+                const approveLeaveRes = await axios.patch(`/api/1.0/leaves/${leaveSearch.id}`);
                 const approveLeaveResult = approveLeaveRes.data;
                 if (approveLeaveResult) {
                   $(approveButtonEvent.target).parent().siblings('.leave_status').text(leaveStatusTable[1]);
