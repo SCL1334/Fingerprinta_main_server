@@ -568,42 +568,63 @@ $(document).ready(async () => {
           $('.attendance').append(table);
           attendanceSearchResult.forEach((attendanceRearch) => {
             const tr = $('<tr></tr>');
-            const td_date = $('<td></td>').attr('rowspan', attendanceRearch.punch.length).text(attendanceRearch.date);
-            const td_class = $('<td></td>').attr('rowspan', attendanceRearch.punch.length).text(`
+            const td_date = $('<td></td>').text(attendanceRearch.date);
+            const td_class = $('<td></td>').text(`
               ${attendanceRearch.class_type_name}-${attendanceRearch.batch}-${attendanceRearch.class_group_name}
             `);
-            const td_name = $('<td></td>').attr('rowspan', attendanceRearch.punch.length).text(attendanceRearch.student_name);
-            const td_punch_rule = $('<td></td>').attr('rowspan', attendanceRearch.punch.length).text(`${attendanceRearch.start}-${attendanceRearch.end}`);
 
-            const att_err_detail = $('<div></div>');
-            console.log(attendanceRearch.trans_to_leave);
-            const leaveSet = attendanceRearch.trans_to_leave;
-            if (leaveSet.length > 0) {
-              for (let i = 0; i < leaveSet.length; i += 1) {
-                const detailDiv = $('<div></div>').text(`${leaveSet[i].reason} reason ${leaveSet[i].hours} ${leaveSet[i].start} ${leaveSet[i].end}`);
-                att_err_detail.append(detailDiv);
-              }
-            } else {
-              const detailDiv = $('<div></div>').text('status ok');
-              att_err_detail.append(detailDiv);
+            const td_name = $('<td></td>').text(attendanceRearch.student_name);
+            const td_punch_rule = $('<td></td>').text(`${attendanceRearch.start}-${attendanceRearch.end}`);
+
+            const td_punch_in = $('<td></td>');
+            const td_punch_out = $('<td></td>');
+            const td_status = $('<td></td>');
+            const td_leave_time = $('<td></td>');
+            const td_leave_hours = $('<td></td>');
+
+            const punch_in_detail = $('<div></div>');
+            const punch_out_detail = $('<div></div>');
+            const status_detail = $('<div></div>');
+            const leave_time_detail = $('<div></div>');
+            const leave_hours_detail = $('<div></div>');
+
+            const punches = attendanceRearch.punch;
+            if (punches) {
+              punches.forEach((punch) => {
+                console.log(punch);
+                const { punch_in, punch_out } = punch;
+                console.log(punch_out);
+                const div_punch_in = $('<div></div>').text(punch_in || '無紀錄');
+                const div_punch_out = $('<div></div>').text((punch_out || '無紀錄'));
+                punch_in_detail.append(div_punch_in);
+                punch_out_detail.append(div_punch_out);
+              });
+
+              td_punch_in.append(punch_in_detail);
+              td_punch_out.append(punch_out_detail);
             }
+
+            const leavesTransfer = attendanceRearch.trans_to_leave;
+            if (leavesTransfer.length > 0) {
+              leavesTransfer.forEach((leave) => {
+                const {
+                  reason, hours, start, end,
+                } = leave;
+                const div_status = $('<div></div>').text(reason);
+                const div_leave_time = $('<div></div>').text(`${start}-${end}`);
+                const div_leave_hours = $('<div></div>').text(hours);
+                status_detail.append(div_status);
+                leave_time_detail.append(div_leave_time);
+                leave_hours_detail.append(div_leave_hours);
+              });
+            }
+            td_status.append(status_detail);
+            td_leave_time.append(leave_time_detail);
+            td_leave_hours.append(leave_hours_detail);
 
             const td_note = $('<td></td>').text(attendanceRearch.note || null);
-
-            for (let i = 0; i < attendanceRearch.punch.length; i += 1) {
-              const { punch_in: punchIn, punch_out: punchOut } = attendanceRearch.punch[i];
-              const td_punch_in = $('<td></td>').text(punchIn || '無紀錄');
-              const td_punch_out = $('<td></td>').text((!punchOut || punchOut === '00:00:00') ? '無紀錄' : punchOut);
-
-              if (i === 0) {
-                tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, att_err_detail, td_note);
-                table.append(tr);
-              } else {
-                const childTr = $('<tr></tr>');
-                childTr.append(td_punch_in, td_punch_out, att_err_detail, td_note);
-                table.append(childTr);
-              }
-            }
+            tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, td_status, td_leave_time, td_leave_hours, td_note);
+            table.append(tr);
           });
         } catch (err) {
           console.log(err);
