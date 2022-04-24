@@ -531,7 +531,6 @@ const getClassAttendance = async (classId, from, to) => {
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
 
-    console.log(classPunches);
     const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
       const studentsPunchOneDate = classPunches[dateRule.date];
       if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
@@ -543,8 +542,7 @@ const getClassAttendance = async (classId, from, to) => {
           dateRule.end,
           studentPunches,
         );
-        console.log(result);
-        console.log(dateRule);
+
         // add class detail
         dateRule.class_type_id = classDetail.class_type_id;
         dateRule.class_type_name = classDetail.class_type_name;
@@ -699,44 +697,77 @@ const getAllAttendances = async (from, to) => {
 
       // 11. tranfer punch recording to object (dictionary)
       const classPunches = classPunchesRaw.reduce((acc, cur) => {
+        const punch = [cur.punch_in, cur.punch_out];
+        delete cur.punch_in;
+        delete cur.punch_out;
         if (!acc[cur.punch_date]) { acc[cur.punch_date] = {}; }
-        acc[cur.punch_date][cur.student_id] = cur;
+
+        if (!acc[cur.punch_date][cur.student_id]) {
+          cur.punches = [punch];
+          acc[cur.punch_date][cur.student_id] = cur;
+        } else {
+          acc[cur.punch_date][cur.student_id].punches.push(punch);
+        }
         return acc;
       }, {});
 
       // 12. from template, fill in punch recording from 9
       //     check attendance at the same time
-      const classAttendances = attendanceTemplates.map((dateRule) => {
-        // add class info
-        dateRule.class_type_id = classes[clas.id].class_type_id;
-        dateRule.class_type_name = classes[clas.id].class_type_name;
-        dateRule.class_group_id = classes[clas.id].class_group_id;
-        dateRule.class_group_name = classes[clas.id].class_group_name;
-        dateRule.batch = classes[clas.id].batch;
-        // dateRule {student_id, student_name, date, start, end}
-        // studentsPunchOneDate {student_id: {detail}}
+
+      const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
         const studentsPunchOneDate = classPunches[dateRule.date];
-        dateRule.punch_in = null;
-        dateRule.punch_out = null;
-        if (studentsPunchOneDate) {
-          const studentPunch = studentsPunchOneDate[dateRule.student_id] || null;
-          dateRule.punch_in = studentPunch ? studentPunch.punch_in : null;
-          dateRule.punch_out = studentPunch ? studentPunch.punch_out : null;
+        if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
+          const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
+          const result = checkAttendanceToLeave(
+            lunchBreakStart,
+            lunchBreakEnd,
+            dateRule.start,
+            dateRule.end,
+            studentPunches,
+          );
+
+          // add class detail
+          dateRule.class_type_id = classes[clas.id].class_type_id;
+          dateRule.class_type_name = classes[clas.id].class_type_name;
+          dateRule.class_group_id = classes[clas.id].class_group_id;
+          dateRule.class_group_name = classes[clas.id].class_group_name;
+          dateRule.batch = classes[clas.id].batch;
+
+          // add abnormal punch
+          dateRule.trans_to_leave = result.leave;
+          dateRule.punch = result.detail;
+          dateRule.attendance_need = result.attendance_need;
+          dateRule.attendance_real = result.attendance_real;
+
+          acc.push(dateRule);
+        } else { // 無打卡記錄
+          const studentPunches = [[null, null]];
+          const result = checkAttendanceToLeave(
+            lunchBreakStart,
+            lunchBreakEnd,
+            dateRule.start,
+            dateRule.end,
+            studentPunches,
+          );
+
+          // add class detail
+          dateRule.class_type_id = classes[clas.id].class_type_id;
+          dateRule.class_type_name = classes[clas.id].class_type_name;
+          dateRule.class_group_id = classes[clas.id].class_group_id;
+          dateRule.class_group_name = classes[clas.id].class_group_name;
+          dateRule.batch = classes[clas.id].batch;
+
+          // add abnormal punch
+          dateRule.trans_to_leave = result.leave;
+          dateRule.punch = result.detail;
+          dateRule.attendance_need = result.attendance_need;
+          dateRule.attendance_real = result.attendance_real;
+
+          acc.push(dateRule);
         }
-        // 判斷出席狀態
-        let status = 0; // 正常
-        if (!dateRule.punch_in && !dateRule.punch_out) {
-          status = 1; // 未打卡
-        } else if (!dateRule.punch_out) {
-          status = 2; // 下課沒打卡
-        } else if (timeStringToMinutes(dateRule.start) + 5 < timeStringToMinutes(dateRule.punch_in)) {
-          status = 3; // 遲到
-        } else if (timeStringToMinutes(dateRule.end) > timeStringToMinutes(dateRule.punch_out)) {
-          status = 4; // 早退
-        }
-        dateRule.status = status;
-        return dateRule;
-      });
+
+        return acc;
+      }, []);
       return classAttendances;
     }));
     // 展開及排序
