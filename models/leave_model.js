@@ -148,8 +148,8 @@ const countLeavesHours = async (studentId) => {
 
 const applyLeave = async (leave) => {
   try {
-    await promisePool.query('INSERT INTO student_leave SET ?', leave);
-    return 1010;
+    const [result] = await promisePool.query('INSERT INTO student_leave SET ?', leave);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;

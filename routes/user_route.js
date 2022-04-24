@@ -16,7 +16,7 @@ const {
 const { getClasses } = require('../controllers/class_controller');
 
 const {
-  applyLeave, getAllLeaves, getPersonLeaves, countLeavesHours,
+  applyLeave, getAllLeaves, getPersonLeaves, countLeavesHours, transferLackAttendance,
 } = require('../controllers/leave_controller');
 
 router.route('/students/profile').get(wrapAsync(getStudentProfile));
@@ -26,6 +26,7 @@ router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
 router.route('/students/:id/leaves').post(wrapAsync(applyLeave));
 router.route('/students/:id/leaves/hours').get(wrapAsync(countLeavesHours));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
+router.route('/students/:id/attendances/leaves').post(wrapAsync(transferLackAttendance));
 
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));

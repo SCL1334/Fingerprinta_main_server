@@ -100,12 +100,39 @@ const countLeavesHours = async (req, res) => {
   }
 };
 
+const transferLackAttendance = async (req, res) => {
+  const studentId = req.params.id;
+  const {
+    description, date, start, end, hours, note,
+  } = req.body;
+
+  const leave = {
+    student_id: studentId,
+    leave_type_id: 3,
+    description,
+    date: dayjs(date).format('YYYY-MM-DD'),
+    start,
+    end,
+    hours,
+    note,
+    approval: true,
+  };
+  const result = await Leave.applyLeave(leave);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
+  }
+};
+
 const applyLeave = async (req, res) => {
   const studentId = req.params.id;
   const {
     leave_type_id, description, date, start, end,
   } = req.body;
-  const accLeaveHours = await (await Leave.countLeavesHours(studentId)).leaves_hours;
+  const accLeaveHours = await Leave.countLeavesHours(studentId).leaves_hours;
 
   let { hours } = req.body;
 
@@ -149,13 +176,13 @@ const applyLeave = async (req, res) => {
     hours: hours || leaveHours,
   };
 
-  const status = await Leave.applyLeave(leave);
-  if (status < 2000) {
-    res.status(200).json({ code: status, data: 'Create successfully' });
-  } else if (status < 3000) {
-    res.status(500).json({ code: status, error: { message: 'Create failed' } });
+  const result = await Leave.applyLeave(leave);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(400).json({ code: status, error: { message: 'Create failed due to invalid input' } });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
@@ -247,4 +274,5 @@ module.exports = {
   approveLeave,
   updateLeave,
   deleteLeave,
+  transferLackAttendance,
 };
