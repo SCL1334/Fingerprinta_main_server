@@ -394,7 +394,7 @@ const getPersonAttendance = async (studentId, from, to) => {
         lunchBreakEnd,
         dateRule.start,
         dateRule.end,
-        oneDatePunches.punches,
+        (oneDatePunches) ? oneDatePunches.punches : [[null, null]],
       );
 
       // add personal detail
@@ -533,30 +533,57 @@ const getClassAttendance = async (classId, from, to) => {
 
     const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
       const studentsPunchOneDate = classPunches[dateRule.date];
-      if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
-        const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
-        const result = checkAttendanceToLeave(
-          lunchBreakStart,
-          lunchBreakEnd,
-          dateRule.start,
-          dateRule.end,
-          studentPunches,
-        );
+      if (studentsPunchOneDate) {
+        if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
+          const studentPunches = (studentsPunchOneDate[dateRule.student_id]) ? studentsPunchOneDate[dateRule.student_id].punches : null;
+          const result = checkAttendanceToLeave(
+            lunchBreakStart,
+            lunchBreakEnd,
+            dateRule.start,
+            dateRule.end,
+            studentPunches,
+          );
 
-        // add class detail
-        dateRule.class_type_id = classDetail.class_type_id;
-        dateRule.class_type_name = classDetail.class_type_name;
-        dateRule.class_group_id = classDetail.class_group_id;
-        dateRule.class_group_name = classDetail.class_group_name;
-        dateRule.batch = classDetail.batch;
+          // add class detail
+          dateRule.class_type_id = classDetail.class_type_id;
+          dateRule.class_type_name = classDetail.class_type_name;
+          dateRule.class_group_id = classDetail.class_group_id;
+          dateRule.class_group_name = classDetail.class_group_name;
+          dateRule.batch = classDetail.batch;
 
-        // add abnormal punch
-        dateRule.trans_to_leave = result.leave;
-        dateRule.punch = result.detail;
-        dateRule.attendance_need = result.attendance_need;
-        dateRule.attendance_real = result.attendance_real;
+          // add abnormal punch
+          dateRule.trans_to_leave = result.leave;
+          dateRule.punch = result.detail;
+          dateRule.attendance_need = result.attendance_need;
+          dateRule.attendance_real = result.attendance_real;
 
-        acc.push(dateRule);
+          acc.push(dateRule);
+        } else {
+          const studentPunches = [[null, null]];
+          const result = checkAttendanceToLeave(
+            lunchBreakStart,
+            lunchBreakEnd,
+            dateRule.start,
+            dateRule.end,
+            studentPunches,
+          );
+          console.log(result);
+          console.log(dateRule);
+          // add class detail
+          dateRule.class_type_id = classDetail.class_type_id;
+          dateRule.class_type_name = classDetail.class_type_name;
+          dateRule.class_group_id = classDetail.class_group_id;
+          dateRule.class_group_name = classDetail.class_group_name;
+          dateRule.batch = classDetail.batch;
+
+          // add abnormal punch
+          dateRule.trans_to_leave = result.leave;
+          dateRule.punch = result.detail;
+          dateRule.attendance_need = result.attendance_need;
+          dateRule.attendance_real = result.attendance_real;
+
+          acc.push(dateRule);
+        }
       } else { // 無打卡記錄
         const studentPunches = [[null, null]];
         const result = checkAttendanceToLeave(
@@ -716,30 +743,57 @@ const getAllAttendances = async (from, to) => {
 
       const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
         const studentsPunchOneDate = classPunches[dateRule.date];
-        if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
-          const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
-          const result = checkAttendanceToLeave(
-            lunchBreakStart,
-            lunchBreakEnd,
-            dateRule.start,
-            dateRule.end,
-            studentPunches,
-          );
+        if (studentsPunchOneDate) {
+          if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
+            const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
+            const result = checkAttendanceToLeave(
+              lunchBreakStart,
+              lunchBreakEnd,
+              dateRule.start,
+              dateRule.end,
+              studentPunches,
+            );
 
-          // add class detail
-          dateRule.class_type_id = classes[clas.id].class_type_id;
-          dateRule.class_type_name = classes[clas.id].class_type_name;
-          dateRule.class_group_id = classes[clas.id].class_group_id;
-          dateRule.class_group_name = classes[clas.id].class_group_name;
-          dateRule.batch = classes[clas.id].batch;
+            // add class detail
+            dateRule.class_type_id = classes[clas.id].class_type_id;
+            dateRule.class_type_name = classes[clas.id].class_type_name;
+            dateRule.class_group_id = classes[clas.id].class_group_id;
+            dateRule.class_group_name = classes[clas.id].class_group_name;
+            dateRule.batch = classes[clas.id].batch;
 
-          // add abnormal punch
-          dateRule.trans_to_leave = result.leave;
-          dateRule.punch = result.detail;
-          dateRule.attendance_need = result.attendance_need;
-          dateRule.attendance_real = result.attendance_real;
+            // add abnormal punch
+            dateRule.trans_to_leave = result.leave;
+            dateRule.punch = result.detail;
+            dateRule.attendance_need = result.attendance_need;
+            dateRule.attendance_real = result.attendance_real;
 
-          acc.push(dateRule);
+            acc.push(dateRule);
+          } else {
+            const studentPunches = [[null, null]];
+            const result = checkAttendanceToLeave(
+              lunchBreakStart,
+              lunchBreakEnd,
+              dateRule.start,
+              dateRule.end,
+              studentPunches,
+            );
+            console.log(result);
+            console.log(dateRule);
+            // add class detail
+            dateRule.class_type_id = classes[clas.id].class_type_id;
+            dateRule.class_type_name = classes[clas.id].class_type_name;
+            dateRule.class_group_id = classes[clas.id].class_group_id;
+            dateRule.class_group_name = classes[clas.id].class_group_name;
+            dateRule.batch = classes[clas.id].batch;
+
+            // add abnormal punch
+            dateRule.trans_to_leave = result.leave;
+            dateRule.punch = result.detail;
+            dateRule.attendance_need = result.attendance_need;
+            dateRule.attendance_real = result.attendance_real;
+
+            acc.push(dateRule);
+          }
         } else { // 無打卡記錄
           const studentPunches = [[null, null]];
           const result = checkAttendanceToLeave(
