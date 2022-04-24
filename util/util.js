@@ -17,6 +17,15 @@ const timeStringToMinutes = (timeString) => {
   }
 };
 
+const minutesToTimeString = (minutes) => {
+  const time = `${Math.ceil(minutes / 60)}:00:00`;
+  return time;
+};
+
+const getCeilHourTime = (timeString) => minutesToTimeString(timeStringToMinutes(timeString));
+
+const minToFloorHourTime = (timeString) => `${Math.floor(timeString / 60)}:00:00`;
+
 module.exports = {
-  wrapAsync, timeStringToMinutes,
+  wrapAsync, timeStringToMinutes, minutesToTimeString, getCeilHourTime, minToFloorHourTime,
 };

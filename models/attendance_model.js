@@ -2,7 +2,12 @@ const dayjs = require('dayjs');
 const { promisePool } = require('./mysqlcon');
 const User = require('./user_model');
 const Class = require('./class_model');
-const { timeStringToMinutes } = require('../util/util');
+const {
+  timeStringToMinutes, minutesToTimeString, getCeilHourTime, minToFloorHourTime,
+} = require('../util/util');
+
+const lunchBreakStart = '12:00'; // 午休
+const lunchBreakEnd = '13:00';
 
 const getAttendanceStatus = (punchIn, punchOut, start, end, breakStart, breakEnd) => {
   let status;
@@ -37,6 +42,153 @@ const getAttendanceStatus = (punchIn, punchOut, start, end, breakStart, breakEnd
     }
   }
   return { status, error: errorDetail };
+};
+
+const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
+  // console.log(punches);
+  const breakStartMin = timeStringToMinutes(breakStart);
+  const breakEndMin = timeStringToMinutes(breakEnd);
+  const inBreak = (time) => (time > breakStartMin && time < breakEndMin);
+
+  let cur = timeStringToMinutes(start); // 初始標記 = 上課時間 Min
+  let nextStart = timeStringToMinutes(start); // 下次打卡起始時間 Min
+  let punchIn; // 打卡上課String
+  let punchOut; // 打卡下課String
+  let punchInMin; // 換算min
+  let punchOutMin; // 換算min
+  let stustart; // 系統換算開始上課時間
+  let stustop; // 系統換算下課時間
+  let breakFlag; // 中斷點 如果下課後還有多的打卡記錄 之後就不看
+  const endMin = timeStringToMinutes(end); // 結束計算 = 下課時間
+
+  let attendanceHours; // 原本出席時數
+  const minToHours = (min) => Math.ceil(min / 60);
+  const gap = parseInt((breakEndMin - breakStartMin) / 60);
+  if ((cur >= breakStartMin && cur < breakEndMin) && (endMin > breakStartMin && endMin <= breakEndMin)) { // 開始結束都在午休
+    attendanceHours = 0;
+  } else if ((cur >= breakStartMin && cur < breakEndMin) || (endMin > breakStartMin && endMin <= breakEndMin)) { // 開始或結束在午休
+    attendanceHours = minToHours(endMin - cur) - gap;
+  } else if (cur < breakStartMin && endMin > breakEndMin) {
+    attendanceHours = minToHours(endMin - cur) - gap;
+  } else {
+    attendanceHours = minToHours(endMin - cur);
+  }
+
+  const attendanceNeed = attendanceHours;
+
+  if (punches === null || punches[0][0] === null) { // 無打卡資料
+    return {
+      leave: [{
+        reason: 'absent', hours: attendanceNeed, start, end,
+      }],
+      detail: [{ punch_in: null, punch_out: null }],
+      attendance_need: attendanceNeed,
+      attendance_real: 0,
+    };
+  }
+
+  const leave = [];
+  const detail = [];
+  // punch [[punch_in, punch_out], []...]
+  punches.forEach((punch) => { // 處理每筆打卡
+    const punchDetail = {};
+    // console.log(punch);
+    if (breakFlag === true) { // 中斷 跳過不處理
+      return;
+    }
+
+    // console.log('________打卡分隔________');
+
+    [punchIn, punchOut] = punch;
+    punchDetail.punch_in = punchIn;
+    punchDetail.punch_out = punchOut;
+    detail.push(punchDetail);
+    punchInMin = timeStringToMinutes(punch[0]);
+    punchOutMin = timeStringToMinutes(punch[1]);
+
+    // console.log('應上課', cur / 60, '實際打卡', punchIn);
+
+    if (!punchOut || punchInMin > endMin) { // 如果打卡不完整 當成沒打卡 || 下課後打卡 不處理
+      breakFlag = true;
+      return;
+    }
+
+    if (punchInMin > cur) { // 打上課卡時間 > 目前起始時間
+      let leaveHour;
+      let leaveStart;
+      let leaveStop;
+      // console.log(`遲到 ${punchInMin - nextStart}`);
+      if (inBreak(punchInMin)) { // 如果在午休打上課卡
+        leaveStop = breakStart;
+        leaveStart = Math.ceil(nextStart / 60);
+        leaveHour = Math.ceil((breakStartMin - nextStart) / 60);
+      } else if (cur <= breakStartMin && punchInMin > breakEndMin) {
+        leaveStop = punchIn;
+        leaveStart = nextStart;
+        leaveHour = Math.ceil((punchInMin - nextStart) / 60) - 1;
+      } else {
+        leaveStop = punchIn;
+        leaveStart = nextStart;
+        leaveHour = Math.ceil((punchInMin - nextStart) / 60);
+      }
+      // console.log(`應請假時數 ${leaveHour}`);
+      attendanceHours -= leaveHour;
+      leave.push({
+        reason: 'late', hours: leaveHour, start: minutesToTimeString(leaveStart), end: getCeilHourTime(leaveStop),
+      });
+    }
+
+    cur = Math.ceil(punchInMin / 60) * 60;
+
+    stustart = cur / 60;
+    // console.log(`開始上課 ${stustart}`);
+
+    // 處理完上課卡
+
+    cur = Math.floor(punchOutMin / 60) * 60; // 標記移動到打下課卡時間
+
+    // console.log(`結束上課 ${cur / 60}`);
+
+    if (cur >= timeStringToMinutes(breakStart) && cur < timeStringToMinutes(breakEnd)) { // 遇到午休
+      cur = timeStringToMinutes(breakEnd);
+    }
+    stustop = cur / 60;
+    nextStart = stustop * 60;
+
+    if (cur >= endMin || nextStart >= endMin) { // 標記超過規定下課時間
+      breakFlag = true;
+    }
+  });
+
+  // 最後結算
+  if (cur < endMin) { // 如果時間點還沒到規定下課時間
+    // console.log(`早退 ${endMin - punchOutMin}`);
+    // console.log('應下課', end, '實際下課', punchOut);
+    let leaveHour;
+    if (cur < breakEndMin) {
+      leaveHour = (endMin - cur) / 60 - 1;
+      // console.log(`應請假時數 ${leaveHour} `);
+    } else {
+      leaveHour = (endMin - cur) / 60;
+      // console.log(`應請假時數 ${leaveHour}`);
+    }
+    // console.log(cur);
+    attendanceHours -= leaveHour;
+    leave.push({
+      reason: 'early', hours: leaveHour, start: minToFloorHourTime(cur) || start, end,
+    });
+  }
+
+  if (stustart - stustop === 0) { // 處理上課時間被吃掉部分
+    Math.floor((endMin - cur) / 60) - Math.floor((punchOutMin - punchInMin) / 60);
+  }
+
+  // console.log('leave hours result');
+  // console.log(leave);
+  // console.log(detail);
+  return {
+    leave, detail, attendance_need: attendanceNeed, attendance_real: attendanceHours,
+  };
 };
 
 const setPunch = async (studentId) => {
@@ -214,56 +366,58 @@ const getPersonAttendance = async (studentId, from, to) => {
 
     // 9. get student punch recording
     const studentPunchesRaw = await getPersonPunch(studentId, searchFrom, searchTo);
+
+    // console.log(studentPunchesRaw);
     // 10. tranfer punch recording to array (multi punches in one day)
     const studentPunches = studentPunchesRaw.reduce((acc, cur) => {
-      if (!acc[cur.punch_date]) { acc[cur.punch_date] = []; }
-      acc[cur.punch_date].push(cur);
+      const punch = [cur.punch_in, cur.punch_out];
+      delete cur.punch_in;
+      delete cur.punch_out;
+      if (!acc[cur.punch_date]) {
+        cur.punches = [punch];
+        acc[cur.punch_date] = cur;
+      } else {
+        acc[cur.punch_date].punches.push(punch);
+      }
       return acc;
-    }, []);
+    }, {});
 
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
+    // 判斷出席狀態
+
     const studentAttendances = attendanceTemplates.reduce((acc, dateRule) => {
-      const oneDatePunches = (studentPunches[dateRule.date]);
+      const oneDatePunches = studentPunches[dateRule.date];
 
-      // studentPunches要先處理沒打卡資料為null
-      oneDatePunches.forEach((oneDatePunch) => {
-        // deep copy
-        const temp = JSON.parse(JSON.stringify(dateRule));
-        temp.punch_in = oneDatePunch ? oneDatePunch.punch_in : null;
-        temp.punch_out = oneDatePunch ? oneDatePunch.punch_out : null;
+      const result = checkAttendanceToLeave(
+        lunchBreakStart,
+        lunchBreakEnd,
+        dateRule.start,
+        dateRule.end,
+        oneDatePunches.punches,
+      );
 
-        // 判斷出席狀態
-        const breakStart = '12:00';
-        const breakEnd = '13:00';
-        // check status
-        const state = getAttendanceStatus(
-          temp.punch_in,
-          temp.punch_out,
-          temp.start,
-          temp.end,
-          breakStart,
-          breakEnd,
-        );
+      // add personal detail
+      dateRule.student_id = studentBasic.id;
+      dateRule.student_name = studentBasic.name;
 
-        temp.status = state.status;
-        temp.error = state.error;
+      // add class detail
+      dateRule.class_type_id = classDetail.class_type_id;
+      dateRule.class_type_name = classDetail.class_type_name;
+      dateRule.class_group_id = classDetail.class_group_id;
+      dateRule.class_group_name = classDetail.class_group_name;
+      dateRule.batch = classDetail.batch;
 
-        // add personal detail
-        temp.student_id = studentBasic.id;
-        temp.student_name = studentBasic.name;
+      // add abnormal punch
+      dateRule.trans_to_leave = result.leave;
+      dateRule.punch = result.detail;
+      dateRule.attendance_need = result.attendance_need;
+      dateRule.attendance_real = result.attendance_real;
 
-        // add class detail
-        temp.class_type_id = classDetail.class_type_id;
-        temp.class_type_name = classDetail.class_type_name;
-        temp.class_group_id = classDetail.class_group_id;
-        temp.class_group_name = classDetail.class_group_name;
-        temp.batch = classDetail.batch;
-        acc.push(temp);
-      });
+      acc.push(dateRule);
+
       return acc;
     }, []);
-
     return studentAttendances;
   } catch (err) {
     console.log(err);
@@ -360,92 +514,81 @@ const getClassAttendance = async (classId, from, to) => {
 
     // 10. tranfer punch recording to object (dictionary)
     const classPunches = classPunchesRaw.reduce((acc, cur) => {
+      const punch = [cur.punch_in, cur.punch_out];
+      delete cur.punch_in;
+      delete cur.punch_out;
       if (!acc[cur.punch_date]) { acc[cur.punch_date] = {}; }
-      if (!acc[cur.punch_date][cur.student_id]) { acc[cur.punch_date][cur.student_id] = []; }
-      acc[cur.punch_date][cur.student_id].push(cur);
+
+      if (!acc[cur.punch_date][cur.student_id]) {
+        cur.punches = [punch];
+        acc[cur.punch_date][cur.student_id] = cur;
+      } else {
+        acc[cur.punch_date][cur.student_id].punches.push(punch);
+      }
       return acc;
     }, {});
+
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
 
+    console.log(classPunches);
     const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
-      // dateRule {student_id, student_name, date, start, end}
-      // studentsPunchOneDate {student_id: {detail}}
       const studentsPunchOneDate = classPunches[dateRule.date];
-      if (studentsPunchOneDate) {
-        const studentPunches = studentsPunchOneDate[dateRule.student_id] || null;
-        if (studentPunches) {
-          studentPunches.forEach((oneDatePunch) => {
-            // deep copy
-            const temp = JSON.parse(JSON.stringify(dateRule));
-            temp.punch_in = oneDatePunch.punch_in || null;
-            temp.punch_out = oneDatePunch.punch_out || null;
+      if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
+        const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
+        const result = checkAttendanceToLeave(
+          lunchBreakStart,
+          lunchBreakEnd,
+          dateRule.start,
+          dateRule.end,
+          studentPunches,
+        );
+        console.log(result);
+        console.log(dateRule);
+        // add class detail
+        dateRule.class_type_id = classDetail.class_type_id;
+        dateRule.class_type_name = classDetail.class_type_name;
+        dateRule.class_group_id = classDetail.class_group_id;
+        dateRule.class_group_name = classDetail.class_group_name;
+        dateRule.batch = classDetail.batch;
 
-            // 判斷出席狀態
-            const breakStart = '12:00';
-            const breakEnd = '13:00';
-            // check status
-            const state = getAttendanceStatus(
-              temp.punch_in,
-              temp.punch_out,
-              temp.start,
-              temp.end,
-              breakStart,
-              breakEnd,
-            );
+        // add abnormal punch
+        dateRule.trans_to_leave = result.leave;
+        dateRule.punch = result.detail;
+        dateRule.attendance_need = result.attendance_need;
+        dateRule.attendance_real = result.attendance_real;
 
-            temp.status = state.status;
-            temp.error = state.error;
+        acc.push(dateRule);
+      } else { // 無打卡記錄
+        const studentPunches = [[null, null]];
+        const result = checkAttendanceToLeave(
+          lunchBreakStart,
+          lunchBreakEnd,
+          dateRule.start,
+          dateRule.end,
+          studentPunches,
+        );
+        console.log(result);
+        console.log(dateRule);
+        // add class detail
+        dateRule.class_type_id = classDetail.class_type_id;
+        dateRule.class_type_name = classDetail.class_type_name;
+        dateRule.class_group_id = classDetail.class_group_id;
+        dateRule.class_group_name = classDetail.class_group_name;
+        dateRule.batch = classDetail.batch;
 
-            // add personal detail
-            temp.student_id = dateRule.student_id;
-            temp.student_name = dateRule.student_id;
+        // add abnormal punch
+        dateRule.trans_to_leave = result.leave;
+        dateRule.punch = result.detail;
+        dateRule.attendance_need = result.attendance_need;
+        dateRule.attendance_real = result.attendance_real;
 
-            // add class detail
-            temp.class_type_id = classDetail.class_type_id;
-            temp.class_type_name = classDetail.class_type_name;
-            temp.class_group_id = classDetail.class_group_id;
-            temp.class_group_name = classDetail.class_group_name;
-            temp.batch = classDetail.batch;
-            acc.push(temp);
-          });
-        } else { // if one student no data on that date
-          // deep copy
-          const temp = JSON.parse(JSON.stringify(dateRule));
-          temp.punch_in = null;
-          temp.punch_out = null;
-
-          // 判斷出席狀態
-          const breakStart = '12:00';
-          const breakEnd = '13:00';
-          // check status
-          const state = getAttendanceStatus(
-            temp.punch_in,
-            temp.punch_out,
-            temp.start,
-            temp.end,
-            breakStart,
-            breakEnd,
-          );
-
-          temp.status = state.status;
-          temp.error = state.error;
-
-          // add personal detail
-          temp.student_id = dateRule.student_id;
-          temp.student_name = dateRule.student_id;
-
-          // add class detail
-          temp.class_type_id = classDetail.class_type_id;
-          temp.class_type_name = classDetail.class_type_name;
-          temp.class_group_id = classDetail.class_group_id;
-          temp.class_group_name = classDetail.class_group_name;
-          temp.batch = classDetail.batch;
-          acc.push(temp);
-        }
+        acc.push(dateRule);
       }
+
       return acc;
     }, []);
+
     return classAttendances;
   } catch (err) {
     console.log(err);
