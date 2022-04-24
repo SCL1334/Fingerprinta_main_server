@@ -558,7 +558,7 @@ $(document).ready(async () => {
           const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '上課打卡', '下課打卡', '狀態', '轉換請假時段', '轉換時假時數', '備註'];
+          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '上課打卡', '下課打卡', '狀態', '轉換請假時段', '轉換時假時數', '備註', ''];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -568,12 +568,12 @@ $(document).ready(async () => {
           $('.attendance').append(table);
           attendanceSearchResult.forEach((attendanceSearch) => {
             const tr = $('<tr></tr>');
-            const td_date = $('<td></td>').text(attendanceSearch.date);
+            const td_date = $('<td></td>').attr('class', 'attendance_date').text(attendanceSearch.date);
             const td_class = $('<td></td>').text(`
               ${attendanceSearch.class_type_name}-${attendanceSearch.batch}-${attendanceSearch.class_group_name}
             `);
 
-            const td_name = $('<td></td>').text(attendanceSearch.student_name);
+            const td_name = $('<td></td>').attr('data-student_id', attendanceSearch.student_id).text(attendanceSearch.student_name);
             const td_punch_rule = $('<td></td>').text(`${attendanceSearch.start}-${attendanceSearch.end}`);
 
             const td_punch_in = $('<td></td>');
@@ -581,6 +581,8 @@ $(document).ready(async () => {
             const td_status = $('<td></td>');
             const td_leave_time = $('<td></td>');
             const td_leave_hours = $('<td></td>');
+            const td_transfer_btn = $('<td></td>');
+            const td_note = $('<td></td>').attr('class', 'note');
 
             const punch_in_detail = $('<div></div>');
             const punch_out_detail = $('<div></div>');
@@ -611,11 +613,25 @@ $(document).ready(async () => {
                   reason, hours, start, end,
                 } = leave;
                 const div_status = $('<div></div>').text(reason);
-                const div_leave_time = $('<div></div>').text(`${start}-${end}`);
-                const div_leave_hours = $('<div></div>').text(hours);
+                const div_leave_time = $('<div></div>').attr('class', 'leave_time').text(`${start}-${end}`);
+                const div_leave_hours = $('<div></div>').append($('<input>').attr('type', 'number').attr('class', 'leave_hours').attr('value', hours));
+                const div_trabsfer_btn = $('<div></div>');
+                const div_note = $('<div></div>').append($('<input>').attr('class', 'note').attr('type', 'text').text(attendanceSearch.note || null));
                 status_detail.append(div_status);
                 leave_time_detail.append(div_leave_time);
                 leave_hours_detail.append(div_leave_hours);
+                const transfer_btn = $('<button></button>').text('轉換假單').click(async (transferButtonEvent) => {
+                  console.log($(transferButtonEvent.target).parent());
+                  // const approveLeaveRes = await axios.patch(`/api/1.0/leaves/${leaveSearch.id}`);
+                  // const approveLeaveResult = approveLeaveRes.data;
+                  // if (approveLeaveResult) {
+                  //   $(approveButtonEvent.target).parent().siblings('.leave_status').text(leaveStatusTable[1]);
+                  //   $(approveButtonEvent.target).remove();
+                  // }
+                });
+                div_trabsfer_btn.append(transfer_btn);
+                td_transfer_btn.append(div_trabsfer_btn);
+                td_note.append(div_note);
               });
             } else {
               const div_status = $('<div></div>').text('normal');
@@ -625,8 +641,7 @@ $(document).ready(async () => {
             td_leave_time.append(leave_time_detail);
             td_leave_hours.append(leave_hours_detail);
 
-            const td_note = $('<td></td>').text(attendanceSearch.note || null);
-            tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, td_status, td_leave_time, td_leave_hours, td_note);
+            tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, td_status, td_leave_time, td_leave_hours, td_note, td_transfer_btn);
             table.append(tr);
           });
         } catch (err) {
