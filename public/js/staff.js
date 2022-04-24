@@ -566,15 +566,15 @@ $(document).ready(async () => {
           table.append(tr);
 
           $('.attendance').append(table);
-          attendanceSearchResult.forEach((attendanceRearch) => {
+          attendanceSearchResult.forEach((attendanceSearch) => {
             const tr = $('<tr></tr>');
-            const td_date = $('<td></td>').text(attendanceRearch.date);
+            const td_date = $('<td></td>').text(attendanceSearch.date);
             const td_class = $('<td></td>').text(`
-              ${attendanceRearch.class_type_name}-${attendanceRearch.batch}-${attendanceRearch.class_group_name}
+              ${attendanceSearch.class_type_name}-${attendanceSearch.batch}-${attendanceSearch.class_group_name}
             `);
 
-            const td_name = $('<td></td>').text(attendanceRearch.student_name);
-            const td_punch_rule = $('<td></td>').text(`${attendanceRearch.start}-${attendanceRearch.end}`);
+            const td_name = $('<td></td>').text(attendanceSearch.student_name);
+            const td_punch_rule = $('<td></td>').text(`${attendanceSearch.start}-${attendanceSearch.end}`);
 
             const td_punch_in = $('<td></td>');
             const td_punch_out = $('<td></td>');
@@ -588,7 +588,7 @@ $(document).ready(async () => {
             const leave_time_detail = $('<div></div>');
             const leave_hours_detail = $('<div></div>');
 
-            const punches = attendanceRearch.punch;
+            const punches = attendanceSearch.punch;
             if (punches) {
               punches.forEach((punch) => {
                 console.log(punch);
@@ -604,7 +604,7 @@ $(document).ready(async () => {
               td_punch_out.append(punch_out_detail);
             }
 
-            const leavesTransfer = attendanceRearch.trans_to_leave;
+            const leavesTransfer = attendanceSearch.trans_to_leave;
             if (leavesTransfer.length > 0) {
               leavesTransfer.forEach((leave) => {
                 const {
@@ -617,12 +617,15 @@ $(document).ready(async () => {
                 leave_time_detail.append(div_leave_time);
                 leave_hours_detail.append(div_leave_hours);
               });
+            } else {
+              const div_status = $('<div></div>').text('normal');
+              status_detail.append(div_status);
             }
             td_status.append(status_detail);
             td_leave_time.append(leave_time_detail);
             td_leave_hours.append(leave_hours_detail);
 
-            const td_note = $('<td></td>').text(attendanceRearch.note || null);
+            const td_note = $('<td></td>').text(attendanceSearch.note || null);
             tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, td_status, td_leave_time, td_leave_hours, td_note);
             table.append(tr);
           });
