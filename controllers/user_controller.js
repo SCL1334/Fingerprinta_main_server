@@ -118,19 +118,17 @@ const signOut = async (req, res) => {
 
 const getStudentProfile = async (req, res) => {
   const { user } = req.session;
-  const { email } = user;
-  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const profile = await User.getStudentProfile(email);
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const profile = await User.getStudentProfile(user.email);
   res.status(200).json({ data: profile });
 };
 
 const getStaffProfile = async (req, res) => {
   const { user } = req.session;
-  const { email } = user;
-  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
   if (user.role !== 'staff') { return res.status(403).json({ error: { message: 'Forbidden' } }); }
 
-  const profile = await User.getStaffProfile(email);
+  const profile = await User.getStaffProfile(user.email);
   res.status(200).json({ data: profile });
 };
 
