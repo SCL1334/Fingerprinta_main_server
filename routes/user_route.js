@@ -25,6 +25,7 @@ router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
 router.route('/students/:id/leaves').post(wrapAsync(applyLeave));
 router.route('/students/:id/leaves/hours').get(wrapAsync(countLeavesHours));
+router.route('/students/:id/punches').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
 router.route('/students/:id/attendances/leaves').post(wrapAsync(transferLackAttendance));
 
