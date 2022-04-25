@@ -168,6 +168,6 @@ $(document).ready(async () => {
     }
   } catch (err) {
     console.log(err);
-    // location.href ='/staff_signin.html';
+    location.href = '/staff_signin.html';
   }
 });
