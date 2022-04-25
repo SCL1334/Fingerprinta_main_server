@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <title>出席詳細</title>
+</head>
+<body>
+  <div class="content">
+    <div class="attendance_info">出席資訊
+      <div>學生姓名</div>
+      <div class="student_name"></div>
+      <div>應出席日期</div>
+      <div class="date"></div>
+      <div>應出席時間</div>
+      <div class="rule"></div>
+      <div>出席概況</div>
+      <div class="status"></div>
+    </div>
+    <div class="attendance_bar"></div>
+    <div class="transfer">補假單
+      <form  method="post">
+        <label for="start">請假起算</label>
+        <input name="name" type="time">
+        <label for="end">請假結算</label>
+        <input name="end" type="time">
+        <label for="hours">時數</label>
+        <input name="hours" type="number">
+        <label for="">請假類型</label>
+        <select name="leave_type_id" id=""></select>
+        <textarea name="note" rows="6" cols="40" placeholder="備註"></textarea>
+        <input type="submit" value="產生假單">
+      </form>
+    </div>
+    <div class="punch">打卡記錄</div>
+    <div class="leave">請假紀錄</div>
+  </div>
+  <script src="./js/attendance_detail.js"></script>
+</body>

@@ -212,13 +212,15 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
   };
 
   const getStudentStart = (time) => {
-    const minutes = timeStringToMinutes(time);
+    let minutes = timeStringToMinutes(time);
+    if (minutes < timeStringToMinutes(start)) { minutes = timeStringToMinutes(start); }
     const hour = Math.ceil(minutes / 30);
     return hour;
   };
 
   const getStudentEnd = (time) => {
-    const minutes = timeStringToMinutes(time);
+    let minutes = timeStringToMinutes(time);
+    if (minutes > timeStringToMinutes(end)) { minutes = timeStringToMinutes(end); }
     const hour = Math.floor(minutes / 30);
     return hour;
   };
