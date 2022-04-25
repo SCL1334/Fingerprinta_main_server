@@ -2,6 +2,7 @@ const dayjs = require('dayjs');
 const { promisePool } = require('./mysqlcon');
 const User = require('./user_model');
 const Class = require('./class_model');
+const Leave = require('./leave_model');
 const {
   timeStringToMinutes, minutesToTimeString, getCeilHourTime, minToFloorHourTime,
 } = require('../util/util');
@@ -79,7 +80,7 @@ const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
   if (punches === null || punches[0][0] === null) { // 無打卡資料
     return {
       leave: [{
-        reason: 'absent', hours: attendanceNeed, start, end,
+        description: 'absent', hours: attendanceNeed, start, end,
       }],
       detail: [{ punch_in: null, punch_out: null }],
       attendance_need: attendanceNeed,
@@ -134,7 +135,11 @@ const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
       // console.log(`應請假時數 ${leaveHour}`);
       attendanceHours -= leaveHour;
       leave.push({
-        reason: 'late', hours: leaveHour, start: minutesToTimeString(leaveStart), end: getCeilHourTime(leaveStop),
+        leave_type_id: 3,
+        description: 'late',
+        hours: leaveHour,
+        start: minutesToTimeString(leaveStart),
+        end: getCeilHourTime(leaveStop),
       });
     }
 
@@ -175,7 +180,11 @@ const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
     // console.log(cur);
     attendanceHours -= leaveHour;
     leave.push({
-      reason: 'early', hours: leaveHour, start: minToFloorHourTime(cur) || start, end,
+      leave_type_id: 3,
+      description: 'early',
+      hours: leaveHour,
+      start: minToFloorHourTime(cur) || start,
+      end,
     });
   }
 
@@ -183,9 +192,6 @@ const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
     Math.floor((endMin - cur) / 60) - Math.floor((punchOutMin - punchInMin) / 60);
   }
 
-  // console.log('leave hours result');
-  // console.log(leave);
-  // console.log(detail);
   return {
     leave, detail, attendance_need: attendanceNeed, attendance_real: attendanceHours,
   };
@@ -382,6 +388,16 @@ const getPersonAttendance = async (studentId, from, to) => {
       return acc;
     }, {});
 
+    //  get valid leave
+    const studentLeavesRaw = await Leave.checkStudentValidLeaves(studentId, from, to);
+    const studentLeaves = studentLeavesRaw.reduce((acc, cur) => {
+      if (!acc[cur.date]) {
+        acc[cur.date] = [];
+      }
+      acc[cur.date].push(cur);
+      return acc;
+    }, {});
+
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
     // 判斷出席狀態
@@ -398,7 +414,7 @@ const getPersonAttendance = async (studentId, from, to) => {
       );
 
       // add personal detail
-      dateRule.student_id = studentBasic.id;
+      { dateRule.student_id = studentBasic.id; }
       dateRule.student_name = studentBasic.name;
 
       // add class detail
@@ -414,10 +430,29 @@ const getPersonAttendance = async (studentId, from, to) => {
       dateRule.attendance_need = result.attendance_need;
       dateRule.attendance_real = result.attendance_real;
 
+      // 確認同天有沒有已經核准假單
+      dateRule.progress = 0;
+      if (result.length === 0) { dateRule.progress = 1; }
+
+      // if has valid leave on that day
+      if (studentLeaves[dateRule.date]) {
+        studentLeaves[dateRule.date].forEach((leave) => {
+          delete leave.batch;
+          delete leave.class_group_name;
+          delete leave.class_type_name;
+          delete leave.student_name;
+          delete leave.student_id;
+        });
+        delete dateRule.trans_to_leave;
+        dateRule.progress = 1;
+        dateRule.trans_to_leave = studentLeaves[dateRule.date];
+      }
+
       acc.push(dateRule);
 
       return acc;
     }, []);
+
     return studentAttendances;
   } catch (err) {
     console.log(err);
