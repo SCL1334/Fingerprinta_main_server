@@ -3,17 +3,17 @@ const Fingerprint = require('../models/fingerprint_model');
 
 const createStudent = async (req, res) => {
   const {
-    name, account, password, class_id,
+    name, email, password, class_id,
   } = req.body;
 
-  const result = await User.createStudent(name, account, password, class_id);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Create failed' });
+  const result = await User.createStudent(name, email, password, class_id);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Create failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Create successfully' });
 };
 
 const getStudents = async (req, res) => {
@@ -40,17 +40,17 @@ const deleteStudent = async (req, res) => {
 
 const createStaff = async (req, res) => {
   const {
-    name, account, password,
+    name, email, password,
   } = req.body;
 
-  const result = await User.createStaff(name, account, password);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Create failed' });
+  const result = await User.createStaff(name, email, password);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Create failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Create successfully' });
 };
 
 const getStaffs = async (req, res) => {
@@ -93,7 +93,7 @@ const studentSignIn = async (req, res) => {
   if (result === -1) {
     return res.status(400).json({ error: 'Signin failed due to invalid input' });
   }
-  req.session.email = email;
+  req.session.user = { role: 'student', email };
   return res.status(200).json({ data: 'Signin successfully' });
 };
 
@@ -106,7 +106,7 @@ const staffSignIn = async (req, res) => {
   if (result === -1) {
     return res.status(400).json({ error: 'Signin failed due to invalid input' });
   }
-  req.session.email = email;
+  req.session.user = { role: 'staff', email };
   return res.status(200).json({ data: 'Signin successfully' });
 };
 
@@ -117,9 +117,18 @@ const signOut = async (req, res) => {
 };
 
 const getStudentProfile = async (req, res) => {
-  const { email } = req.session;
-  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const profile = await User.getStudentProfile(email);
+  const { user } = req.session;
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const profile = await User.getStudentProfile(user.email);
+  res.status(200).json({ data: profile });
+};
+
+const getStaffProfile = async (req, res) => {
+  const { user } = req.session;
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  if (user.role !== 'staff') { return res.status(403).json({ error: { message: 'Forbidden' } }); }
+
+  const profile = await User.getStaffProfile(user.email);
   res.status(200).json({ data: profile });
 };
 
@@ -127,19 +136,20 @@ const matchFingerprint = async (req, res) => {
   const studentId = req.params.id;
   const fingerId = await Fingerprint.getEnrollId();
   if (fingerId === -1) {
-    return res.status(400).json({ error: 'Match failed due to enroll failed' });
+    return res.status(400).json({ error: { message: 'Match failed due to enroll failed' } });
   }
   if (fingerId === -2) {
-    res.status(500).json({ error: 'Match failed due to sensor disconnect' });
+    res.status(500).json({ error: { message: 'Match failed due to sensor disconnect' } });
   }
   const result = await User.matchFingerprint(studentId, fingerId);
-  if (result === 0) {
-    return res.status(500).json({ error: 'Match failed' });
+
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { finger_id: result.finger_id, message: 'Match successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Match failed due to invalid input' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: 'Match failed due to invalid input' });
-  }
-  return res.status(200).json({ data: 'Match OK' });
 };
 
 module.exports = {
@@ -154,5 +164,6 @@ module.exports = {
   staffSignIn,
   signOut,
   getStudentProfile,
+  getStaffProfile,
   matchFingerprint,
 };

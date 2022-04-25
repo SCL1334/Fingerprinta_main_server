@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <title> 校務人員頁面</title>
+</head>
+<body>
+  <div class="page">
+    <h1>校務人員頁面</h1>
+    <div class="top">
+      <div class="userName"></div>
+      <div class="signout">登出</div>
+    </div>
+    <div class="navbar">
+      <div>School管理____________________________
+        <div class="account_manage">帳號管理</div>
+        <div class="class_manage">班級管理</div>
+      </div>
+      <div>出勤管理_______________________________
+        <div class="get_attendances">學生出勤查詢</div>
+        <div class="approve_leave_application">請假申請審核</div>
+        <div class="punch_time_setting">打卡時間設定</div>
+        <div class="leave_setting">休假設定</div>
+        <div class="analyze_attendance">分析報告</div>
+        <div class="sensor_operator">指紋機指令
+          <button id="sensor_identify">啟動打卡模式</button>
+          <button id="sensor_stop">啟動待機模式</button>
+        </div>
+      </div>
+    </div>
+    <div>______________________________________</div>
+    <div class="content"></div>
+  <script src="./js/staff.js"></script>
+</body>
+</html>

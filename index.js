@@ -28,6 +28,7 @@ app.use(`/api/${API_VERSION}`, [
   require('./routes/user_route'),
   require('./routes/class_route'),
   require('./routes/calendar_route'),
+  require('./routes/leave_route'),
 ]);
 
 // server test

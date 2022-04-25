@@ -64,12 +64,64 @@ const deleteYearHolidays = async (year) => {
     }
     await promisePool.query('DELETE FROM calendar WHERE YEAR(date(date)) = ?', [year]);
     return 1030;
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    console.log(err);
     return 2030;
   }
 };
 
+const getPunchException = async (year, month) => {
+  try {
+    const [punchExceptions] = await promisePool.query(
+      'SELECT * FROM punch_exception WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
+      [year, month],
+    );
+    punchExceptions.forEach((date) => {
+      date.date = dayjs(date.date).format('YYYY-MM-DD');
+    });
+    return punchExceptions;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const createPunchException = async (punchException) => {
+  try {
+    const [result] = await promisePool.query('INSERT INTO punch_exception SET ?', punchException);
+    return { code: 1010, insert_id: result.insertId };
+  } catch (err) {
+    console.log(err);
+    const { errno } = err;
+    // 1062 Duplicate entry
+    if (errno === 1062 || errno === 1048) {
+      return { code: 3010 };
+    }
+    return { code: 2010 };
+  }
+};
+
+const deletePunchException = async (punchExceptionId) => {
+  // delete success:1  fail case: server 0 / target not exist -1 /foreign key constraint -2
+  try {
+    const [result] = await promisePool.query('SELECT id FROM punch_exception WHERE id = ?', [punchExceptionId]);
+    if (result.length === 0) {
+      console.log('target not exist');
+      return -1;
+    }
+    await promisePool.query('DELETE FROM punch_exception WHERE id = ?', [punchExceptionId]);
+    return 1;
+  } catch (error) {
+    console.log(error);
+    const { errno } = error;
+    if (errno === 1451) {
+      // conflict err
+      return -2;
+    }
+    return 0;
+  }
+};
+
 module.exports = {
-  getMonthHolidays, initYearHolidays, editHoliday, deleteYearHolidays,
+  getMonthHolidays, initYearHolidays, editHoliday, deleteYearHolidays, getPunchException, createPunchException, deletePunchException,
 };

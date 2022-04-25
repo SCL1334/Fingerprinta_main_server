@@ -11,7 +11,9 @@ const {
 
 const { getStudents, getClassTeachers } = require('../controllers/user_controller');
 
-const { getClassPunch } = require('../controllers/attendance_controller');
+const { getClassPunch, getClassAttendances } = require('../controllers/attendance_controller');
+
+const { getClassLeaves } = require('../controllers/leave_controller');
 
 router.route('/classes/types').get(wrapAsync(getTypes));
 router.route('/classes/types').post(wrapAsync(createType));
@@ -25,7 +27,8 @@ router.route('/classes/routines').post(wrapAsync(createRoutine));
 router.route('/classes/routines/:id').put(wrapAsync(editRoutine));
 router.route('/classes/routines/:id').delete(wrapAsync(deleteRoutine));
 
-router.route('/classes/:id/attendances').get(wrapAsync(getClassPunch));
+router.route('/classes/:id/leaves').get(wrapAsync(getClassLeaves));
+router.route('/classes/:id/attendances').get(wrapAsync(getClassAttendances));
 router.route('/classes/:id/students').get(wrapAsync(getStudents));
 router.route('/classes/:id/teachers').get(wrapAsync(getClassTeachers));
 router.route('/classes/:classId/teachers/:teacherId').post(wrapAsync(addTeacher));

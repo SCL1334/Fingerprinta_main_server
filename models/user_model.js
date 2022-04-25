@@ -15,14 +15,14 @@ const createStudent = async (name, email, password, classId) => {
       class_id: classId,
     };
     const [result] = await promisePool.query('INSERT INTO student SET ?', student);
-    return result.insertId;
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -30,8 +30,28 @@ const getStudents = async (classId = null) => {
   // need to do paging optimization later
   try {
     const sqlFilter = (classId) ? ' WHERE class_id = ?' : '';
-    const [students] = await promisePool.query(`SELECT id, name, email, class_id, finger_id FROM student ${sqlFilter}`, [classId]);
+    const [students] = await promisePool.query(`
+    SELECT s.id, s.name, s.email, s.class_id, s.finger_id, c.batch, cg.name AS class_group_name, ct.name AS class_type_name 
+    FROM student AS s
+    LEFT OUTER JOIN class AS c ON s.class_id = c.id
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}`, [classId]);
     return students;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const getOneStudent = async (studentId) => {
+  try {
+    const [profilesBasic] = await promisePool.query(`
+      SELECT id, name, class_id FROM student WHERE id = ?
+      `, [studentId]);
+    const profileBasic = profilesBasic[0];
+
+    return profileBasic;
   } catch (err) {
     console.log(err);
     return null;
@@ -67,14 +87,14 @@ const createStaff = async (name, email, password) => {
       password: hashedPassword,
     };
     const [result] = await promisePool.query('INSERT INTO staff SET ?', staff);
-    return result.insertId;
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -170,6 +190,19 @@ const getStudentProfile = async (email) => {
   }
 };
 
+const getStaffProfile = async (email) => {
+  try {
+    const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE email = ?;', [email]);
+    const profile = profiles[0];
+    const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);
+    profile.classes = classes;
+    return profile;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const matchFingerprint = async (studentId, fingerId) => {
   const conn = await promisePool.getConnection();
   try {
@@ -177,15 +210,15 @@ const matchFingerprint = async (studentId, fingerId) => {
     const [result] = await conn.query('SELECT id FROM student WHERE id = ?', [studentId]);
     if (result.length === 0) {
       console.log('student not exist');
-      return -1;
+      return { code: 4020 };
     }
     await conn.query('UPDATE student SET finger_id = ? WHERE id = ?', [fingerId, studentId]);
     await conn.query('COMMIT');
-    return 1;
+    return { code: 1020, finger_id: fingerId };
   } catch (err) {
     await conn.query('ROLLBACK');
     console.log(err);
-    return 0;
+    return { code: 2020 };
   } finally {
     await conn.release();
   }
@@ -208,6 +241,7 @@ const findByFinger = async (fingerId) => {
 module.exports = {
   createStudent,
   getStudents,
+  getOneStudent,
   deleteStudent,
   createStaff,
   getStaffs,
@@ -216,6 +250,7 @@ module.exports = {
   studentSignIn,
   staffSignIn,
   getStudentProfile,
+  getStaffProfile,
   matchFingerprint,
   findByFinger,
 };

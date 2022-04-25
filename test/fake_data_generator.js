@@ -5,6 +5,11 @@ const dayjs = require('dayjs');
 const salt = parseInt(process.env.BCRYPT_SALT, 10);
 const { promisePool } = require('../models/mysqlcon');
 
+const truncateTable = async (tableName) => {
+  await promisePool.query(`TRUNCATE ${tableName};`);
+  console.log('truncated');
+};
+
 // name, email, password, class_id, finger_id
 const createFakeUser = async (roleId, startId, num, classId = null) => {
   try {
@@ -13,7 +18,7 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
     // gen fake data
     const users = [];
     for (let i = startId; i < startId + num; i += 1) {
-      const name = `test_${role[roleId]}_${i}`;
+      const name = `${role[roleId]}_${i}`;
       const email = `${name}@test.com`;
       const hashedPassword = await bcrypt.hash(password, salt);
       if (classId) {
@@ -36,31 +41,42 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
 
 // 1: 'student', 2: 'teacher'
 // gen 15 students first, same class
-// createFakeUser(1, 16, 15, 1);
+// roleId startId num classId
+// truncateTable('student');
+// createFakeUser(1, 1, 7, 1);
+// createFakeUser(1, 8, 7, 2);
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
-
-const truncatePunch = async () => {
-  await promisePool.query('TRUNCATE student_punch;');
-  console.log('completed');
-};
 
 // student_id, punch_in, punch_out
 const createFakePunch = async (days) => {
   try {
-    await truncatePunch();
+    await truncateTable('student_punch');
     const today = dayjs();
     const punchInInit = dayjs(`${today.format('YYYY-MM-DD')} 09:00:00`);
     const punchOutInit = dayjs(`${today.format('YYYY-MM-DD')} 18:00:00`);
     const [students] = await promisePool.query('SELECT id FROM student');
     const randomMin = () => Math.floor(Math.random() * 60) - 30;
+    const getRandom = (n) => Math.ceil(Math.random() * n);
     const attendance = [];
     for (let i = days - 1; i >= 0; i -= 1) {
       const punchDate = today.subtract(i, 'day');
       students.forEach((student) => {
-        const punchIn = punchInInit.add(randomMin(), 'minute');
-        const punchOut = punchOutInit.add(randomMin(), 'minute');
-        attendance.push([student.id, punchDate.format('YYYY-MM-DD'), punchIn.format('HH:mm:ss'), punchOut.format('HH:mm:ss')]);
+        const random = getRandom(50);
+        let punchIn = punchInInit.add(randomMin(), 'minute');
+        let punchOut = punchOutInit.add(randomMin(), 'minute');
+        if (random <= 5) {
+          punchIn = null;
+          punchOut = null;
+        } else if (random <= 20) {
+          punchOut = null;
+        }
+
+        attendance.push([
+          student.id, punchDate.format('YYYY-MM-DD'),
+          (punchIn) ? punchIn.format('HH:mm:ss') : null,
+          (punchOut) ? punchOut.format('HH:mm:ss') : null,
+        ]);
       });
     }
     console.log(attendance);
@@ -72,4 +88,66 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(30);
+// createFakePunch(80);
+
+const createLeaveTypes = async () => {
+  try {
+    await truncateTable('leave_type');
+    const leaveTypes = [['personal'], ['sick']];
+    await promisePool.query('INSERT INTO leave_type (name) VALUES ?', [leaveTypes]);
+    console.log('completed');
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const createFakeLeaveApplications = async (days, rate) => {
+  try {
+    await truncateTable('student_leave');
+    const today = dayjs();
+    const startInit = dayjs(`${today.format('YYYY-MM-DD')} 09:00:00`);
+    const endInit = dayjs(`${today.format('YYYY-MM-DD')} 18:00:00`);
+    const [students] = await promisePool.query('SELECT id FROM student');
+    const [types] = await promisePool.query('SELECT id FROM leave_type');
+    const random = (num) => Math.floor(Math.random() * num);
+    const randomHour = () => Math.floor(Math.random() * 5);
+    const description = 'test';
+    const applications = [];
+
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const date = today.subtract(i, 'day');
+      students.forEach((student) => {
+        if (random(rate) !== 0) {
+          return;
+        }
+        const start = startInit.add(randomHour(), 'hour');
+        const end = endInit.subtract(randomHour(), 'hour');
+        let hours;
+        const restStart = startInit.add(3, 'hour');
+        const restEnd = startInit.add(4, 'hour');
+        if (start <= restStart && end >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+          hours = restStart - start + end - restEnd;
+        } else if (start >= restEnd || end <= restStart) { // 沒有重疊到Rest
+          hours = end - start;
+        } else if (start <= restStart && end < restEnd) { // end 在 Rest中
+          hours = restStart - start;
+        } else if (start >= restStart && end <= restEnd) { // start end 皆落在Rest範圍
+          hours = 0;
+        } else if (start >= restStart && end > restEnd) { // start 在Rest中
+          hours = end - restEnd;
+        }
+        console.log(hours);
+        const type = types[random(types.length)].id;
+        applications.push([student.id, type, description, date.format('YYYY-MM-DD'), start.format('HH:mm:ss'), end.format('HH:mm:ss'), hours / 60 / 60 / 1000]);
+      });
+    }
+    console.log(applications);
+    await promisePool.query('INSERT INTO student_leave (student_id, leave_type_id, description, date, start, end, hours) VALUES ?', [applications]);
+    console.log('completed');
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// createLeaveTypes();
+createFakeLeaveApplications(15, 15);

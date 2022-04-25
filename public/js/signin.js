@@ -1,30 +1,28 @@
-const signInForm = document.querySelector('.signin_form');
-
-signInForm.addEventListener('submit', handleFromSubmit);
-async function handleFromSubmit(event) {
-  try {
-    const account = document.getElementById('account').value;
-    const password = document.getElementById('password').value;
-    event.preventDefault();
-    const form = event.target;
-    const url = form.action;
-    const responseData = await axios(url, {
-      method: 'POST',
-      data: {
-        account,
-        password,
-      },
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
-    const { data } = await responseData;
-    if (data) {
-      // redirect to profile page
-      location.href = '/profile.html';
+$(document).ready(() => {
+  $('.signin_form').submit(async (event) => {
+    try {
+      event.preventDefault();
+      const email = $('#email').val();
+      const password = $('#password').val();
+      const responseData = await axios($('.signin_form').attr('action'), {
+        method: $('.signin_form').attr('method'),
+        data: {
+          email,
+          password,
+        },
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+      const { data } = await responseData;
+      if (data) {
+        // redirect to profile page
+        console.log(location.href);
+        location.href = location.href.replace('_signin.html', '.html');
+      }
+    } catch (err) {
+      console.log(err);
+      console.log(err.response.data);
     }
-  } catch (err) {
-    console.log(err);
-    console.log(err.response.data);
-  }
-}
+  });
+});

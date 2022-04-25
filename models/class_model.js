@@ -14,16 +14,16 @@ const getTypes = async () => {
 
 const createType = async (typeName) => {
   try {
-    await promisePool.query('INSERT INTO class_type SET ?', { name: typeName });
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_type SET ?', { name: typeName });
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -61,16 +61,16 @@ const getGroups = async () => {
 
 const createGroup = async (groupName) => {
   try {
-    await promisePool.query('INSERT INTO class_group SET ?', { name: groupName });
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_group SET ?', { name: groupName });
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry, 1048 ER_BAD_NULL_ERROR
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -109,16 +109,16 @@ const getRoutines = async (classTypeId = null) => {
 
 const createRoutine = async (routine) => {
   try {
-    await promisePool.query('INSERT INTO class_routine SET ?', routine);
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class_routine SET ?', routine);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -193,9 +193,14 @@ const removeTeacher = async (classId, teacherId) => {
 // Class Manage
 const getClasses = async (teacherId = null) => {
   try {
-    const sqlFilter = (teacherId) ? ' WHERE id IN (SELECT class_id FROM class_teacher WHERE teacher_id = ?)' : '';
-    const [classes] = await promisePool.query(`SELECT * FROM class${sqlFilter}`, [teacherId]);
-    classes.forEach((clas) => {
+    const sqlFilter = (teacherId) ? ' WHERE c.id IN (SELECT class_id FROM class_teacher WHERE teacher_id = ?)' : '';
+    const [classes] = await promisePool.query(`
+    SELECT c.*, ct.name as class_type_name, cg.name as class_group_name FROM class as c
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}
+    `, [teacherId]);
+    classes.map((clas) => {
       clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
       clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
     });
@@ -206,18 +211,38 @@ const getClasses = async (teacherId = null) => {
   }
 };
 
+const getOneClass = async (classId) => {
+  try {
+    const sqlFilter = ' WHERE c.id = ?';
+    const [classes] = await promisePool.query(`
+    SELECT c.*, ct.name as class_type_name, cg.name as class_group_name FROM class as c
+    LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
+    LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+    ${sqlFilter}
+    `, [classId]);
+    classes.map((clas) => {
+      clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
+      clas.end_date = dayjs(clas.end_date).format('YYYY-MM-DD');
+    });
+    return classes[0];
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const createClass = async (clas) => {
   try {
-    await promisePool.query('INSERT INTO class SET ?', clas);
-    return 1;
+    const [result] = await promisePool.query('INSERT INTO class SET ?', clas);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return -1;
+      return { code: 3010 };
     }
-    return 0;
+    return { code: 2010 };
   }
 };
 
@@ -271,6 +296,7 @@ module.exports = {
   addTeacher,
   removeTeacher,
   getClasses,
+  getOneClass,
   createClass,
   editClass,
   deleteClass,
