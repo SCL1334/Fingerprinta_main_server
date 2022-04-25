@@ -137,8 +137,7 @@ const applyLeave = async (req, res) => {
   let { hours } = req.body;
 
   const { user } = req.session;
-  const { email } = user;
-  if (!email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
   if (user.role !== 'staff') {
     if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || 0) {
       return res.status(403).json({ error: { message: 'Leave Hours over limit' } });
@@ -154,7 +153,7 @@ const applyLeave = async (req, res) => {
 
   const minToHours = (min) => Math.ceil(min / 60);
 
-  if (start <= restStart && end >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
     leaveHours = minToHours(restStart - startMin + endMin - restEnd);
   } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
     leaveHours = minToHours(endMin - startMin);

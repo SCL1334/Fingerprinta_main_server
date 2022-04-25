@@ -153,6 +153,7 @@ const getClassLeaves = async (classId, from = null, to = null) => {
       `,
       [classId, from, to],
     );
+
     leaves.forEach((leave) => {
       leave.date = dayjs(leave.date).format('YYYY-MM-DD');
     });

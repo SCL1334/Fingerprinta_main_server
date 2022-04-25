@@ -197,6 +197,77 @@ const checkAttendanceToLeave = (breakStart, breakEnd, start, end, punches) => {
   };
 };
 
+const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], leaves = []) => {
+  const getHalfHourFromStr = (time) => {
+    const [hour] = time.split(':');
+    return parseInt(hour, 10);
+  };
+
+  const toTime = (halfHour) => {
+    const hour = Math.trunc(halfHour / 2);
+    const hourStr = (hour < 10) ? `0${hour}` : hour;
+    const minute = Math.trunc(((halfHour / 2) % 1) * 60);
+    const minStr = (minute < 10) ? `0${minute}` : minute;
+    return `${hourStr}:${minStr}`;
+  };
+
+  const getStudentStart = (time) => {
+    const minutes = timeStringToMinutes(time);
+    const hour = Math.ceil(minutes / 30);
+    return hour;
+  };
+
+  const getStudentEnd = (time) => {
+    const minutes = timeStringToMinutes(time);
+    const hour = Math.floor(minutes / 30);
+    return hour;
+  };
+
+  // count with half hour
+  const startHour = getHalfHourFromStr(start) * 2;
+  const endHour = getHalfHourFromStr(end) * 2;
+  const breakStartHour = getHalfHourFromStr(breakStart) * 2;
+  const breakEndHour = getHalfHourFromStr(breakEnd) * 2;
+
+  // init attendance
+  const attendance = {};
+  let pauseFlag = false;
+  for (let i = startHour; i < endHour; i += 1) {
+    if (i === breakStartHour) { pauseFlag = true; }
+    if (i === breakEndHour) { pauseFlag = false; }
+    if (pauseFlag === false) { attendance[toTime(i)] = 1; }
+  }
+
+  punches.forEach((punch) => {
+    const [punchIn, punchOut] = punch;
+    if (!punchOut) { return; }
+    const punchInHour = getStudentStart(punchIn);
+    const punchOutHour = getStudentEnd(punchOut);
+    let breakTime = false;
+    for (let i = punchInHour; i < punchOutHour; i += 1) {
+      if (i > endHour) { break; }
+      if (i === breakStartHour) { breakTime = true; }
+      if (i === breakEndHour) { breakTime = false; }
+      if (breakTime === false) { attendance[toTime(i)] = 0; }
+    }
+  });
+
+  leaves.forEach((leave) => {
+    const [leaveStart, leaveEnd] = leave;
+    if (!leaveStart) { return; }
+    const leaveStartHour = getStudentStart(leaveStart);
+    const leaveEndHour = getStudentEnd(leaveEnd);
+    let breakTime = false;
+    for (let i = leaveStartHour; i < leaveEndHour; i += 1) {
+      if (i > endHour) { break; }
+      if (i === breakStartHour) { breakTime = true; }
+      if (i === breakEndHour) { breakTime = false; }
+      if (breakTime === false) { attendance[toTime(i)] = 2; }
+    }
+  });
+  return attendance;
+};
+
 const setPunch = async (studentId) => {
   try {
     const punch = dayjs();
@@ -602,8 +673,7 @@ const getClassAttendance = async (classId, from, to) => {
             dateRule.end,
             studentPunches,
           );
-          console.log(result);
-          console.log(dateRule);
+
           // add class detail
           dateRule.class_type_id = classDetail.class_type_id;
           dateRule.class_type_name = classDetail.class_type_name;
@@ -628,8 +698,6 @@ const getClassAttendance = async (classId, from, to) => {
           dateRule.end,
           studentPunches,
         );
-        console.log(result);
-        console.log(dateRule);
         // add class detail
         dateRule.class_type_id = classDetail.class_type_id;
         dateRule.class_type_name = classDetail.class_type_name;
@@ -773,87 +841,55 @@ const getAllAttendances = async (from, to) => {
         return acc;
       }, {});
 
+      // 12 get student leaves
+
+      const classLeavesRaw = await Leave.getClassLeaves(clas.id, searchFrom, searchTo);
+
+      // 13 transfer leave to object
+      const classLeaves = classLeavesRaw.reduce((acc, cur) => {
+        const leave = [cur.start, cur.end];
+        delete cur.start;
+        delete cur.end;
+        if (!acc[cur.date]) { acc[cur.date] = {}; }
+        if (!acc[cur.date][cur.student_id]) {
+          cur.leaves = [leave];
+          acc[cur.date][cur.student_id] = cur;
+        } else {
+          acc[cur.date][cur.student_id].leaves.push(leave);
+        }
+        return acc;
+      }, {});
+
       // 12. from template, fill in punch recording from 9
       //     check attendance at the same time
 
       const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
         const studentsPunchOneDate = classPunches[dateRule.date];
-        if (studentsPunchOneDate) {
-          if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
-            const studentPunches = studentsPunchOneDate[dateRule.student_id].punches || null;
-            const result = checkAttendanceToLeave(
-              lunchBreakStart,
-              lunchBreakEnd,
-              dateRule.start,
-              dateRule.end,
-              studentPunches,
-            );
+        const studentsLeavesOneDate = classLeaves[dateRule.date];
+        const studentLeaves = (studentsLeavesOneDate && studentsLeavesOneDate[dateRule.student_id])
+          ? studentsLeavesOneDate[dateRule.student_id].leaves : [];
+        const studentPunches = (studentsPunchOneDate && studentsPunchOneDate[dateRule.student_id])
+          ? studentsPunchOneDate[dateRule.student_id].punches : [];
 
-            // add class detail
-            dateRule.class_type_id = classes[clas.id].class_type_id;
-            dateRule.class_type_name = classes[clas.id].class_type_name;
-            dateRule.class_group_id = classes[clas.id].class_group_id;
-            dateRule.class_group_name = classes[clas.id].class_group_name;
-            dateRule.batch = classes[clas.id].batch;
+        const attendance = checkAttendanceStatus(
+          lunchBreakStart,
+          lunchBreakEnd,
+          dateRule.start,
+          dateRule.end,
+          studentPunches,
+          studentLeaves,
+        );
 
-            // add abnormal punch
-            dateRule.trans_to_leave = result.leave;
-            dateRule.punch = result.detail;
-            dateRule.attendance_need = result.attendance_need;
-            dateRule.attendance_real = result.attendance_real;
+        // add class detail
+        dateRule.class_type_id = classes[clas.id].class_type_id;
+        dateRule.class_type_name = classes[clas.id].class_type_name;
+        dateRule.class_group_id = classes[clas.id].class_group_id;
+        dateRule.class_group_name = classes[clas.id].class_group_name;
+        dateRule.batch = classes[clas.id].batch;
 
-            acc.push(dateRule);
-          } else {
-            const studentPunches = [[null, null]];
-            const result = checkAttendanceToLeave(
-              lunchBreakStart,
-              lunchBreakEnd,
-              dateRule.start,
-              dateRule.end,
-              studentPunches,
-            );
-            console.log(result);
-            console.log(dateRule);
-            // add class detail
-            dateRule.class_type_id = classes[clas.id].class_type_id;
-            dateRule.class_type_name = classes[clas.id].class_type_name;
-            dateRule.class_group_id = classes[clas.id].class_group_id;
-            dateRule.class_group_name = classes[clas.id].class_group_name;
-            dateRule.batch = classes[clas.id].batch;
+        dateRule.attendance = attendance;
 
-            // add abnormal punch
-            dateRule.trans_to_leave = result.leave;
-            dateRule.punch = result.detail;
-            dateRule.attendance_need = result.attendance_need;
-            dateRule.attendance_real = result.attendance_real;
-
-            acc.push(dateRule);
-          }
-        } else { // 無打卡記錄
-          const studentPunches = [[null, null]];
-          const result = checkAttendanceToLeave(
-            lunchBreakStart,
-            lunchBreakEnd,
-            dateRule.start,
-            dateRule.end,
-            studentPunches,
-          );
-
-          // add class detail
-          dateRule.class_type_id = classes[clas.id].class_type_id;
-          dateRule.class_type_name = classes[clas.id].class_type_name;
-          dateRule.class_group_id = classes[clas.id].class_group_id;
-          dateRule.class_group_name = classes[clas.id].class_group_name;
-          dateRule.batch = classes[clas.id].batch;
-
-          // add abnormal punch
-          dateRule.trans_to_leave = result.leave;
-          dateRule.punch = result.detail;
-          dateRule.attendance_need = result.attendance_need;
-          dateRule.attendance_real = result.attendance_real;
-
-          acc.push(dateRule);
-        }
+        acc.push(dateRule);
 
         return acc;
       }, []);
