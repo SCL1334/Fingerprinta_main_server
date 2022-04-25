@@ -2,7 +2,7 @@ $(document).ready(async () => {
   const leaveTypeTable = { 1: '事假', 2: '病假' };
   const leaveStatusTable = { 0: '待審核', 1: '已審核' };
   const AttendanceStatus = {
-    0: '正常', 1: '未打卡', 2: '下課未打卡', 3: '遲到', 4: '早退',
+    normal: '正常', absent: '未打卡', late: '遲到', early: '早退',
   };
   const sensorUrl = 'http://127.0.0.1:5000';
   try {
@@ -558,7 +558,7 @@ $(document).ready(async () => {
           const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '上課打卡', '下課打卡', '狀態', '轉換請假時段', '轉換時假時數', '備註', ''];
+          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '上課打卡', '下課打卡', '狀態', '轉換請假時段', '轉換請假時數', '備註', '處理情形', ''];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -572,7 +572,7 @@ $(document).ready(async () => {
             const td_class = $('<td></td>').text(`
               ${attendanceSearch.class_type_name}-${attendanceSearch.batch}-${attendanceSearch.class_group_name}
             `);
-
+            const td_progress = $('<td></td>').attr('class', 'attendance_progress').text(`${attendanceSearch.progress}`);
             const td_name = $('<td></td>').attr('class', 'leave_student').attr('data-student_id', attendanceSearch.student_id).text(attendanceSearch.student_name);
             const td_punch_rule = $('<td></td>').text(`${attendanceSearch.start}-${attendanceSearch.end}`);
 
@@ -593,9 +593,7 @@ $(document).ready(async () => {
             const punches = attendanceSearch.punch;
             if (punches) {
               punches.forEach((punch) => {
-                console.log(punch);
                 const { punch_in, punch_out } = punch;
-                console.log(punch_out);
                 const div_punch_in = $('<div></div>').text(punch_in || '無紀錄');
                 const div_punch_out = $('<div></div>').text((punch_out || '無紀錄'));
                 punch_in_detail.append(div_punch_in);
@@ -607,12 +605,13 @@ $(document).ready(async () => {
             }
 
             const leavesTransfer = attendanceSearch.trans_to_leave;
+
             if (leavesTransfer.length > 0) {
               leavesTransfer.forEach((leave, index) => {
                 const {
-                  reason, hours, start, end,
+                  description, hours, start, end,
                 } = leave;
-                const div_status = $('<div></div>').attr('class', `pair_${index}`).text(reason);
+                const div_status = $('<div></div>').attr('class', `pair_${index}`).text(AttendanceStatus[description]);
                 const div_leave_time = $('<div></div>').attr('class', `pair_${index}`).text(`${start}-${end}`);
                 const div_leave_hours = $('<div></div>').attr('class', `pair_${index}`).append($('<input>').attr('type', 'number')
                   .attr('value', hours));
@@ -623,52 +622,57 @@ $(document).ready(async () => {
                 leave_time_detail.append(div_leave_time);
                 leave_hours_detail.append(div_leave_hours);
                 const transfer_btn = $('<button></button>').text('轉換假單').click(async (transferButtonEvent) => {
-                  const date = $(transferButtonEvent.target).parent().parent().siblings('.attendance_date')
-                    .text();
-                  const studentId = $(transferButtonEvent.target).parent().parent().siblings('.leave_student')
-                    .data('student_id');
-                  const time = $(transferButtonEvent.target).parent().parent().siblings('.leave_time')
-                    .children()
-                    .children(`.pair_${index}`)
-                    .text();
-                  const status = $(transferButtonEvent.target).parent().parent().siblings('.leave_description')
-                    .children()
-                    .children(`.pair_${index}`)
-                    .text();
-                  const hours = $(transferButtonEvent.target).parent().parent().siblings('.leave_hours')
-                    .children()
-                    .children(`.pair_${index}`)
-                    .children()
-                    .val();
-
-                  const note = $(transferButtonEvent.target).parent().parent().siblings('.note')
-                    .children(`.pair_${index}`)
-                    .children()
-                    .val();
-
-                  const [leaveStart, leaveEnd] = time.split('-');
-
-                  const transferLeaveRes = await axios(`/api/1.0/students/${studentId}/attendances/leaves`, {
-                    method: 'POST',
-                    data: {
-                      description: status,
-                      date,
-                      start: leaveStart,
-                      end: leaveEnd,
-                      hours,
-                      note,
-                    },
-                    headers: {
-                      'content-type': 'application/json',
-                    },
-                  });
-                  const transferLeaveResult = transferLeaveRes.data;
-                  if (transferLeaveResult) {
-                    $(transferButtonEvent.target).parent().parent().siblings('.note')
+                  try {
+                    const date = $(transferButtonEvent.target).parent().parent().siblings('.attendance_date')
+                      .text();
+                    const studentId = $(transferButtonEvent.target).parent().parent().siblings('.leave_student')
+                      .data('student_id');
+                    const time = $(transferButtonEvent.target).parent().parent().siblings('.leave_time')
+                      .children()
+                      .children(`.pair_${index}`)
+                      .text();
+                    const status = $(transferButtonEvent.target).parent().parent().siblings('.leave_description')
+                      .children()
+                      .children(`.pair_${index}`)
+                      .text();
+                    const hours = $(transferButtonEvent.target).parent().parent().siblings('.leave_hours')
+                      .children()
                       .children(`.pair_${index}`)
                       .children()
-                      .val(note);
-                    $(transferButtonEvent.target).remove();
+                      .val();
+
+                    const note = $(transferButtonEvent.target).parent().parent().siblings('.note')
+                      .children(`.pair_${index}`)
+                      .children()
+                      .val();
+
+                    const [leaveStart, leaveEnd] = time.split('-');
+
+                    const transferLeaveRes = await axios(`/api/1.0/students/${studentId}/attendances/leaves`, {
+                      method: 'POST',
+                      data: {
+                        description: status,
+                        date,
+                        start: leaveStart,
+                        end: leaveEnd,
+                        hours,
+                        note,
+                      },
+                      headers: {
+                        'content-type': 'application/json',
+                      },
+                    });
+                    const transferLeaveResult = transferLeaveRes.data;
+                    if (transferLeaveResult) {
+                      $(transferButtonEvent.target).parent().parent().siblings('.note')
+                        .children(`.pair_${index}`)
+                        .children()
+                        .val(note);
+                      $(transferButtonEvent.target).text('轉換完成').attr('disabled', true);
+                    }
+                  } catch (err) {
+                    console.log(err);
+                    console.log(err.response.data);
                   }
                 });
                 div_trabsfer_btn.append(transfer_btn);
@@ -676,14 +680,27 @@ $(document).ready(async () => {
                 td_note.append(div_note);
               });
             } else {
-              const div_status = $('<div></div>').text('normal');
+              const div_status = $('<div></div>').text(AttendanceStatus.normal);
               status_detail.append(div_status);
             }
             td_status.append(status_detail);
             td_leave_time.append(leave_time_detail);
             td_leave_hours.append(leave_hours_detail);
 
-            tr.append(td_date, td_class, td_name, td_punch_rule, td_punch_in, td_punch_out, td_status, td_leave_time, td_leave_hours, td_note, td_transfer_btn);
+            tr.append(
+              td_date,
+              td_class,
+              td_name,
+              td_punch_rule,
+              td_punch_in,
+              td_punch_out,
+              td_status,
+              td_leave_time,
+              td_leave_hours,
+              td_note,
+              td_progress,
+              td_transfer_btn,
+            );
             table.append(tr);
           });
         } catch (err) {
