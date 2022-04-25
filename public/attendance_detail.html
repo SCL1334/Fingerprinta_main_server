@@ -17,26 +17,31 @@
       <div class="date"></div>
       <div>應出席時間</div>
       <div class="rule"></div>
+    </div>
+    <br>
+    <div class="attendance_bar">
       <div>出席概況</div>
       <div class="status"></div>
     </div>
-    <div class="attendance_bar"></div>
+    <br>
     <div class="transfer">補假單
       <form  method="post">
         <label for="start">請假起算</label>
-        <input name="name" type="time">
+        <input id="start" name="start" type="time" value="10:00">
         <label for="end">請假結算</label>
-        <input name="end" type="time">
+        <input id="end" name="end" type="time" value="12:00">
         <label for="hours">時數</label>
-        <input name="hours" type="number">
+        <input id="hours" name="hours" type="number">
         <label for="">請假類型</label>
-        <select name="leave_type_id" id=""></select>
-        <textarea name="note" rows="6" cols="40" placeholder="備註"></textarea>
-        <input type="submit" value="產生假單">
+        <select class="leave_type" name="leave_type_id" id="leave_type"></select>
+        <textarea id="note" name="note" rows="6" cols="40" placeholder="管理員備註"></textarea>
+        <input class="create_leave" type="submit" value="產生假單">
       </form>
     </div>
-    <div class="punch">打卡記錄</div>
-    <div class="leave">請假紀錄</div>
+    <br>
+    <div class="punch">當日打卡記錄</div>
+    <br>
+    <div class="leave">當日請假紀錄</div>
   </div>
   <script src="./js/attendance_detail.js"></script>
 </body>
