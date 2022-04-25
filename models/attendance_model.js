@@ -459,13 +459,20 @@ const getPersonAttendance = async (studentId, from, to) => {
       return acc;
     }, {});
 
-    //  get valid leave
-    const studentLeavesRaw = await Leave.checkStudentValidLeaves(studentId, from, to);
+    //  get student leaves
+    const studentLeavesRaw = await Leave.getPersonLeaves(studentId, from, to);
+
+    // 10. tranfer leave recording to object (dictionary)
     const studentLeaves = studentLeavesRaw.reduce((acc, cur) => {
+      const leave = [cur.start, cur.end];
+      delete cur.start;
+      delete cur.end;
       if (!acc[cur.date]) {
-        acc[cur.date] = [];
+        cur.leaves = [leave];
+        acc[cur.date] = cur;
+      } else {
+        acc[cur.date].leaves.push(leave);
       }
-      acc[cur.date].push(cur);
       return acc;
     }, {});
 
@@ -475,17 +482,19 @@ const getPersonAttendance = async (studentId, from, to) => {
 
     const studentAttendances = attendanceTemplates.reduce((acc, dateRule) => {
       const oneDatePunches = studentPunches[dateRule.date];
+      const oneDateLeaves = studentLeaves[dateRule.date];
 
-      const result = checkAttendanceToLeave(
+      const attendance = checkAttendanceStatus(
         lunchBreakStart,
         lunchBreakEnd,
         dateRule.start,
         dateRule.end,
-        (oneDatePunches) ? oneDatePunches.punches : [[null, null]],
+        (oneDatePunches) ? oneDatePunches.punches : [],
+        (oneDateLeaves) ? oneDateLeaves.leaves : [],
       );
 
       // add personal detail
-      { dateRule.student_id = studentBasic.id; }
+      dateRule.student_id = studentBasic.id;
       dateRule.student_name = studentBasic.name;
 
       // add class detail
@@ -495,29 +504,8 @@ const getPersonAttendance = async (studentId, from, to) => {
       dateRule.class_group_name = classDetail.class_group_name;
       dateRule.batch = classDetail.batch;
 
-      // add abnormal punch
-      dateRule.trans_to_leave = result.leave;
-      dateRule.punch = result.detail;
-      dateRule.attendance_need = result.attendance_need;
-      dateRule.attendance_real = result.attendance_real;
-
-      // 確認同天有沒有已經核准假單
-      dateRule.progress = 0;
-      if (result.length === 0) { dateRule.progress = 1; }
-
-      // if has valid leave on that day
-      if (studentLeaves[dateRule.date]) {
-        studentLeaves[dateRule.date].forEach((leave) => {
-          delete leave.batch;
-          delete leave.class_group_name;
-          delete leave.class_type_name;
-          delete leave.student_name;
-          delete leave.student_id;
-        });
-        delete dateRule.trans_to_leave;
-        dateRule.progress = 1;
-        dateRule.trans_to_leave = studentLeaves[dateRule.date];
-      }
+      // add attendance data
+      dateRule.attendance = attendance;
 
       acc.push(dateRule);
 
@@ -634,86 +622,55 @@ const getClassAttendance = async (classId, from, to) => {
       return acc;
     }, {});
 
+    // 11 get student leaves
+
+    const classLeavesRaw = await Leave.getClassLeaves(classId, searchFrom, searchTo);
+
+    // 12 transfer leave to object
+    const classLeaves = classLeavesRaw.reduce((acc, cur) => {
+      const leave = [cur.start, cur.end];
+      delete cur.start;
+      delete cur.end;
+      if (!acc[cur.date]) { acc[cur.date] = {}; }
+      if (!acc[cur.date][cur.student_id]) {
+        cur.leaves = [leave];
+        acc[cur.date][cur.student_id] = cur;
+      } else {
+        acc[cur.date][cur.student_id].leaves.push(leave);
+      }
+      return acc;
+    }, {});
+
     // 11. from template, fill in punch recording from 9
     //     check attendance at the same time
 
     const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
       const studentsPunchOneDate = classPunches[dateRule.date];
-      if (studentsPunchOneDate) {
-        if (studentsPunchOneDate[dateRule.student_id]) { // 有打卡記錄
-          const studentPunches = (studentsPunchOneDate[dateRule.student_id]) ? studentsPunchOneDate[dateRule.student_id].punches : null;
-          const result = checkAttendanceToLeave(
-            lunchBreakStart,
-            lunchBreakEnd,
-            dateRule.start,
-            dateRule.end,
-            studentPunches,
-          );
+      const studentsLeavesOneDate = classLeaves[dateRule.date];
+      const studentLeaves = (studentsLeavesOneDate && studentsLeavesOneDate[dateRule.student_id])
+        ? studentsLeavesOneDate[dateRule.student_id].leaves : [];
+      const studentPunches = (studentsPunchOneDate && studentsPunchOneDate[dateRule.student_id])
+        ? studentsPunchOneDate[dateRule.student_id].punches : [];
 
-          // add class detail
-          dateRule.class_type_id = classDetail.class_type_id;
-          dateRule.class_type_name = classDetail.class_type_name;
-          dateRule.class_group_id = classDetail.class_group_id;
-          dateRule.class_group_name = classDetail.class_group_name;
-          dateRule.batch = classDetail.batch;
+      const attendance = checkAttendanceStatus(
+        lunchBreakStart,
+        lunchBreakEnd,
+        dateRule.start,
+        dateRule.end,
+        studentPunches,
+        studentLeaves,
+      );
 
-          // add abnormal punch
-          dateRule.trans_to_leave = result.leave;
-          dateRule.punch = result.detail;
-          dateRule.attendance_need = result.attendance_need;
-          dateRule.attendance_real = result.attendance_real;
+      // add class detail
+      dateRule.class_type_id = classDetail.class_type_id;
+      dateRule.class_type_name = classDetail.class_type_name;
+      dateRule.class_group_id = classDetail.class_group_id;
+      dateRule.class_group_name = classDetail.class_group_name;
+      dateRule.batch = classDetail.batch;
 
-          acc.push(dateRule);
-        } else {
-          const studentPunches = [[null, null]];
-          const result = checkAttendanceToLeave(
-            lunchBreakStart,
-            lunchBreakEnd,
-            dateRule.start,
-            dateRule.end,
-            studentPunches,
-          );
+      dateRule.attendance = attendance;
 
-          // add class detail
-          dateRule.class_type_id = classDetail.class_type_id;
-          dateRule.class_type_name = classDetail.class_type_name;
-          dateRule.class_group_id = classDetail.class_group_id;
-          dateRule.class_group_name = classDetail.class_group_name;
-          dateRule.batch = classDetail.batch;
-
-          // add abnormal punch
-          dateRule.trans_to_leave = result.leave;
-          dateRule.punch = result.detail;
-          dateRule.attendance_need = result.attendance_need;
-          dateRule.attendance_real = result.attendance_real;
-
-          acc.push(dateRule);
-        }
-      } else { // 無打卡記錄
-        const studentPunches = [[null, null]];
-        const result = checkAttendanceToLeave(
-          lunchBreakStart,
-          lunchBreakEnd,
-          dateRule.start,
-          dateRule.end,
-          studentPunches,
-        );
-        // add class detail
-        dateRule.class_type_id = classDetail.class_type_id;
-        dateRule.class_type_name = classDetail.class_type_name;
-        dateRule.class_group_id = classDetail.class_group_id;
-        dateRule.class_group_name = classDetail.class_group_name;
-        dateRule.batch = classDetail.batch;
-
-        // add abnormal punch
-        dateRule.trans_to_leave = result.leave;
-        dateRule.punch = result.detail;
-        dateRule.attendance_need = result.attendance_need;
-        dateRule.attendance_real = result.attendance_real;
-
-        acc.push(dateRule);
-      }
-
+      acc.push(dateRule);
       return acc;
     }, []);
 
@@ -860,7 +817,7 @@ const getAllAttendances = async (from, to) => {
         return acc;
       }, {});
 
-      // 12. from template, fill in punch recording from 9
+      // 14. from template, fill in punch recording from 9
       //     check attendance at the same time
 
       const classAttendances = attendanceTemplates.reduce((acc, dateRule) => {
