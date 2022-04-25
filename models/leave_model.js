@@ -55,12 +55,13 @@ const getAllLeaves = async (from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        LEFT OUTER JOIN leave_type as lt ON lt.id = sl.leave_type_id
         ${sqlFilter}
         ${sqlSort}
       `,
@@ -83,12 +84,13 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.student_id, sl.leave_type_id, sl.description, sl.date, sl.start, sl.end, sl.approval, sl.hours, sl.note, s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        LEFT OUTER JOIN leave_type as lt ON lt.id = sl.leave_type_id
         WHERE sl.student_id = ?
         ${sqlFilter}
         ${sqlSort}
@@ -112,12 +114,13 @@ const checkStudentValidLeaves = async (studentId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.student_id, sl.leave_type_id, sl.description, sl.date, sl.start, sl.end, sl.hours, sl.note,  s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        LEFT OUTER JOIN leave_type as lt ON lt.id = sl.leave_type_id
         WHERE sl.student_id = ?
         AND approval = 1
         ${sqlFilter}
@@ -142,12 +145,13 @@ const getClassLeaves = async (classId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.student_id, sl.leave_type_id, sl.description, sl.date, sl.start, sl.end, sl.approval, sl.hours, sl.note, s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        LEFT OUTER JOIN leave_type as lt ON lt.id = sl.leave_type_id
         WHERE sl.student_id IN (SELECT id FROM student WHERE class_id = ?)
         ${sqlFilter}
         ${sqlSort}
@@ -172,12 +176,13 @@ const checkClassValidLeaves = async (classId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.student_id, sl.leave_type_id, sl.description, sl.date, sl.start, sl.end, sl.hours, sl.note, s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
         LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
         LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
+        LEFT OUTER JOIN leave_type as lt ON lt.id = sl.leave_type_id
         WHERE sl.student_id IN (SELECT id FROM student WHERE class_id = ?)
         AND approval = 1
         ${sqlFilter}
