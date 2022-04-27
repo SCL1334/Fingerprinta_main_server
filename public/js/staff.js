@@ -13,11 +13,6 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
-$(document).on('hide.bs.modal', '#class_routine_form', () => {
-  alert('test');
-// Do stuff here
-});
-
 async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
@@ -67,6 +62,13 @@ async function setPunchTime() {
 
     content.append(classRoutineForm);
     const classRoutineModal = $('#class_routine_form');
+    classRoutineModal.on($.modal.BEFORE_CLOSE, () => {
+      // clear last time data
+      classRoutineModal.find('input,select').val('').end();
+      // remove listener
+      classRoutineModal.children('.submit').off();
+      // classRoutineModal.replaceWith(clone);
+    });
 
     const createRoutineBtn = $('.call_create');
     createRoutineBtn.click(async (callCreate) => {
@@ -94,7 +96,7 @@ async function setPunchTime() {
           }
         } catch (err) {
           console.log(err);
-          alert('update fail');
+          alert('create fail');
         }
       });
     });
@@ -164,23 +166,6 @@ async function setPunchTime() {
         $(row).attr('data-id', data.id);
       },
       fnDrawCallback(oSettings) {
-        $('#class_routine_form')
-          .on('hide', () => {
-            console.log('hide');
-          })
-          .on('hidden', () => {
-            console.log('hidden');
-          })
-          .on('show', () => {
-            console.log('show');
-          })
-          .on('shown', () => {
-            console.log('shown');
-          })
-          .on('hidden.bs.modal', (event) => {
-            // do something...
-            console.log('ccc');
-          });
         $('.routine_edit').click(async (callEdit) => {
           callEdit.preventDefault();
           try {
@@ -191,8 +176,8 @@ async function setPunchTime() {
             const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
             classRoutineModal.children('.class_type').val(originClassTypeId);
             classRoutineModal.children('.weekday').val(originWeekday);
-            classRoutineModal.children('.start_time').attr('value', originStartTime);
-            classRoutineModal.children('.end_time').attr('value', originEndTime);
+            classRoutineModal.children('.start_time').val(originStartTime);
+            classRoutineModal.children('.end_time').val(originEndTime);
             classRoutineModal.modal('show');
             classRoutineModal.children('.submit').click(async (submit) => {
               submit.preventDefault();
