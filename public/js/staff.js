@@ -13,6 +13,11 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
+$(document).on('hide.bs.modal', '#class_routine_form', () => {
+  alert('test');
+// Do stuff here
+});
+
 async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
@@ -40,8 +45,8 @@ async function setPunchTime() {
       acc += `<option value=${cur}>星期${weekdayTable[cur]}</option>`;
       return acc;
     }, '');
-    const editRoutineForm = `
-    <div class="modal fade show" id="routine_edit_form" role="dialog">
+    const classRoutineForm = `
+    <div class="modal fade" id="class_routine_form" role="dialog">
       <label for="class_type"></label>
       <select class="class_type" name="class_type">
         <option value="disabled selected hidden">請選擇培訓班級類型</option>
@@ -60,8 +65,8 @@ async function setPunchTime() {
     </div>
     `;
 
-    content.append(editRoutineForm);
-    const classRoutineModal = $('#routine_edit_form');
+    content.append(classRoutineForm);
+    const classRoutineModal = $('#class_routine_form');
 
     const createRoutineBtn = $('.call_create');
     createRoutineBtn.click(async (callCreate) => {
@@ -159,6 +164,23 @@ async function setPunchTime() {
         $(row).attr('data-id', data.id);
       },
       fnDrawCallback(oSettings) {
+        $('#class_routine_form')
+          .on('hide', () => {
+            console.log('hide');
+          })
+          .on('hidden', () => {
+            console.log('hidden');
+          })
+          .on('show', () => {
+            console.log('show');
+          })
+          .on('shown', () => {
+            console.log('shown');
+          })
+          .on('hidden.bs.modal', (event) => {
+            // do something...
+            console.log('ccc');
+          });
         $('.routine_edit').click(async (callEdit) => {
           callEdit.preventDefault();
           try {
@@ -190,6 +212,7 @@ async function setPunchTime() {
                 const editRoutineResult = editRoutineRes.data;
                 if (editRoutineResult) {
                   classRoutineModal.children('.close-modal').click();
+
                   setPunchTime();
                 }
               } catch (err) {
@@ -218,6 +241,216 @@ async function setPunchTime() {
     });
   } catch (err) {
     console.log(err);
+  }
+}
+
+// Account Manage
+async function accountManage() {
+  $('.content').empty();
+
+  const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
+  const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
+  const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
+  const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
+  accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
+  $('.content').append(accountCompenents);
+  // student account part
+  studentAccounts.click(async () => {
+    const studentUrl = '/api/1.0/students';
+    let studentAddForm = '';
+    try {
+      const classesRaw = await axios.get('/api/1.0/classes');
+      const classes = classesRaw.data.data;
+      const classesOptions = classes.reduce((acc, cur) => {
+        acc += `<option value=${cur.id}>${cur.class_type_name}-${cur.batch}-${cur.class_group_name}</option>`;
+        return acc;
+      }, '');
+      accountManageBoard.empty();
+      studentAddForm = `
+      <div class="student_form">新增學生帳號
+      <form action="${studentUrl}" method="POST">
+        <select id='student_class'>
+          <option value=null>請選擇學生班級</option>
+          ${classesOptions}
+        </select>
+        <input id='student_name' name='name' type='text' value='葉承彥'>
+        <input id='student_email' name='email' type='email' value='sean@test.com'>
+        <input id='student_password' name='password' type='password' value='1234'>
+        <button type="submit">送出</button>
+      </form>
+    </div>
+      `;
+    } catch (err) {
+      console.log(err);
+      console.log(err.response.data);
+      return;
+    }
+    accountManageBoard.append(studentAddForm);
+
+    // Add new student trigger
+    $('.student_form form').submit(async (newStudentSubmitEvent) => {
+      try {
+        newStudentSubmitEvent.preventDefault();
+        const addStudentName = $('#student_name').val();
+        const addStudentEmail = $('#student_email').val();
+        const addStudentPassword = $('#student_password').val();
+        const addStudentClass = $('#student_class').val();
+        const addStudentRes = await axios(studentUrl, {
+          method: 'POST',
+          data: {
+            name: addStudentName,
+            email: addStudentEmail,
+            password: addStudentPassword,
+            class_id: addStudentClass,
+          },
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        const addStudentResult = addStudentRes.data.data;
+        if (addStudentResult) {
+          const tr = $('<tr></tr>');
+          const td_id = $('<td></td>').text(addStudentResult.insert_id);
+          const td_student_name = $('<td></td>').text(addStudentName);
+          const td_student_email = $('<td></td>').text(addStudentEmail);
+          const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
+          const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
+          const td_delete = $('<td></td>');
+          const td_enroll = $('<td></td>');
+          const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+            const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
+            const deleteStudentResult = deleteStudentRes.data;
+            if (deleteStudentResult) {
+              $(deleteButtonEvent.target).parent().parent().remove();
+            }
+          });
+          const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+            const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
+            const enrollFingerResult = enrollFingerRes.data.data;
+            if (enrollFingerResult) {
+              $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
+            }
+          });
+          td_enroll.append(enroll_btn);
+          td_delete.append(delete_btn);
+          tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
+          table.append(tr);
+        }
+      } catch (err) {
+        console.log(err);
+        console.log(err.response.data);
+      }
+    });
+
+    // init table
+    const table = $('<table></table>').attr('class', 'students_result');
+    const tr = $('<tr></tr>');
+    const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    table.append(tr);
+    accountManageBoard.append(table);
+    // show all exists students
+    try {
+      const studentsDetail = await axios.get(studentUrl);
+      const studentsData = studentsDetail.data.data;
+      studentsData.forEach((student) => {
+        const tr = $('<tr></tr>');
+        const td_id = $('<td></td>').text(student.id);
+        const td_student_name = $('<td></td>').text(student.name);
+        const td_student_email = $('<td></td>').text(student.email);
+        const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
+        const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
+        const td_delete = $('<td></td>');
+        const td_enroll = $('<td></td>');
+        const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+          const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
+          const deleteStudentResult = deleteStudentRes.data;
+          if (deleteStudentResult) {
+            $(deleteButtonEvent.target).parent().parent().remove();
+          }
+        });
+        const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+          const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
+          const enrollFingerResult = enrollFingerRes.data.data;
+          if (enrollFingerResult) {
+            $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
+          }
+        });
+        td_enroll.append(enroll_btn);
+        td_delete.append(delete_btn);
+        tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
+        table.append(tr);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  // staff account part
+  async function staffManage() {
+    const staffUrl = '/api/1.0/staffs';
+    accountManageBoard.empty();
+    const staffAccountTable = $('<table></table>').attr('id', 'staff_account_table');
+    content.append(staffAccountTable);
+    content.append($('<div></div>').append(createBtn('call_create', '新增')));
+    const thead = $('<thead></thead>');
+    const heads = ['ID', '名稱', 'email', '', ''];
+    const tr = $('<tr></tr>');
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    thead.append(tr);
+    staffAccountTable.append(thead);
+    try {
+      const staffAccountForm = `
+      <div class="modal fade show" id="staff_account_form" role="dialog">
+        <input class='name' name='name' type='text' placeholder='請輸入名稱'>
+        <input class='email' name='email' type='email' placeholder='請輸入Email'>
+        <input class='password' name='password' type='password' placeholder='請輸入密碼'>
+        <button type="submit">送出</button>
+      </div>
+      `;
+      accountManageBoard.append(staffAccountForm);
+      const staffAccountModal = $('#staff_account_form');
+
+      const CreateStaffAccountBtn = $('.call_create');
+      CreateStaffAccountBtn.click(async (callCreate) => {
+        callCreate.preventDefault();
+        staffAccountModal.modal('show');
+        staffAccountModal.children('.submit').click(async (submit) => {
+          submit.preventDefault();
+          try {
+            const staffAccountRes = await axios(staffUrl, {
+              method: 'POST',
+              data: {
+                class_type_id: $(submit.target).parent().children('.class_type').val(),
+                weekday: $(submit.target).parent().children('.weekday').val(),
+                start_time: $(submit.target).parent().children('.start_time').val(),
+                end_time: $(submit.target).parent().children('.end_time').val(),
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const staffAccountResult = staffAccountRes.data;
+            if (staffAccountResult) {
+              staffAccountModal.trigger('reset');
+              staffAccountModal.children('.close-modal').click();
+              setPunchTime();
+            }
+          } catch (err) {
+            console.log(err);
+            alert('update fail');
+          }
+        });
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
@@ -378,152 +611,8 @@ $(document).ready(async () => {
     punchTime.click(setPunchTime);
 
     // accounts manage
-    $('.account_manage').click(async () => {
-      $('.content').empty();
-
-      const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
-      const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
-      const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
-      const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
-      accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
-      $('.content').append(accountCompenents);
-      // student account part
-      studentAccounts.click(async () => {
-        const studentUrl = '/api/1.0/students';
-        let studentAddForm = '';
-        try {
-          const classesRaw = await axios.get('/api/1.0/classes');
-          const classes = classesRaw.data.data;
-          const classesOptions = classes.reduce((acc, cur) => {
-            acc += `<option value=${cur.id}>${cur.class_type_name}-${cur.batch}-${cur.class_group_name}</option>`;
-            return acc;
-          }, '');
-          accountManageBoard.empty();
-          studentAddForm = `
-          <div class="student_form">新增學生帳號
-          <form action="${studentUrl}" method="POST">
-            <select id='student_class'>
-              <option value=null>請選擇學生班級</option>
-              ${classesOptions}
-            </select>
-            <input id='student_name' name='name' type='text' value='葉承彥'>
-            <input id='student_email' name='email' type='email' value='sean@test.com'>
-            <input id='student_password' name='password' type='password' value='1234'>
-            <button type="submit">送出</button>
-          </form>
-        </div>
-          `;
-        } catch (err) {
-          console.log(err);
-          console.log(err.response.data);
-          return;
-        }
-        accountManageBoard.append(studentAddForm);
-
-        // Add new student trigger
-        $('.student_form form').submit(async (newStudentSubmitEvent) => {
-          try {
-            newStudentSubmitEvent.preventDefault();
-            const addStudentName = $('#student_name').val();
-            const addStudentEmail = $('#student_email').val();
-            const addStudentPassword = $('#student_password').val();
-            const addStudentClass = $('#student_class').val();
-            const addStudentRes = await axios(studentUrl, {
-              method: 'POST',
-              data: {
-                name: addStudentName,
-                email: addStudentEmail,
-                password: addStudentPassword,
-                class_id: addStudentClass,
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const addStudentResult = addStudentRes.data.data;
-            if (addStudentResult) {
-              const tr = $('<tr></tr>');
-              const td_id = $('<td></td>').text(addStudentResult.insert_id);
-              const td_student_name = $('<td></td>').text(addStudentName);
-              const td_student_email = $('<td></td>').text(addStudentEmail);
-              const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
-              const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
-              const td_delete = $('<td></td>');
-              const td_enroll = $('<td></td>');
-              const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-                const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
-                const deleteStudentResult = deleteStudentRes.data;
-                if (deleteStudentResult) {
-                  $(deleteButtonEvent.target).parent().parent().remove();
-                }
-              });
-              const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-                const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
-                const enrollFingerResult = enrollFingerRes.data.data;
-                if (enrollFingerResult) {
-                  $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-                }
-              });
-              td_enroll.append(enroll_btn);
-              td_delete.append(delete_btn);
-              tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-              table.append(tr);
-            }
-          } catch (err) {
-            console.log(err);
-            console.log(err.response.data);
-          }
-        });
-
-        // init table
-        const table = $('<table></table>').attr('class', 'students_result');
-        const tr = $('<tr></tr>');
-        const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
-        heads.forEach((head) => {
-          const th = $('<th></th>').text(head);
-          tr.append(th);
-        });
-        table.append(tr);
-        accountManageBoard.append(table);
-        // show all exists students
-        try {
-          const studentsDetail = await axios.get(studentUrl);
-          const studentsData = studentsDetail.data.data;
-          studentsData.forEach((student) => {
-            const tr = $('<tr></tr>');
-            const td_id = $('<td></td>').text(student.id);
-            const td_student_name = $('<td></td>').text(student.name);
-            const td_student_email = $('<td></td>').text(student.email);
-            const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
-            const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
-            const td_delete = $('<td></td>');
-            const td_enroll = $('<td></td>');
-            const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-              const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
-              const deleteStudentResult = deleteStudentRes.data;
-              if (deleteStudentResult) {
-                $(deleteButtonEvent.target).parent().parent().remove();
-              }
-            });
-            const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-              const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
-              const enrollFingerResult = enrollFingerRes.data.data;
-              if (enrollFingerResult) {
-                $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-              }
-            });
-            td_enroll.append(enroll_btn);
-            td_delete.append(delete_btn);
-            tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-            table.append(tr);
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
-      // staff account part
-    });
+    const account = $('.account_manage');
+    account.click(accountManage);
 
     // class manage
     $('.class_manage').click(async () => {
