@@ -99,7 +99,11 @@ const deleteGroup = async (groupId) => {
 const getRoutines = async (classTypeId = null) => {
   try {
     const sqlFilter = (classTypeId) ? ' WHERE class_type_id = ?' : '';
-    const [routines] = await promisePool.query(`SELECT * FROM class_routine${sqlFilter}`, [classTypeId]);
+    const [routines] = await promisePool.query(`
+    SELECT cr.*, ct.name AS class_type_name 
+    FROM class_routine AS cr
+    LEFT OUTER JOIN class_type AS ct ON ct.id = cr.class_type_id
+    ${sqlFilter}`, [classTypeId]);
     return routines;
   } catch (err) {
     console.log(err);
