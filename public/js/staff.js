@@ -1,14 +1,61 @@
+const leaveTypeTable = { 1: '事假', 2: '病假' };
+const leaveStatusTable = { 0: '待審核', 1: '已審核' };
+const AttendanceStatus = {
+  normal: '正常', absent: '未打卡', late: '遲到', early: '早退',
+};
+// 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
+const attendanceColor = {
+  0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
+};
+const sensorUrl = 'http://127.0.0.1:5000';
+const content = $('.content');
+
+async function setPunchTime() {
+  console.log('click');
+  content.empty();
+  const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
+  content.append(classRoutineTable);
+  const thead = $('<thead></thead>');
+  const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
+  const tr = $('<tr></tr>');
+  heads.forEach((head) => {
+    const th = $('<th></th>').text(head);
+    tr.append(th);
+  });
+  thead.append(tr);
+  classRoutineTable.append(thead);
+
+  classRoutineTable.DataTable({
+    ajax: {
+      url: '/api/1.0/classes/types/1/routines', // 要抓哪個地方的資料
+      type: 'GET', // 使用什麼方式抓
+      dataType: 'json', // 回傳資料的類型
+    },
+    rowId(a) {
+      return `class_routine_id_${a.id}`;
+    },
+    columns: [
+      { data: 'class_type_id' },
+      { data: 'weekday' },
+      { data: 'start_time' },
+      { data: 'end_time' },
+      {
+        data: 'edit_class_routine',
+        render(data, type, full, meta) {
+          return "<input type='submit' value='編輯資料'>";
+        },
+      },
+      {
+        data: 'delete_class_routine',
+        render(data, type, full, meta) {
+          return "<input type='submit' value='刪除資料'>";
+        },
+      },
+    ],
+  });
+}
+
 $(document).ready(async () => {
-  const leaveTypeTable = { 1: '事假', 2: '病假' };
-  const leaveStatusTable = { 0: '待審核', 1: '已審核' };
-  const AttendanceStatus = {
-    normal: '正常', absent: '未打卡', late: '遲到', early: '早退',
-  };
-  // 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
-  const attendanceColor = {
-    0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
-  };
-  const sensorUrl = 'http://127.0.0.1:5000';
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
@@ -159,6 +206,10 @@ $(document).ready(async () => {
         console.log(err);
       }
     });
+
+    // Class routine
+    const punchTime = $('.punch_time_setting');
+    punchTime.click(setPunchTime);
 
     // accounts manage
     $('.account_manage').click(async () => {
