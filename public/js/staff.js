@@ -61,20 +61,19 @@ async function setPunchTime() {
     `;
 
     content.append(classRoutineForm);
-    const classRoutineModal = $('#class_routine_form');
-    classRoutineModal.on($.modal.BEFORE_CLOSE, () => {
+    const createStaffAccountModal = $('#class_routine_form');
+    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
       // clear last time data
-      classRoutineModal.find('input,select').val('').end();
+      createStaffAccountModal.find('input,select').val('').end();
       // remove listener
-      classRoutineModal.children('.submit').off();
-      // classRoutineModal.replaceWith(clone);
+      createStaffAccountModal.children('.submit').off();
     });
 
     const createRoutineBtn = $('.call_create');
     createRoutineBtn.click(async (callCreate) => {
       callCreate.preventDefault();
-      classRoutineModal.modal('show');
-      classRoutineModal.children('.submit').click(async (submit) => {
+      createStaffAccountModal.modal('show');
+      createStaffAccountModal.children('.submit').click(async (submit) => {
         submit.preventDefault();
         try {
           const editRoutineRes = await axios(classRoutineUrl, {
@@ -91,7 +90,7 @@ async function setPunchTime() {
           });
           const editRoutineResult = editRoutineRes.data;
           if (editRoutineResult) {
-            classRoutineModal.children('.close-modal').click();
+            createStaffAccountModal.children('.close-modal').click();
             setPunchTime();
           }
         } catch (err) {
@@ -174,12 +173,12 @@ async function setPunchTime() {
             const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
             const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
             const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
-            classRoutineModal.children('.class_type').val(originClassTypeId);
-            classRoutineModal.children('.weekday').val(originWeekday);
-            classRoutineModal.children('.start_time').val(originStartTime);
-            classRoutineModal.children('.end_time').val(originEndTime);
-            classRoutineModal.modal('show');
-            classRoutineModal.children('.submit').click(async (submit) => {
+            createStaffAccountModal.children('.class_type').val(originClassTypeId);
+            createStaffAccountModal.children('.weekday').val(originWeekday);
+            createStaffAccountModal.children('.start_time').val(originStartTime);
+            createStaffAccountModal.children('.end_time').val(originEndTime);
+            createStaffAccountModal.modal('show');
+            createStaffAccountModal.children('.submit').click(async (submit) => {
               submit.preventDefault();
               try {
                 const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
@@ -196,7 +195,7 @@ async function setPunchTime() {
                 });
                 const editRoutineResult = editRoutineRes.data;
                 if (editRoutineResult) {
-                  classRoutineModal.children('.close-modal').click();
+                  createStaffAccountModal.children('.close-modal').click();
 
                   setPunchTime();
                 }
@@ -216,7 +215,7 @@ async function setPunchTime() {
             const deleteRoutineRes = await axios.delete(`${classRoutineUrl}/${classRoutineId}`);
             const deleteRoutineResult = deleteRoutineRes.data;
             if (deleteRoutineResult) {
-              classRoutineRow.remove();
+              setPunchTime();
             }
           } catch (err) {
             console.log(err);
@@ -379,10 +378,10 @@ async function accountManage() {
     const staffUrl = '/api/1.0/staffs';
     accountManageBoard.empty();
     const staffAccountTable = $('<table></table>').attr('id', 'staff_account_table');
-    content.append(staffAccountTable);
-    content.append($('<div></div>').append(createBtn('call_create', '新增')));
+    accountManageBoard.append(staffAccountTable);
+    accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
     const thead = $('<thead></thead>');
-    const heads = ['ID', '名稱', 'email', '', ''];
+    const heads = ['ID', '名稱', 'email', ''];
     const tr = $('<tr></tr>');
     heads.forEach((head) => {
       const th = $('<th></th>').text(head);
@@ -390,53 +389,112 @@ async function accountManage() {
     });
     thead.append(tr);
     staffAccountTable.append(thead);
-    try {
-      const staffAccountForm = `
-      <div class="modal fade show" id="staff_account_form" role="dialog">
-        <input class='name' name='name' type='text' placeholder='請輸入名稱'>
-        <input class='email' name='email' type='email' placeholder='請輸入Email'>
-        <input class='password' name='password' type='password' placeholder='請輸入密碼'>
-        <button type="submit">送出</button>
+
+    const createStaffAccountForm = `
+      <div class="modal fade show" id="create_staff_account_form" role="dialog">
+        <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
+        <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
+        <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
+        <button type="submit" class="submit">新增帳號</button>
       </div>
       `;
-      accountManageBoard.append(staffAccountForm);
-      const staffAccountModal = $('#staff_account_form');
 
-      const CreateStaffAccountBtn = $('.call_create');
-      CreateStaffAccountBtn.click(async (callCreate) => {
-        callCreate.preventDefault();
-        staffAccountModal.modal('show');
-        staffAccountModal.children('.submit').click(async (submit) => {
-          submit.preventDefault();
+    accountManageBoard.append(createStaffAccountForm);
+
+    const createStaffAccountModal = $('#create_staff_account_form');
+    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
+      // clear last time data
+      createStaffAccountModal.find('input,select').val('').end();
+      // remove listener
+      createStaffAccountModal.children('.submit').off();
+    });
+
+    const createStaffAccountBtn = $('.call_create');
+    createStaffAccountBtn.click(async (callCreate) => {
+      callCreate.preventDefault();
+      createStaffAccountModal.modal('show');
+      createStaffAccountModal.children('.submit').click(async (submit) => {
+        submit.preventDefault();
+        try {
+          const staffAccountRes = await axios(staffUrl, {
+            method: 'POST',
+            data: {
+              name: $(submit.target).siblings('.create_name').val(),
+              email: $(submit.target).siblings('.create_email').val(),
+              password: $(submit.target).siblings('.create_password').val(),
+            },
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+          const staffAccountResult = staffAccountRes.data;
+          if (staffAccountResult) {
+            createStaffAccountModal.children('.close-modal').click();
+            staffManage();
+          }
+        } catch (err) {
+          console.log(err);
+          alert('帳號創建失敗');
+        }
+      });
+    });
+
+    staffAccountTable.DataTable({
+      ajax: {
+        url: staffUrl, // 要抓哪個地方的資料
+        type: 'GET', // 使用什麼方式抓
+        dataType: 'json', // 回傳資料的類型
+      },
+      columns: [
+        { data: 'id' },
+        { data: 'name' },
+        { data: 'email' },
+        {
+          data: 'staff_delete',
+          render() {
+            return createBtn('staff_delete', '刪除');
+          },
+        },
+      ],
+      columnDefs: [
+        {
+          targets: 0,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'staff_id');
+          },
+        },
+        {
+          targets: 1,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'name');
+          },
+        },
+        {
+          targets: 2,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'email');
+          },
+        },
+      ],
+      fnDrawCallback(oSettings) {
+        $('.staff_delete').click(async (event) => {
+          event.preventDefault();
           try {
-            const staffAccountRes = await axios(staffUrl, {
-              method: 'POST',
-              data: {
-                class_type_id: $(submit.target).parent().children('.class_type').val(),
-                weekday: $(submit.target).parent().children('.weekday').val(),
-                start_time: $(submit.target).parent().children('.start_time').val(),
-                end_time: $(submit.target).parent().children('.end_time').val(),
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const staffAccountResult = staffAccountRes.data;
-            if (staffAccountResult) {
-              staffAccountModal.trigger('reset');
-              staffAccountModal.children('.close-modal').click();
-              setPunchTime();
+            const staffRow = $(event.target).parent().parent();
+            const staffId = staffRow.children('.staff_id').text();
+            const deleteStaffRes = await axios.delete(`${staffUrl}/${staffId}`);
+            const deleteStaffResult = deleteStaffRes.data;
+            if (deleteStaffResult) {
+              staffManage();
             }
           } catch (err) {
             console.log(err);
-            alert('update fail');
           }
         });
-      });
-    } catch (err) {
-      console.log(err);
-    }
+      },
+    });
   }
+  staffAccounts.click(staffManage);
 }
 
 $(document).ready(async () => {
