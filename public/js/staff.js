@@ -1,7 +1,6 @@
-const leaveTypeTable = { 1: '事假', 2: '病假' };
 const leaveStatusTable = { 0: '待審核', 1: '已審核' };
-const AttendanceStatus = {
-  normal: '正常', absent: '未打卡', late: '遲到', early: '早退',
+const weekdayTable = {
+  0: '日', 1: 'ㄧ', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六',
 };
 // 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
 const attendanceColor = {
@@ -10,11 +9,17 @@ const attendanceColor = {
 const sensorUrl = 'http://127.0.0.1:5000';
 const content = $('.content');
 
+function createBtn(clas, text) {
+  return `<input type='submit' class='${clas}' value='${text}'>`;
+}
+
 async function setPunchTime() {
-  console.log('click');
+  const classRoutineUrl = '/api/1.0/classes/routines';
+  // init
   content.empty();
   const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
   content.append(classRoutineTable);
+  content.append($('<div></div>').append(createBtn('call_create', '新增')));
   const thead = $('<thead></thead>');
   const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
   const tr = $('<tr></tr>');
@@ -24,35 +29,196 @@ async function setPunchTime() {
   });
   thead.append(tr);
   classRoutineTable.append(thead);
+  try {
+    const classTypesRaw = await axios.get('/api/1.0/classes/types');
+    const classTypes = classTypesRaw.data.data;
+    const classTypeOptions = classTypes.reduce((acc, cur) => {
+      acc += `<option value=${cur.id}>${cur.name}</option>`;
+      return acc;
+    }, '');
+    const weekdayOptions = Object.keys(weekdayTable).reduce((acc, cur) => {
+      acc += `<option value=${cur}>星期${weekdayTable[cur]}</option>`;
+      return acc;
+    }, '');
+    const editRoutineForm = `
+    <div class="modal fade show" id="routine_edit_form" role="dialog">
+      <label for="class_type"></label>
+      <select class="class_type" name="class_type">
+        <option value="disabled selected hidden">請選擇培訓班級類型</option>
+        ${classTypeOptions}
+      </select>
+      <label for="weekday"></label>
+      <select class="weekday" name="weekday">
+        <option value="disabled selected hidden">請選擇星期</option>
+        ${weekdayOptions}
+      </select>
+      <label for="start_time">上課時間</label>
+      <input class="start_time" type="time">
+      <label for="end_time">下課時間</label>
+      <input class="end_time" type="time">
+      <button type="submit" class="submit">送出</button>
+    </div>
+    `;
 
-  classRoutineTable.DataTable({
-    ajax: {
-      url: '/api/1.0/classes/types/1/routines', // 要抓哪個地方的資料
-      type: 'GET', // 使用什麼方式抓
-      dataType: 'json', // 回傳資料的類型
-    },
-    rowId(a) {
-      return `class_routine_id_${a.id}`;
-    },
-    columns: [
-      { data: 'class_type_id' },
-      { data: 'weekday' },
-      { data: 'start_time' },
-      { data: 'end_time' },
-      {
-        data: 'edit_class_routine',
-        render(data, type, full, meta) {
-          return "<input type='submit' value='編輯資料'>";
-        },
+    content.append(editRoutineForm);
+    const classRoutineModal = $('#routine_edit_form');
+
+    const createRoutineBtn = $('.call_create');
+    createRoutineBtn.click(async (callCreate) => {
+      callCreate.preventDefault();
+      classRoutineModal.modal('show');
+      classRoutineModal.children('.submit').click(async (submit) => {
+        submit.preventDefault();
+        try {
+          const editRoutineRes = await axios(classRoutineUrl, {
+            method: 'POST',
+            data: {
+              class_type_id: $(submit.target).parent().children('.class_type').val(),
+              weekday: $(submit.target).parent().children('.weekday').val(),
+              start_time: $(submit.target).parent().children('.start_time').val(),
+              end_time: $(submit.target).parent().children('.end_time').val(),
+            },
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+          const editRoutineResult = editRoutineRes.data;
+          if (editRoutineResult) {
+            classRoutineModal.children('.close-modal').click();
+            setPunchTime();
+          }
+        } catch (err) {
+          console.log(err);
+          alert('update fail');
+        }
+      });
+    });
+
+    await classRoutineTable.DataTable({
+      ajax: {
+        url: classRoutineUrl, // 要抓哪個地方的資料
+        type: 'GET', // 使用什麼方式抓
+        dataType: 'json', // 回傳資料的類型
       },
-      {
-        data: 'delete_class_routine',
-        render(data, type, full, meta) {
-          return "<input type='submit' value='刪除資料'>";
+      columns: [
+        { data: 'class_type_name' },
+        {
+          data: 'weekday',
+          render(data) {
+            return data = weekdayTable[data];
+          },
         },
+        {
+          data: 'start_time',
+        },
+        {
+          data: 'end_time',
+        },
+        {
+          data: 'edit_class_routine',
+          render() {
+            return createBtn('routine_edit', '編輯');
+          },
+        },
+        {
+          data: 'delete_class_routine',
+          render() {
+            return createBtn('routine_delete', '刪除');
+          },
+        },
+      ],
+      columnDefs: [
+        {
+          targets: 0,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('data-class_type_id', rowData.class_type_id);
+            $(td).attr('class', 'class_type');
+          },
+        },
+        {
+          targets: 1,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'weekday');
+            $(td).attr('data-weekday', rowData.weekday);
+          },
+        },
+        {
+          targets: 2,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'start_time');
+          },
+        },
+        {
+          targets: 3,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'end_time');
+          },
+        },
+      ],
+      createdRow(row, data, dataIndex) {
+        $(row).attr('data-id', data.id);
       },
-    ],
-  });
+      fnDrawCallback(oSettings) {
+        $('.routine_edit').click(async (callEdit) => {
+          callEdit.preventDefault();
+          try {
+            const classRoutineId = $(callEdit.target).parent().parent().data('id');
+            const originClassTypeId = $(callEdit.target).parent().siblings('.class_type').data('class_type_id');
+            const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
+            const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
+            const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
+            classRoutineModal.children('.class_type').val(originClassTypeId);
+            classRoutineModal.children('.weekday').val(originWeekday);
+            classRoutineModal.children('.start_time').attr('value', originStartTime);
+            classRoutineModal.children('.end_time').attr('value', originEndTime);
+            classRoutineModal.modal('show');
+            classRoutineModal.children('.submit').click(async (submit) => {
+              submit.preventDefault();
+              try {
+                const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
+                  method: 'PUT',
+                  data: {
+                    class_type_id: $(submit.target).parent().children('.class_type').val(),
+                    weekday: $(submit.target).parent().children('.weekday').val(),
+                    start_time: $(submit.target).parent().children('.start_time').val(),
+                    end_time: $(submit.target).parent().children('.end_time').val(),
+                  },
+                  headers: {
+                    'content-type': 'application/json',
+                  },
+                });
+                const editRoutineResult = editRoutineRes.data;
+                if (editRoutineResult) {
+                  classRoutineModal.children('.close-modal').click();
+                  setPunchTime();
+                }
+              } catch (err) {
+                console.log(err);
+                alert('update fail');
+              }
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+        $('.routine_delete').click(async (event) => {
+          try {
+            const classRoutineRow = $(event.target).parent().parent();
+            const classRoutineId = classRoutineRow.data('id');
+            const deleteRoutineRes = await axios.delete(`${classRoutineUrl}/${classRoutineId}`);
+            const deleteRoutineResult = deleteRoutineRes.data;
+            if (deleteRoutineResult) {
+              classRoutineRow.remove();
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 $(document).ready(async () => {
