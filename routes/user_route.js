@@ -6,7 +6,7 @@ const {
   createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
   getStudentProfile, getStaffProfile,
-  matchFingerprint,
+  matchFingerprint, initFingerData,
 } = require('../controllers/user_controller');
 
 const {
@@ -29,8 +29,11 @@ router.route('/students/:id/punches').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
 router.route('/students/:id/attendances/leaves').post(wrapAsync(transferLackAttendance));
 
-router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
+router.route('/students/:studentId/fingerprint/:fingerId').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
+
+router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
+
 router.route('/students/signin').post(wrapAsync(studentSignIn));
 router.route('/students').post(wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));

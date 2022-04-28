@@ -1,4 +1,3 @@
-require('dotenv').config();
 const bcrypt = require('bcrypt');
 
 const salt = parseInt(process.env.BCRYPT_SALT, 10);

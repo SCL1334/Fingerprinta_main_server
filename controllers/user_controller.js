@@ -133,15 +133,66 @@ const getStaffProfile = async (req, res) => {
 };
 
 const matchFingerprint = async (req, res) => {
-  const studentId = req.params.id;
-  const fingerId = await Fingerprint.getEnrollId();
-  if (fingerId === -1) {
-    return res.status(400).json({ error: { message: 'Match failed due to enroll failed' } });
+  const { studentId } = req.params;
+  const { fingerId } = req.params;
+  // check student exist
+  const studentExist = await User.getOneStudent(studentId);
+  if (!studentExist) { return res.status(400).json({ code: 4000, error: { message: 'Student not exist' } }); }
+  // check student has registered
+  const studentRegister = await Fingerprint.checkStudentEnroll(studentId);
+  if (studentRegister.length !== 0) {
+    return res.status(400).json({
+      code: 4021,
+      error: {
+        message:
+        'student has registered',
+      },
+    });
   }
-  if (fingerId === -2) {
-    res.status(500).json({ error: { message: 'Match failed due to sensor disconnect' } });
+  // check if finger Id has been used
+  const pair = await Fingerprint.findStudent(fingerId);
+  // internal error
+  if (pair === null) { res.status(500).json({ code: 2020, error: { message: 'Match failed, Internal server error' } }); }
+  // no fingerprint id
+  // sensor hardware doesn't fit software => finger_id >= 200
+  if (pair.length === 0) {
+    return res.status(400).json({
+      code: 4444,
+      error: {
+        message: 'finger id over origin sensor hardware limit OR table has not been init',
+      },
+    });
   }
-  const result = await User.matchFingerprint(studentId, fingerId);
+  // has been paired with a student
+  if (pair[0].student_id) {
+    return res.status(400).json({
+      code: 4022,
+      error: {
+        message:
+        `finger_id has been used by student_id: ${pair[0].student_id}`,
+      },
+    });
+  }
+  // no student pair but status wrong => better clean both sensor and server data
+  if (pair[0].status !== 0) {
+    res.status(500).json({ code: 2444, error: { message: 'status wrong, need to clear the finger id' } });
+  }
+
+  // send to sensor
+  const enrollStatus = await Fingerprint.enrollId(fingerId);
+  console.log(enrollStatus);
+  if (enrollStatus.code > 3000) {
+    return res.status(400).json({
+      code: enrollStatus.code,
+      error: { message: enrollStatus.message },
+    });
+  }
+
+  if (enrollStatus.code > 2000) {
+    res.status(500).json({ code: enrollStatus, error: { message: 'Match failed due to sensor issue' } });
+  }
+  // valid student and valid fingerprint
+  const result = await Fingerprint.matchStudent(fingerId, studentId);
 
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { finger_id: result.finger_id, message: 'Match successfully' } });
@@ -150,6 +201,17 @@ const matchFingerprint = async (req, res) => {
   } else {
     res.status(400).json({ code: result.code, error: { message: 'Match failed due to invalid input' } });
   }
+};
+
+const initFingerData = async (req, res) => {
+  const fingerId = req.params.id;
+  // sensor record 0-199
+  if (fingerId >= 200) { return res.status(400).json({ code: 3040, error: { message: 'finger Id out of range' } }); }
+  const initRowStatus = await Fingerprint.initOneRow(fingerId);
+  if (initRowStatus.code > 2000) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Internal server Errors' } }); }
+  const deleteSensorFingerStatus = await Fingerprint.deleteOneSensorFinger(fingerId);
+  if (deleteSensorFingerStatus.code > 2000 || (!deleteSensorFingerStatus.code)) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Sensor Errors' } }); }
+  res.status(200).json({ data: { message: 'Delete successfully' } });
 };
 
 module.exports = {
@@ -166,4 +228,5 @@ module.exports = {
   getStudentProfile,
   getStaffProfile,
   matchFingerprint,
+  initFingerData,
 };
