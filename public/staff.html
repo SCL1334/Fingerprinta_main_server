@@ -11,6 +11,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- dayjs for date management -->
+  <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+  <script src="https://unpkg.com/dayjs@1.8.21/plugin/utc.js"></script>
+  <script>dayjs.extend(window.dayjs_plugin_utc)</script>
+  <link rel="stylesheet" href="./style/staff.css">
   <title> 校務人員頁面</title>
 </head>
 <body>
@@ -29,7 +34,8 @@
         <div class="get_attendances">學生出勤查詢</div>
         <div class="approve_leave_application">請假申請審核</div>
         <div class="punch_time_setting">班別打卡週期時間設定</div>
-        <div class="rule_setting">上課日 / 特例設定</div>
+        <div class="exception_setting">特例設定</div>
+        <div class="rule_setting">上課日</div>
         <div class="sensor_operator">指紋機指令
           <button id="sensor_identify">啟動打卡模式</button>
           <button id="sensor_stop">啟動待機模式</button>

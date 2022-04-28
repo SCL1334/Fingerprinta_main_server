@@ -497,6 +497,220 @@ async function accountManage() {
   staffAccounts.click(staffManage);
 }
 
+// holiday setting
+async function exceptionManage() {
+  $('.content').empty();
+  let exceptionForm = '';
+  let classTypeTable = '';
+  try {
+    const classTypesRaw = await axios.get('/api/1.0/classes/types');
+    const classTypes = classTypesRaw.data.data;
+    classTypeTable = classTypes.reduce((acc, cur) => {
+      if (!acc[cur.id]) { acc[cur.id] = cur; }
+      return acc;
+    }, {});
+    const classTypeOptions = classTypes.reduce((acc, cur) => {
+      acc += `<option value=${cur.id}>${cur.name}</option>`;
+      return acc;
+    }, '');
+
+    exceptionForm = `
+        <div class="exception_form">新增出勤例外日期
+          <form action="/api/1.0/calendar/punchExceptions" method="POST">
+            <select id='exception_class_type'>
+              <option value=null>請選擇班級類型</option>
+              ${classTypeOptions}
+            </select>
+            <input id='exception_batch' name='batch' type='number' value='15'>
+            <input id='exception_date' name='date' type='date' value='2022-04-26'>
+            <input id='exception_start' name='start_time' type='time' value='14:00'>
+            <input id='exception_end' name='end_time' type='time' value='17:00'>
+            <button type="submit">送出</button>
+          </form>
+        </div>
+      `;
+  } catch (err) {
+    console.log(err);
+    console.log(err.response.data);
+  }
+  $('.content').append(exceptionForm);
+
+  // init table
+  const table = $('<table></table>').attr('class', 'exception_result');
+  const tr = $('<tr></tr>');
+  const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間'];
+  heads.forEach((head) => {
+    const th = $('<th></th>').text(head);
+    tr.append(th);
+  });
+  table.append(tr);
+  $('.content').append(table);
+
+  $('.exception_form form').submit(async (newExceptionEvent) => {
+    try {
+      newExceptionEvent.preventDefault();
+      const addExceptionType = $('#exception_class_type').val();
+      const addExceptionBatch = $('#exception_batch').val();
+      const addExceptionDate = $('#exception_date').val();
+      const addExceptionStart = $('#exception_start').val();
+      const addExceptionEnd = $('#exception_end').val();
+      const addExceptionRes = await axios('/api/1.0/calendar/punchExceptions', {
+        method: 'POST',
+        data: {
+          class_type_id: addExceptionType,
+          batch: addExceptionBatch,
+          date: addExceptionDate,
+          start_time: addExceptionStart,
+          end_time: addExceptionEnd,
+        },
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+
+      const addExceptionResult = addExceptionRes.data.data;
+      if (addExceptionResult) {
+        const tr = $('<tr></tr>');
+        const td_class_type = $('<td></td>').text($('#exception_class_type').text());
+        const td_batch = $('<td></td>').text(addExceptionBatch);
+        const td_date = $('<td></td>').text(addExceptionDate);
+        const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
+        const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
+        tr.append(td_class_type, td_batch, td_date, td_start, td_end);
+        table.append(tr);
+      }
+    } catch (err) {
+      console.log(err);
+      console.log(err.response.data);
+    }
+  });
+
+  const date = new Date().toISOString().split('T')[0].split('-');
+  // get all exception
+  try {
+    const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    const exceptionResult = exceptionRes.data.data;
+    exceptionResult.forEach((edate) => {
+      const tr = $('<tr></tr>');
+      const td_class_ttype = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
+      const td_batch = $('<td></td>').text(edate.batch);
+      const td_date = $('<td></td>').text(edate.date);
+      const td_start = $('<td></td>').text(edate.start);
+      const td_end = $('<td></td>').text(edate.end);
+      tr.append(td_class_ttype, td_batch, td_date, td_start, td_end);
+      table.append(tr);
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function genRuleManage(date) {
+  return async function () {
+    $('.content').empty();
+    const calendarUrl = '/api/1.0/calendar/months';
+    const dateUrl = '/api/1.0/calendar/date';
+    const checkDate = (date === null || date === undefined) ? dayjs() : dayjs(date);
+    const yearMonth = checkDate.format('YYYYMM');
+    const year = checkDate.format('YYYY');
+    const month = checkDate.format('MM');
+    // create table and head
+    const calendarBlock = $('<div></div>').attr('class', 'calendar');
+    const calenderHead = $('<div></div>').attr('class', 'calendar_head');
+    const calendarTitle = $('<div></div>').attr('class', 'calendar_title');
+    const yearDiv = $('<div></div>').attr('class', 'year').text(`西元${year}年`);
+    const monthDiv = $('<div></div>').attr('class', 'month').text(`${month}月`);
+    const lastMonth = checkDate.subtract(1, 'month');
+    const nextMonth = checkDate.add(1, 'month');
+    const lastMonthBtn = $(`<div class="change_month"><button data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
+    const nextMonthBtn = $(`<div class="change_month"><button data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
+    const tableDiv = $('<div></div>').attr('class', 'calendar_table');
+    const table = $('<table></table>');
+    const tr = $('<tr></tr>');
+    Object.keys(weekdayTable).forEach((head) => {
+      const th = $('<th></th>').text(`星期${weekdayTable[head]}`);
+      tr.append(th);
+    });
+    table.append(tr);
+
+    calendarTitle.append(yearDiv, monthDiv);
+    calenderHead.append(lastMonthBtn, calendarTitle, nextMonthBtn);
+    calendarBlock.append(calenderHead);
+    content.append(calendarBlock, tableDiv);
+
+    const changeMonth = $('.change_month');
+    changeMonth.click((event) => {
+      const targetMonth = $(event.target).data('month');
+      genRuleManage(`${targetMonth}`)();
+    });
+
+    try {
+      const calendarRaw = await axios.get(`${calendarUrl}/${yearMonth}`);
+      const calendar = calendarRaw.data.data;
+      // get week day
+      let tr = $('<tr></tr>');
+      calendar.forEach((cell, index) => {
+        const tdDate = $('<td></td>').text(dayjs(cell.date).format('DD'));
+        //  .css('background-color', schoolDay[cell.need_punch]);
+        // const btn = $(`<a href="${calendarUrl}/${dayjs(cell.date).format('YYYYMMDD')}"
+        // class="btn btn-info" role="button">🔘</a>`);
+        const toggle = $(`
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        `);
+        const btn = toggle.children('input');
+        if (cell.need_punch === 1) { btn.prop('checked', true); }
+
+        // set btn function
+        btn.click(async (event) => {
+          event.preventDefault();
+          // if click the checkbox itself, is(':checked') will get the opposite result from current
+          const wantToBe = $(event.target).is(':checked');
+          try {
+            const switchRes = await axios.put(`${dateUrl}/${cell.date.replaceAll('-', '')}`);
+            const switchResult = switchRes.data;
+            if (switchResult) {
+              btn.prop('checked', wantToBe);
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+
+        // first date, check lack tr
+        if (index === 0) {
+          for (let i = 0; i < dayjs(cell.date).day(); i += 1) {
+            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            tr.append(tdBlank);
+          }
+        }
+        tdDate.append(toggle);
+        tr.append(tdDate);
+
+        if (dayjs(cell.date).day() === 6) {
+          table.append(tr);
+          tr = $('<tr></tr>');
+        }
+
+        // last date, add to full week
+        if (index === calendar.length - 1) {
+          const lastDateDay = dayjs(cell.date).day();
+          for (let i = lastDateDay; i < 6; i += 1) {
+            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            tr.append(tdBlank);
+            table.append(tr);
+          }
+        }
+      });
+      tableDiv.append(table);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+}
+
 $(document).ready(async () => {
   try {
     // init page, check if valid signin
@@ -542,112 +756,13 @@ $(document).ready(async () => {
       }
     });
 
-    $('.rule_setting').click(async () => {
-      $('.content').empty();
-      let exceptionForm = '';
-      let classTypeTable = '';
-      try {
-        const classTypesRaw = await axios.get('/api/1.0/classes/types');
-        const classTypes = classTypesRaw.data.data;
-        classTypeTable = classTypes.reduce((acc, cur) => {
-          if (!acc[cur.id]) { acc[cur.id] = cur; }
-          return acc;
-        }, {});
-        const classTypeOptions = classTypes.reduce((acc, cur) => {
-          acc += `<option value=${cur.id}>${cur.name}</option>`;
-          return acc;
-        }, '');
+    // ----------------------------- temp route ----------------------------------
 
-        exceptionForm = `
-          <div class="exception_form">新增出勤例外日期
-            <form action="/api/1.0/calendar/punchExceptions" method="POST">
-              <select id='exception_class_type'>
-                <option value=null>請選擇班級類型</option>
-                ${classTypeOptions}
-              </select>
-              <input id='exception_batch' name='batch' type='number' value='15'>
-              <input id='exception_date' name='date' type='date' value='2022-04-26'>
-              <input id='exception_start' name='start_time' type='time' value='14:00'>
-              <input id='exception_end' name='end_time' type='time' value='17:00'>
-              <button type="submit">送出</button>
-            </form>
-          </div>
-        `;
-      } catch (err) {
-        console.log(err);
-        console.log(err.response.data);
-      }
-      $('.content').append(exceptionForm);
+    const punchRule = $('.rule_setting');
+    punchRule.click(genRuleManage());
 
-      // init table
-      const table = $('<table></table>').attr('class', 'exception_result');
-      const tr = $('<tr></tr>');
-      const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間'];
-      heads.forEach((head) => {
-        const th = $('<th></th>').text(head);
-        tr.append(th);
-      });
-      table.append(tr);
-      $('.content').append(table);
-
-      $('.exception_form form').submit(async (newExceptionEvent) => {
-        try {
-          newExceptionEvent.preventDefault();
-          const addExceptionType = $('#exception_class_type').val();
-          const addExceptionBatch = $('#exception_batch').val();
-          const addExceptionDate = $('#exception_date').val();
-          const addExceptionStart = $('#exception_start').val();
-          const addExceptionEnd = $('#exception_end').val();
-          const addExceptionRes = await axios('/api/1.0/calendar/punchExceptions', {
-            method: 'POST',
-            data: {
-              class_type_id: addExceptionType,
-              batch: addExceptionBatch,
-              date: addExceptionDate,
-              start_time: addExceptionStart,
-              end_time: addExceptionEnd,
-            },
-            headers: {
-              'content-type': 'application/json',
-            },
-          });
-
-          const addExceptionResult = addExceptionRes.data.data;
-          if (addExceptionResult) {
-            const tr = $('<tr></tr>');
-            const td_class_type = $('<td></td>').text($('#exception_class_type').text());
-            const td_batch = $('<td></td>').text(addExceptionBatch);
-            const td_date = $('<td></td>').text(addExceptionDate);
-            const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
-            const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
-            tr.append(td_class_type, td_batch, td_date, td_start, td_end);
-            table.append(tr);
-          }
-        } catch (err) {
-          console.log(err);
-          console.log(err.response.data);
-        }
-      });
-
-      const date = new Date().toISOString().split('T')[0].split('-');
-      // get all exception
-      try {
-        const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
-        const exceptionResult = exceptionRes.data.data;
-        exceptionResult.forEach((edate) => {
-          const tr = $('<tr></tr>');
-          const td_class_ttype = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
-          const td_batch = $('<td></td>').text(edate.batch);
-          const td_date = $('<td></td>').text(edate.date);
-          const td_start = $('<td></td>').text(edate.start);
-          const td_end = $('<td></td>').text(edate.end);
-          tr.append(td_class_ttype, td_batch, td_date, td_start, td_end);
-          table.append(tr);
-        });
-      } catch (err) {
-        console.log(err);
-      }
-    });
+    const punchException = $('.exception_setting');
+    punchException.click(exceptionManage);
 
     // Class routine
     const punchTime = $('.punch_time_setting');
