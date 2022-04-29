@@ -1,12 +1,18 @@
 require('dotenv').config();
 const session = require('express-session');
+// Express Initialization
+const express = require('express');
+// routes
+const userRoute = require('./routes/user_route');
+const classRoute = require('./routes/class_route');
+const calendarRoute = require('./routes/calendar_route');
+const leaveRoute = require('./routes/leave_route');
 
 const {
   PORT, API_VERSION,
 } = process.env;
 
-// Express Initialization
-const express = require('express');
+const Cache = require('./util/cache');
 
 const app = express();
 
@@ -25,10 +31,7 @@ app.use(session({
 
 // API routes
 app.use(`/api/${API_VERSION}`, [
-  require('./routes/user_route'),
-  require('./routes/class_route'),
-  require('./routes/calendar_route'),
-  require('./routes/leave_route'),
+  userRoute, classRoute, calendarRoute, leaveRoute,
 ]);
 
 // server test
@@ -42,6 +45,9 @@ app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  Cache.connect().catch(() => {
+    console.log('Redis connect fail');
+  });
   console.log(`Server is running on port ${PORT}`);
 });
