@@ -2,7 +2,7 @@ const router = require('express').Router();
 
 const { wrapAsync } = require('../util/util');
 const {
-  createStudent, getStudents, deleteStudent, studentSignIn,
+  createStudent, editStudent, getStudents, deleteStudent, studentSignIn,
   createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
   getStudentProfile, getStaffProfile,
@@ -37,6 +37,7 @@ router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
 router.route('/students/signin').post(wrapAsync(studentSignIn));
 router.route('/students').post(wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));
+router.route('/students/:id').put(wrapAsync(editStudent));
 router.route('/students/:id').delete(wrapAsync(deleteStudent));
 
 router.route('/teachers/:id/classes').get(wrapAsync(getClasses));

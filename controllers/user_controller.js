@@ -16,6 +16,20 @@ const createStudent = async (req, res) => {
   }
 };
 
+const editStudent = async (req, res) => {
+  const studentId = req.params.id;
+  const { name, email, class_id } = req.body;
+  const student = { name, email, class_id };
+  const status = await User.editStudent(studentId, student);
+  if (status.code < 2000) {
+    res.status(200).json({ code: status.code, data: { message: 'Update successfully' } });
+  } else if (status.code < 3000) {
+    res.status(500).json({ code: status.code, error: { message: 'Update failed' } });
+  } else {
+    res.status(400).json({ code: status.code, error: { message: 'Update failed due to invalid input' } });
+  }
+};
+
 const getStudents = async (req, res) => {
   const classId = req.params.id;
   const students = await User.getStudents(classId);
@@ -216,6 +230,7 @@ const initFingerData = async (req, res) => {
 
 module.exports = {
   createStudent,
+  editStudent,
   getStudents,
   deleteStudent,
   createStaff,

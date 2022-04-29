@@ -25,6 +25,21 @@ const createStudent = async (name, email, password, classId) => {
   }
 };
 
+const editStudent = async (studentId, student) => {
+  try {
+    const [result] = await promisePool.query('SELECT id FROM student WHERE id = ?', [studentId]);
+    if (result.length === 0) {
+      console.log('target not exist');
+      return { code: 4020 };
+    }
+    await promisePool.query('UPDATE student SET ? WHERE id = ?', [student, studentId]);
+    return { code: 1020 };
+  } catch (error) {
+    console.log(error);
+    return { code: 2020 };
+  }
+};
+
 const getStudents = async (classId = null) => {
   // need to do paging optimization later
   try {
@@ -240,6 +255,7 @@ const findByFinger = async (fingerId) => {
 
 module.exports = {
   createStudent,
+  editStudent,
   getStudents,
   getOneStudent,
   deleteStudent,
