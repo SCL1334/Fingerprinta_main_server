@@ -1,4 +1,3 @@
-require('dotenv').config();
 const bcrypt = require('bcrypt');
 
 const salt = parseInt(process.env.BCRYPT_SALT, 10);
@@ -23,6 +22,21 @@ const createStudent = async (name, email, password, classId) => {
       return { code: 3010 };
     }
     return { code: 2010 };
+  }
+};
+
+const editStudent = async (studentId, student) => {
+  try {
+    const [result] = await promisePool.query('SELECT id FROM student WHERE id = ?', [studentId]);
+    if (result.length === 0) {
+      console.log('target not exist');
+      return { code: 4020 };
+    }
+    await promisePool.query('UPDATE student SET ? WHERE id = ?', [student, studentId]);
+    return { code: 1020 };
+  } catch (error) {
+    console.log(error);
+    return { code: 2020 };
   }
 };
 
@@ -158,6 +172,39 @@ const studentSignIn = async (email, password) => {
   }
 };
 
+const studentChangePassword = async (email, password, newPassword) => {
+  try {
+    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
+    if (students.length === 1) {
+      const match = await bcrypt.compare(password, students[0].password);
+      if (match) {
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+        return { code: 1020 };
+      }
+    }
+    return { code: 4029 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2020 };
+  }
+};
+
+const studentResetPassword = async (email, newPassword) => {
+  try {
+    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
+    if (students.length === 1) {
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+      return { code: 1020 };
+    }
+    return { code: 4029 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2020 };
+  }
+};
+
 const staffSignIn = async (email, password) => {
   try {
     const [staffs] = await promisePool.query('SELECT email, password FROM staff WHERE email = ?', [email]);
@@ -203,6 +250,7 @@ const getStaffProfile = async (email) => {
   }
 };
 
+// not use after adding fingerprint table
 const matchFingerprint = async (studentId, fingerId) => {
   const conn = await promisePool.getConnection();
   try {
@@ -226,7 +274,7 @@ const matchFingerprint = async (studentId, fingerId) => {
 
 const findByFinger = async (fingerId) => {
   try {
-    const [students] = await promisePool.query('SELECT id FROM student WHERE finger_id = ?', [fingerId]);
+    const [students] = await promisePool.query('SELECT student_id FROM fingerprint WHERE id = ?', [fingerId]);
     if (students.length === 0) {
       console.log('student not exist');
       return -1;
@@ -240,6 +288,7 @@ const findByFinger = async (fingerId) => {
 
 module.exports = {
   createStudent,
+  editStudent,
   getStudents,
   getOneStudent,
   deleteStudent,
@@ -248,6 +297,8 @@ module.exports = {
   getClassTeachers,
   deleteStaff,
   studentSignIn,
+  studentChangePassword,
+  studentResetPassword,
   staffSignIn,
   getStudentProfile,
   getStaffProfile,

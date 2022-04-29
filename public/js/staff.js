@@ -1,14 +1,717 @@
+const leaveStatusTable = { 0: '待審核', 1: '已審核' };
+const weekdayTable = {
+  0: '日', 1: 'ㄧ', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六',
+};
+// 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
+const attendanceColor = {
+  0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
+};
+const sensorUrl = 'http://127.0.0.1:5000';
+const content = $('.content');
+
+function createBtn(clas, text) {
+  return `<input type='submit' class='${clas}' value='${text}'>`;
+}
+
+async function setPunchTime() {
+  const classRoutineUrl = '/api/1.0/classes/routines';
+  // init
+  content.empty();
+  const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
+  content.append(classRoutineTable);
+  content.append($('<div></div>').append(createBtn('call_create', '新增')));
+  const thead = $('<thead></thead>');
+  const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
+  const tr = $('<tr></tr>');
+  heads.forEach((head) => {
+    const th = $('<th></th>').text(head);
+    tr.append(th);
+  });
+  thead.append(tr);
+  classRoutineTable.append(thead);
+  try {
+    const classTypesRaw = await axios.get('/api/1.0/classes/types');
+    const classTypes = classTypesRaw.data.data;
+    const classTypeOptions = classTypes.reduce((acc, cur) => {
+      acc += `<option value=${cur.id}>${cur.name}</option>`;
+      return acc;
+    }, '');
+    const weekdayOptions = Object.keys(weekdayTable).reduce((acc, cur) => {
+      acc += `<option value=${cur}>星期${weekdayTable[cur]}</option>`;
+      return acc;
+    }, '');
+    const classRoutineForm = `
+    <div class="modal fade" id="class_routine_form" role="dialog">
+      <label for="class_type"></label>
+      <select class="class_type" name="class_type">
+        <option value="disabled selected hidden">請選擇培訓班級類型</option>
+        ${classTypeOptions}
+      </select>
+      <label for="weekday"></label>
+      <select class="weekday" name="weekday">
+        <option value="disabled selected hidden">請選擇星期</option>
+        ${weekdayOptions}
+      </select>
+      <label for="start_time">上課時間</label>
+      <input class="start_time" type="time">
+      <label for="end_time">下課時間</label>
+      <input class="end_time" type="time">
+      <button type="submit" class="submit">送出</button>
+    </div>
+    `;
+
+    content.append(classRoutineForm);
+    const createStaffAccountModal = $('#class_routine_form');
+    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
+      // clear last time data
+      createStaffAccountModal.find('input,select').val('').end();
+      // remove listener
+      createStaffAccountModal.children('.submit').off();
+    });
+
+    const createRoutineBtn = $('.call_create');
+    createRoutineBtn.click(async (callCreate) => {
+      callCreate.preventDefault();
+      createStaffAccountModal.modal('show');
+      createStaffAccountModal.children('.submit').click(async (submit) => {
+        submit.preventDefault();
+        try {
+          const editRoutineRes = await axios(classRoutineUrl, {
+            method: 'POST',
+            data: {
+              class_type_id: $(submit.target).parent().children('.class_type').val(),
+              weekday: $(submit.target).parent().children('.weekday').val(),
+              start_time: $(submit.target).parent().children('.start_time').val(),
+              end_time: $(submit.target).parent().children('.end_time').val(),
+            },
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+          const editRoutineResult = editRoutineRes.data;
+          if (editRoutineResult) {
+            createStaffAccountModal.children('.close-modal').click();
+            setPunchTime();
+          }
+        } catch (err) {
+          console.log(err);
+          alert('create fail');
+        }
+      });
+    });
+
+    await classRoutineTable.DataTable({
+      ajax: {
+        url: classRoutineUrl, // 要抓哪個地方的資料
+        type: 'GET', // 使用什麼方式抓
+        dataType: 'json', // 回傳資料的類型
+      },
+      columns: [
+        { data: 'class_type_name' },
+        {
+          data: 'weekday',
+          render(data) {
+            return data = weekdayTable[data];
+          },
+        },
+        {
+          data: 'start_time',
+        },
+        {
+          data: 'end_time',
+        },
+        {
+          data: 'edit_class_routine',
+          render() {
+            return createBtn('routine_edit', '編輯');
+          },
+        },
+        {
+          data: 'delete_class_routine',
+          render() {
+            return createBtn('routine_delete', '刪除');
+          },
+        },
+      ],
+      columnDefs: [
+        {
+          targets: 0,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('data-class_type_id', rowData.class_type_id);
+            $(td).attr('class', 'class_type');
+          },
+        },
+        {
+          targets: 1,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'weekday');
+            $(td).attr('data-weekday', rowData.weekday);
+          },
+        },
+        {
+          targets: 2,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'start_time');
+          },
+        },
+        {
+          targets: 3,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'end_time');
+          },
+        },
+      ],
+      createdRow(row, data, dataIndex) {
+        $(row).attr('data-id', data.id);
+      },
+      fnDrawCallback(oSettings) {
+        $('.routine_edit').click(async (callEdit) => {
+          callEdit.preventDefault();
+          try {
+            const classRoutineId = $(callEdit.target).parent().parent().data('id');
+            const originClassTypeId = $(callEdit.target).parent().siblings('.class_type').data('class_type_id');
+            const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
+            const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
+            const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
+            createStaffAccountModal.children('.class_type').val(originClassTypeId);
+            createStaffAccountModal.children('.weekday').val(originWeekday);
+            createStaffAccountModal.children('.start_time').val(originStartTime);
+            createStaffAccountModal.children('.end_time').val(originEndTime);
+            createStaffAccountModal.modal('show');
+            createStaffAccountModal.children('.submit').click(async (submit) => {
+              submit.preventDefault();
+              try {
+                const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
+                  method: 'PUT',
+                  data: {
+                    class_type_id: $(submit.target).parent().children('.class_type').val(),
+                    weekday: $(submit.target).parent().children('.weekday').val(),
+                    start_time: $(submit.target).parent().children('.start_time').val(),
+                    end_time: $(submit.target).parent().children('.end_time').val(),
+                  },
+                  headers: {
+                    'content-type': 'application/json',
+                  },
+                });
+                const editRoutineResult = editRoutineRes.data;
+                if (editRoutineResult) {
+                  createStaffAccountModal.children('.close-modal').click();
+
+                  setPunchTime();
+                }
+              } catch (err) {
+                console.log(err);
+                alert('update fail');
+              }
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        });
+        $('.routine_delete').click(async (event) => {
+          try {
+            const classRoutineRow = $(event.target).parent().parent();
+            const classRoutineId = classRoutineRow.data('id');
+            const deleteRoutineRes = await axios.delete(`${classRoutineUrl}/${classRoutineId}`);
+            const deleteRoutineResult = deleteRoutineRes.data;
+            if (deleteRoutineResult) {
+              setPunchTime();
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// Account Manage
+async function accountManage() {
+  $('.content').empty();
+
+  const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
+  const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
+  const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
+  const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
+  accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
+  $('.content').append(accountCompenents);
+  // student account part
+  studentAccounts.click(async () => {
+    const studentUrl = '/api/1.0/students';
+    let studentAddForm = '';
+    try {
+      const classesRaw = await axios.get('/api/1.0/classes');
+      const classes = classesRaw.data.data;
+      const classesOptions = classes.reduce((acc, cur) => {
+        acc += `<option value=${cur.id}>${cur.class_type_name}-${cur.batch}-${cur.class_group_name}</option>`;
+        return acc;
+      }, '');
+      accountManageBoard.empty();
+      studentAddForm = `
+      <div class="student_form">新增學生帳號
+      <form action="${studentUrl}" method="POST">
+        <select id='student_class'>
+          <option value=null>請選擇學生班級</option>
+          ${classesOptions}
+        </select>
+        <input id='student_name' name='name' type='text' value='葉承彥'>
+        <input id='student_email' name='email' type='email' value='sean@test.com'>
+        <input id='student_password' name='password' type='password' value='1234'>
+        <button type="submit">送出</button>
+      </form>
+    </div>
+      `;
+    } catch (err) {
+      console.log(err);
+      console.log(err.response.data);
+      return;
+    }
+    accountManageBoard.append(studentAddForm);
+
+    // Add new student trigger
+    $('.student_form form').submit(async (newStudentSubmitEvent) => {
+      try {
+        newStudentSubmitEvent.preventDefault();
+        const addStudentName = $('#student_name').val();
+        const addStudentEmail = $('#student_email').val();
+        const addStudentPassword = $('#student_password').val();
+        const addStudentClass = $('#student_class').val();
+        const addStudentRes = await axios(studentUrl, {
+          method: 'POST',
+          data: {
+            name: addStudentName,
+            email: addStudentEmail,
+            password: addStudentPassword,
+            class_id: addStudentClass,
+          },
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        const addStudentResult = addStudentRes.data.data;
+        if (addStudentResult) {
+          const tr = $('<tr></tr>');
+          const td_id = $('<td></td>').text(addStudentResult.insert_id);
+          const td_student_name = $('<td></td>').text(addStudentName);
+          const td_student_email = $('<td></td>').text(addStudentEmail);
+          const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
+          const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
+          const td_delete = $('<td></td>');
+          const td_enroll = $('<td></td>');
+          const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+            const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
+            const deleteStudentResult = deleteStudentRes.data;
+            if (deleteStudentResult) {
+              $(deleteButtonEvent.target).parent().parent().remove();
+            }
+          });
+          const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+            const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
+            const enrollFingerResult = enrollFingerRes.data.data;
+            if (enrollFingerResult) {
+              $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
+            }
+          });
+          td_enroll.append(enroll_btn);
+          td_delete.append(delete_btn);
+          tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
+          table.append(tr);
+        }
+      } catch (err) {
+        console.log(err);
+        console.log(err.response.data);
+      }
+    });
+
+    // init table
+    const table = $('<table></table>').attr('class', 'students_result');
+    const tr = $('<tr></tr>');
+    const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    table.append(tr);
+    accountManageBoard.append(table);
+    // show all exists students
+    try {
+      const studentsDetail = await axios.get(studentUrl);
+      const studentsData = studentsDetail.data.data;
+      studentsData.forEach((student) => {
+        const tr = $('<tr></tr>');
+        const td_id = $('<td></td>').text(student.id);
+        const td_student_name = $('<td></td>').text(student.name);
+        const td_student_email = $('<td></td>').text(student.email);
+        const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
+        const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
+        const td_delete = $('<td></td>');
+        const td_enroll = $('<td></td>');
+        const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
+          const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
+          const deleteStudentResult = deleteStudentRes.data;
+          if (deleteStudentResult) {
+            $(deleteButtonEvent.target).parent().parent().remove();
+          }
+        });
+        const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
+          const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
+          const enrollFingerResult = enrollFingerRes.data.data;
+          if (enrollFingerResult) {
+            $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
+          }
+        });
+        td_enroll.append(enroll_btn);
+        td_delete.append(delete_btn);
+        tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
+        table.append(tr);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  // staff account part
+  async function staffManage() {
+    const staffUrl = '/api/1.0/staffs';
+    accountManageBoard.empty();
+    const staffAccountTable = $('<table></table>').attr('id', 'staff_account_table');
+    accountManageBoard.append(staffAccountTable);
+    accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    const thead = $('<thead></thead>');
+    const heads = ['ID', '名稱', 'email', ''];
+    const tr = $('<tr></tr>');
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    thead.append(tr);
+    staffAccountTable.append(thead);
+
+    const createStaffAccountForm = `
+      <div class="modal fade show" id="create_staff_account_form" role="dialog">
+        <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
+        <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
+        <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
+        <button type="submit" class="submit">新增帳號</button>
+      </div>
+      `;
+
+    accountManageBoard.append(createStaffAccountForm);
+
+    const createStaffAccountModal = $('#create_staff_account_form');
+    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
+      // clear last time data
+      createStaffAccountModal.find('input,select').val('').end();
+      // remove listener
+      createStaffAccountModal.children('.submit').off();
+    });
+
+    const createStaffAccountBtn = $('.call_create');
+    createStaffAccountBtn.click(async (callCreate) => {
+      callCreate.preventDefault();
+      createStaffAccountModal.modal('show');
+      createStaffAccountModal.children('.submit').click(async (submit) => {
+        submit.preventDefault();
+        try {
+          const staffAccountRes = await axios(staffUrl, {
+            method: 'POST',
+            data: {
+              name: $(submit.target).siblings('.create_name').val(),
+              email: $(submit.target).siblings('.create_email').val(),
+              password: $(submit.target).siblings('.create_password').val(),
+            },
+            headers: {
+              'content-type': 'application/json',
+            },
+          });
+          const staffAccountResult = staffAccountRes.data;
+          if (staffAccountResult) {
+            createStaffAccountModal.children('.close-modal').click();
+            staffManage();
+          }
+        } catch (err) {
+          console.log(err);
+          alert('帳號創建失敗');
+        }
+      });
+    });
+
+    staffAccountTable.DataTable({
+      ajax: {
+        url: staffUrl, // 要抓哪個地方的資料
+        type: 'GET', // 使用什麼方式抓
+        dataType: 'json', // 回傳資料的類型
+      },
+      columns: [
+        { data: 'id' },
+        { data: 'name' },
+        { data: 'email' },
+        {
+          data: 'staff_delete',
+          render() {
+            return createBtn('staff_delete', '刪除');
+          },
+        },
+      ],
+      columnDefs: [
+        {
+          targets: 0,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'staff_id');
+          },
+        },
+        {
+          targets: 1,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'name');
+          },
+        },
+        {
+          targets: 2,
+          createdCell(td, cellData, rowData, row, col) {
+            $(td).attr('class', 'email');
+          },
+        },
+      ],
+      fnDrawCallback(oSettings) {
+        $('.staff_delete').click(async (event) => {
+          event.preventDefault();
+          try {
+            const staffRow = $(event.target).parent().parent();
+            const staffId = staffRow.children('.staff_id').text();
+            const deleteStaffRes = await axios.delete(`${staffUrl}/${staffId}`);
+            const deleteStaffResult = deleteStaffRes.data;
+            if (deleteStaffResult) {
+              staffManage();
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+      },
+    });
+  }
+  staffAccounts.click(staffManage);
+}
+
+// holiday setting
+async function exceptionManage() {
+  $('.content').empty();
+  let exceptionForm = '';
+  let classTypeTable = '';
+  try {
+    const classTypesRaw = await axios.get('/api/1.0/classes/types');
+    const classTypes = classTypesRaw.data.data;
+    classTypeTable = classTypes.reduce((acc, cur) => {
+      if (!acc[cur.id]) { acc[cur.id] = cur; }
+      return acc;
+    }, {});
+    const classTypeOptions = classTypes.reduce((acc, cur) => {
+      acc += `<option value=${cur.id}>${cur.name}</option>`;
+      return acc;
+    }, '');
+
+    exceptionForm = `
+        <div class="exception_form">新增出勤例外日期
+          <form action="/api/1.0/calendar/punchExceptions" method="POST">
+            <select id='exception_class_type'>
+              <option value=null>請選擇班級類型</option>
+              ${classTypeOptions}
+            </select>
+            <input id='exception_batch' name='batch' type='number' value='15'>
+            <input id='exception_date' name='date' type='date' value='2022-04-26'>
+            <input id='exception_start' name='start_time' type='time' value='14:00'>
+            <input id='exception_end' name='end_time' type='time' value='17:00'>
+            <button type="submit">送出</button>
+          </form>
+        </div>
+      `;
+  } catch (err) {
+    console.log(err);
+    console.log(err.response.data);
+  }
+  $('.content').append(exceptionForm);
+
+  // init table
+  const table = $('<table></table>').attr('class', 'exception_result');
+  const tr = $('<tr></tr>');
+  const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間'];
+  heads.forEach((head) => {
+    const th = $('<th></th>').text(head);
+    tr.append(th);
+  });
+  table.append(tr);
+  $('.content').append(table);
+
+  $('.exception_form form').submit(async (newExceptionEvent) => {
+    try {
+      newExceptionEvent.preventDefault();
+      const addExceptionType = $('#exception_class_type').val();
+      const addExceptionBatch = $('#exception_batch').val();
+      const addExceptionDate = $('#exception_date').val();
+      const addExceptionStart = $('#exception_start').val();
+      const addExceptionEnd = $('#exception_end').val();
+      const addExceptionRes = await axios('/api/1.0/calendar/punchExceptions', {
+        method: 'POST',
+        data: {
+          class_type_id: addExceptionType,
+          batch: addExceptionBatch,
+          date: addExceptionDate,
+          start_time: addExceptionStart,
+          end_time: addExceptionEnd,
+        },
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+
+      const addExceptionResult = addExceptionRes.data.data;
+      if (addExceptionResult) {
+        const tr = $('<tr></tr>');
+        const td_class_type = $('<td></td>').text($('#exception_class_type').text());
+        const td_batch = $('<td></td>').text(addExceptionBatch);
+        const td_date = $('<td></td>').text(addExceptionDate);
+        const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
+        const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
+        tr.append(td_class_type, td_batch, td_date, td_start, td_end);
+        table.append(tr);
+      }
+    } catch (err) {
+      console.log(err);
+      console.log(err.response.data);
+    }
+  });
+
+  const date = new Date().toISOString().split('T')[0].split('-');
+  // get all exception
+  try {
+    const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    const exceptionResult = exceptionRes.data.data;
+    exceptionResult.forEach((edate) => {
+      const tr = $('<tr></tr>');
+      const td_class_ttype = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
+      const td_batch = $('<td></td>').text(edate.batch);
+      const td_date = $('<td></td>').text(edate.date);
+      const td_start = $('<td></td>').text(edate.start);
+      const td_end = $('<td></td>').text(edate.end);
+      tr.append(td_class_ttype, td_batch, td_date, td_start, td_end);
+      table.append(tr);
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function genRuleManage(date) {
+  return async function () {
+    $('.content').empty();
+    const calendarUrl = '/api/1.0/calendar/months';
+    const dateUrl = '/api/1.0/calendar/date';
+    const checkDate = (date === null || date === undefined) ? dayjs() : dayjs(date);
+    const yearMonth = checkDate.format('YYYYMM');
+    const year = checkDate.format('YYYY');
+    const month = checkDate.format('MM');
+    // create table and head
+    const calendarBlock = $('<div></div>').attr('class', 'calendar');
+    const calenderHead = $('<div></div>').attr('class', 'calendar_head');
+    const calendarTitle = $('<div></div>').attr('class', 'calendar_title');
+    const yearDiv = $('<div></div>').attr('class', 'year').text(`西元${year}年`);
+    const monthDiv = $('<div></div>').attr('class', 'month').text(`${month}月`);
+    const lastMonth = checkDate.subtract(1, 'month');
+    const nextMonth = checkDate.add(1, 'month');
+    const lastMonthBtn = $(`<div class="change_month"><button data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
+    const nextMonthBtn = $(`<div class="change_month"><button data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
+    const tableDiv = $('<div></div>').attr('class', 'calendar_table');
+    const table = $('<table></table>');
+    const tr = $('<tr></tr>');
+    Object.keys(weekdayTable).forEach((head) => {
+      const th = $('<th></th>').text(`星期${weekdayTable[head]}`);
+      tr.append(th);
+    });
+    table.append(tr);
+
+    calendarTitle.append(yearDiv, monthDiv);
+    calenderHead.append(lastMonthBtn, calendarTitle, nextMonthBtn);
+    calendarBlock.append(calenderHead);
+    content.append(calendarBlock, tableDiv);
+
+    const changeMonth = $('.change_month');
+    changeMonth.click((event) => {
+      const targetMonth = $(event.target).data('month');
+      genRuleManage(`${targetMonth}`)();
+    });
+
+    try {
+      const calendarRaw = await axios.get(`${calendarUrl}/${yearMonth}`);
+      const calendar = calendarRaw.data.data;
+      // get week day
+      let tr = $('<tr></tr>');
+      calendar.forEach((cell, index) => {
+        const tdDate = $('<td></td>').text(dayjs(cell.date).format('DD'));
+        //  .css('background-color', schoolDay[cell.need_punch]);
+        // const btn = $(`<a href="${calendarUrl}/${dayjs(cell.date).format('YYYYMMDD')}"
+        // class="btn btn-info" role="button">🔘</a>`);
+        const toggle = $(`
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        `);
+        const btn = toggle.children('input');
+        if (cell.need_punch === 1) { btn.prop('checked', true); }
+
+        // set btn function
+        btn.click(async (event) => {
+          event.preventDefault();
+          // if click the checkbox itself, is(':checked') will get the opposite result from current
+          const wantToBe = $(event.target).is(':checked');
+          try {
+            const switchRes = await axios.put(`${dateUrl}/${cell.date.replaceAll('-', '')}`);
+            const switchResult = switchRes.data;
+            if (switchResult) {
+              btn.prop('checked', wantToBe);
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        });
+
+        // first date, check lack tr
+        if (index === 0) {
+          for (let i = 0; i < dayjs(cell.date).day(); i += 1) {
+            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            tr.append(tdBlank);
+          }
+        }
+        tdDate.append(toggle);
+        tr.append(tdDate);
+
+        if (dayjs(cell.date).day() === 6) {
+          table.append(tr);
+          tr = $('<tr></tr>');
+        }
+
+        // last date, add to full week
+        if (index === calendar.length - 1) {
+          const lastDateDay = dayjs(cell.date).day();
+          for (let i = lastDateDay; i < 6; i += 1) {
+            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            tr.append(tdBlank);
+            table.append(tr);
+          }
+        }
+      });
+      tableDiv.append(table);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+}
+
 $(document).ready(async () => {
-  const leaveTypeTable = { 1: '事假', 2: '病假' };
-  const leaveStatusTable = { 0: '待審核', 1: '已審核' };
-  const AttendanceStatus = {
-    normal: '正常', absent: '未打卡', late: '遲到', early: '早退',
-  };
-  // 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
-  const attendanceColor = {
-    0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
-  };
-  const sensorUrl = 'http://127.0.0.1:5000';
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
@@ -53,153 +756,21 @@ $(document).ready(async () => {
       }
     });
 
+    // ----------------------------- temp route ----------------------------------
+
+    const punchRule = $('.rule_setting');
+    punchRule.click(genRuleManage());
+
+    const punchException = $('.exception_setting');
+    punchException.click(exceptionManage);
+
+    // Class routine
+    const punchTime = $('.punch_time_setting');
+    punchTime.click(setPunchTime);
+
     // accounts manage
-    $('.account_manage').click(async () => {
-      $('.content').empty();
-
-      const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
-      const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
-      const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
-      const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
-      accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
-      $('.content').append(accountCompenents);
-      // student account part
-      studentAccounts.click(async () => {
-        const studentUrl = '/api/1.0/students';
-        let studentAddForm = '';
-        try {
-          const classesRaw = await axios.get('/api/1.0/classes');
-          const classes = classesRaw.data.data;
-          const classesOptions = classes.reduce((acc, cur) => {
-            acc += `<option value=${cur.id}>${cur.class_type_name}-${cur.batch}-${cur.class_group_name}</option>`;
-            return acc;
-          }, '');
-          accountManageBoard.empty();
-          studentAddForm = `
-          <div class="student_form">新增學生帳號
-          <form action="${studentUrl}" method="POST">
-            <select id='student_class'>
-              <option value=null>請選擇學生班級</option>
-              ${classesOptions}
-            </select>
-            <input id='student_name' name='name' type='text' value='葉承彥'>
-            <input id='student_email' name='email' type='email' value='sean@test.com'>
-            <input id='student_password' name='password' type='password' value='1234'>
-            <button type="submit">送出</button>
-          </form>
-        </div>
-          `;
-        } catch (err) {
-          console.log(err);
-          console.log(err.response.data);
-          return;
-        }
-        accountManageBoard.append(studentAddForm);
-
-        // Add new student trigger
-        $('.student_form form').submit(async (newStudentSubmitEvent) => {
-          try {
-            newStudentSubmitEvent.preventDefault();
-            const addStudentName = $('#student_name').val();
-            const addStudentEmail = $('#student_email').val();
-            const addStudentPassword = $('#student_password').val();
-            const addStudentClass = $('#student_class').val();
-            const addStudentRes = await axios(studentUrl, {
-              method: 'POST',
-              data: {
-                name: addStudentName,
-                email: addStudentEmail,
-                password: addStudentPassword,
-                class_id: addStudentClass,
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const addStudentResult = addStudentRes.data.data;
-            if (addStudentResult) {
-              const tr = $('<tr></tr>');
-              const td_id = $('<td></td>').text(addStudentResult.insert_id);
-              const td_student_name = $('<td></td>').text(addStudentName);
-              const td_student_email = $('<td></td>').text(addStudentEmail);
-              const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
-              const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
-              const td_delete = $('<td></td>');
-              const td_enroll = $('<td></td>');
-              const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-                const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
-                const deleteStudentResult = deleteStudentRes.data;
-                if (deleteStudentResult) {
-                  $(deleteButtonEvent.target).parent().parent().remove();
-                }
-              });
-              const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-                const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
-                const enrollFingerResult = enrollFingerRes.data.data;
-                if (enrollFingerResult) {
-                  $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-                }
-              });
-              td_enroll.append(enroll_btn);
-              td_delete.append(delete_btn);
-              tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-              table.append(tr);
-            }
-          } catch (err) {
-            console.log(err);
-            console.log(err.response.data);
-          }
-        });
-
-        // init table
-        const table = $('<table></table>').attr('class', 'students_result');
-        const tr = $('<tr></tr>');
-        const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
-        heads.forEach((head) => {
-          const th = $('<th></th>').text(head);
-          tr.append(th);
-        });
-        table.append(tr);
-        accountManageBoard.append(table);
-        // show all exists students
-        try {
-          const studentsDetail = await axios.get(studentUrl);
-          const studentsData = studentsDetail.data.data;
-          studentsData.forEach((student) => {
-            const tr = $('<tr></tr>');
-            const td_id = $('<td></td>').text(student.id);
-            const td_student_name = $('<td></td>').text(student.name);
-            const td_student_email = $('<td></td>').text(student.email);
-            const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
-            const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
-            const td_delete = $('<td></td>');
-            const td_enroll = $('<td></td>');
-            const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-              const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
-              const deleteStudentResult = deleteStudentRes.data;
-              if (deleteStudentResult) {
-                $(deleteButtonEvent.target).parent().parent().remove();
-              }
-            });
-            const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-              const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
-              const enrollFingerResult = enrollFingerRes.data.data;
-              if (enrollFingerResult) {
-                $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-              }
-            });
-            td_enroll.append(enroll_btn);
-            td_delete.append(delete_btn);
-            tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-            table.append(tr);
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
-      // staff account part
-    });
+    const account = $('.account_manage');
+    account.click(accountManage);
 
     // class manage
     $('.class_manage').click(async () => {
@@ -562,7 +1133,7 @@ $(document).ready(async () => {
           const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '狀態', '備註', ''];
+          const heads = ['打卡日期', '班級', '姓名', '應出席時間', '狀態', ''];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -724,7 +1295,6 @@ $(document).ready(async () => {
               td_name,
               td_punch_rule,
               td_status,
-              td_note,
               td_detail_btn,
             );
             table.append(tr);
@@ -815,7 +1385,7 @@ $(document).ready(async () => {
               const td_date = $('<td></td>').text(leaveSearch.date);
               const td_student = $('<td></td>').text(leaveSearch.student_name);
               const td_class = $('<td></td>').text(`${leaveSearch.class_type_name}-${leaveSearch.batch}-${leaveSearch.class_group_name}`);
-              const td_type = $('<td></td>').text(leaveTypeTable[leaveSearch.leave_type_id]);
+              const td_type = $('<td></td>').text(leaveSearch.leave_type_name);
               const td_start = $('<td></td>').text(leaveSearch.start);
               const td_end = $('<td></td>').text(leaveSearch.end);
               const td_reason = $('<td></td>').text(leaveSearch.description);

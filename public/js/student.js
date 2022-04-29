@@ -1,9 +1,9 @@
 $(document).ready(async () => {
-  const leaveTypeTable = { 1: '事假', 2: '病假' };
   const leaveStatusTable = { 0: '審核中', 1: '已審核' };
-  const AttendanceStatus = {
-    0: '正常', 1: '未打卡', 2: '下課未打卡', 3: '遲到', 4: '早退',
+  const attendanceColor = {
+    0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
   };
+  const today = new Date().toISOString().split('T')[0].replaceAll('-', '');
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/students/profile');
@@ -28,11 +28,41 @@ $(document).ready(async () => {
       }
     });
 
+    // punch today
+    try {
+      const punchTodayRaw = await axios.get(`api/1.0/students/${id}/punches?from=${today}&to=${today}`);
+      const punchToday = punchTodayRaw.data.data;
+      const punchHead = ['上課打卡', '下課打卡'].reduce((acc, cur) => {
+        acc.append($('<td></td>').text(cur));
+        return acc;
+      }, $('<tr></tr>'));
+      $('.punch_today').append(punchHead);
+      if (punchToday.length === 0) { $('.punch_today').append($('<div></div>').text('無紀錄')); }
+
+      const punchDetail = punchToday.reduce((acc, cur) => {
+        const { punch_in: punchIn, punch_out: punchOut } = cur;
+        acc.append($('<td></td>').text(punchIn || '無紀錄'));
+        acc.append($('<td></td>').text(punchOut || '無紀錄'));
+        return acc;
+      }, $('<tr></tr>'));
+      $('.punch_today').append(punchDetail);
+    } catch (err) {
+      console.log(err);
+    }
+
+    // leave total
+    try {
+      const leavesTotalRes = await axios.get(`api/1.0/students/${id}/leaves/hours`);
+      const leavesTotalResult = leavesTotalRes.data.data;
+      $('.leave_total').append($('<h3></h3>').text(`目前累計已核准請假時數: ${leavesTotalResult.leaves_hours}`));
+    } catch (err) {
+      console.log(err);
+    }
     // get attendance
     $('.get_attendances').click(async () => {
       $('.content').text('');
 
-      const attendance = $('<div></div>').attr('class', 'attendance').text('打卡記錄');
+      const attendance = $('<div></div>').attr('class', 'attendance').text('出席記錄');
 
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
@@ -45,11 +75,11 @@ $(document).ready(async () => {
           if (table) { table.text(''); }
           const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
           const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-          const responseData = await axios.get(`/api/1.0/students/${id}/attendances${from}${to}`);
-          const { data } = responseData;
+          const attendanceSearchRes = await axios.get(`/api/1.0/students/${id}/attendances${from}${to}`);
+          const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result');
           const tr = $('<tr></tr>');
-          const heads = ['打卡日期', '上課打卡', '下課打卡', '應出席時間', '狀態', '備註'];
+          const heads = ['應出席日期', '應出席時間', '狀態'];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -57,15 +87,23 @@ $(document).ready(async () => {
           table.append(tr);
 
           $('.attendance').append(table);
-          data.data.forEach((attendance) => {
+          attendanceSearchResult.forEach((attendanceSearch) => {
             const tr = $('<tr></tr>');
-            const td_date = $('<td></td>').text(attendance.date);
-            const td_punch_in = $('<td></td>').text(attendance.punch_in || '無紀錄');
-            const td_punch_out = $('<td></td>').text(attendance.punch_out || '無紀錄');
-            const td_punch_rule = $('<td></td>').text(`${attendance.start}-${attendance.end}`);
-            const td_status = $('<td></td>').text(AttendanceStatus[attendance.status]);
-            const td_note = $('<td></td>').text(attendance.note || null);
-            tr.append(td_date, td_punch_in, td_punch_out, td_punch_rule, td_status, td_note);
+            const td_date = $('<td></td>').attr('class', 'attendance_date').text(attendanceSearch.date);
+            const td_punch_rule = $('<td></td>').attr('class', 'rule').text(`${attendanceSearch.start}-${attendanceSearch.end}`);
+            const td_status = $('<td></td>').attr('class', 'attendance_status').append($('<div></div>'));
+            const attendanceTable = $('<tr></tr>');
+            const { attendance } = attendanceSearch;
+            Object.keys(attendance).forEach((time) => {
+              const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
+              attendanceTable.append(td_time_grid);
+            });
+            td_status.append(attendanceTable);
+            tr.append(
+              td_date,
+              td_punch_rule,
+              td_status,
+            );
             table.append(tr);
           });
         } catch (err) {
@@ -81,7 +119,7 @@ $(document).ready(async () => {
         const leaveTypesRaw = await axios.get('/api/1.0/leaves/types');
         const leaveTypes = leaveTypesRaw.data.data;
         const options = leaveTypes.reduce((acc, cur) => {
-          acc += `<option value=${cur.id}>${leaveTypeTable[cur.id]}</option>`;
+          acc += `<option value=${cur.id}>${cur.name}</option>`;
           return acc;
         }, '');
         $('.content').text('');
@@ -170,7 +208,7 @@ $(document).ready(async () => {
             data.data.forEach((leave) => {
               const tr = $('<tr></tr>');
               const td_date = $('<td></td>').text(leave.date);
-              const td_type = $('<td></td>').text(leaveTypeTable[leave.leave_type_id]);
+              const td_type = $('<td></td>').text(leave.leave_type_name);
               const td_start = $('<td></td>').text(leave.start);
               const td_end = $('<td></td>').text(leave.end);
               const td_reason = $('<td></td>').text(leave.description);
