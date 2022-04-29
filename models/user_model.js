@@ -202,6 +202,7 @@ const getStaffProfile = async (email) => {
   }
 };
 
+// not use after adding fingerprint table
 const matchFingerprint = async (studentId, fingerId) => {
   const conn = await promisePool.getConnection();
   try {
@@ -225,7 +226,7 @@ const matchFingerprint = async (studentId, fingerId) => {
 
 const findByFinger = async (fingerId) => {
   try {
-    const [students] = await promisePool.query('SELECT id FROM student WHERE finger_id = ?', [fingerId]);
+    const [students] = await promisePool.query('SELECT student_id FROM fingerprint WHERE id = ?', [fingerId]);
     if (students.length === 0) {
       console.log('student not exist');
       return -1;

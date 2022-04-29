@@ -1,5 +1,6 @@
 const dayjs = require('dayjs');
 const Class = require('../models/class_model');
+const Fingerprint = require('../models/fingerprint_model');
 
 // Type Manage
 const getTypes = async (req, res) => {
@@ -243,6 +244,24 @@ const deleteClass = async (req, res) => {
   }
 };
 
+const initClassFingerList = async (req, res) => {
+  const classId = req.params.id;
+  const fingerList = await Fingerprint.getFingerListOfClass(classId);
+  if (fingerList === null) {
+    return res.status(500).json({ error: { message: 'Delete failed due to server error' } });
+  }
+  fingerList.forEach((element, index) => { fingerList[index] = element.id; });
+  // close because may need to delete sensor data again
+  // if (fingerList.length === 0) {
+  //   return res.status(400).json({ error: { message: 'No data need to be deleted' } });
+  // }
+  const initRowsStatus = await Fingerprint.initByClass(classId);
+  if (initRowsStatus.code > 2000) { return res.status(500).json({ code: initRowsStatus.code, error: { message: 'Internal server Errors' } }); }
+  const deleteSensorFingerStatus = await Fingerprint.deleteSensorFingerList(fingerList);
+  if (deleteSensorFingerStatus.code > 2000 || (!deleteSensorFingerStatus.code)) { return res.status(500).json({ code: initRowsStatus.code, error: { message: 'Sensor Errors' } }); }
+  res.status(200).json({ code: 1030, data: { message: 'Delete successfully' } });
+};
+
 module.exports = {
   getTypes,
   createType,
@@ -260,4 +279,5 @@ module.exports = {
   createClass,
   editClass,
   deleteClass,
+  initClassFingerList,
 };

@@ -48,6 +48,42 @@ const deleteOneSensorFinger = async (fingerId) => {
   }
 };
 
+const deleteSensorFingerList = async (fingerIdList) => {
+  try {
+    const sensorRes = await axios(`${sensorFingerUrl}`, {
+      method: 'DELETE',
+      data: {
+        list: fingerIdList,
+      },
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
+    const sensorResult = sensorRes.data;
+    const statusCode = sensorResult.code;
+    if (statusCode < 2000) { return { code: 1030 }; }
+    return { code: 2030 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2030 };
+  }
+};
+
+const getFingerListOfClass = async (classId) => {
+  try {
+    const [fingerList] = await promisePool.query(`
+    SELECT id FROM fingerprint 
+    WHERE student_id 
+    IN ( SELECT id FROM student WHERE class_id = ?)
+    ORDER BY id ASC;
+    `, [classId]);
+    return fingerList;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const matchStudent = async (fingerId, studentId) => {
   try {
     await promisePool.query('UPDATE fingerprint SET student_id = ?, status = 1 WHERE id = ?', [studentId, fingerId]);
@@ -63,6 +99,21 @@ const matchStudent = async (fingerId, studentId) => {
 const initOneRow = async (fingerId) => {
   try {
     await promisePool.query('UPDATE fingerprint SET student_id = null, status = 0 WHERE id = ?', [fingerId]);
+    return { code: 1030 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2030 };
+  }
+};
+
+const initByClass = async (classId) => {
+  try {
+    await promisePool.query(`
+    UPDATE fingerprint 
+    SET student_id = null, status = 0 
+    WHERE student_id IN
+    (SELECT id FROM student WHERE class_id = ?)
+    `, [classId]);
     return { code: 1030 };
   } catch (err) {
     console.log(err);
@@ -116,9 +167,13 @@ const initTable = async () => {
 module.exports = {
   enrollId,
   deleteOneSensorFinger,
+  deleteSensorFingerList,
+  getFingerListOfClass,
   matchStudent,
   initOneRow,
+  initByClass,
   findStudent,
   initTable,
   checkStudentEnroll,
+
 };

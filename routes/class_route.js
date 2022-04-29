@@ -7,6 +7,7 @@ const {
   getRoutines, createRoutine, editRoutine, deleteRoutine,
   addTeacher, removeTeacher,
   getClasses, createClass, editClass, deleteClass,
+  initClassFingerList,
 } = require('../controllers/class_controller');
 
 const { getStudents, getClassTeachers } = require('../controllers/user_controller');
@@ -37,5 +38,7 @@ router.route('/classes').get(wrapAsync(getClasses));
 router.route('/classes').post(wrapAsync(createClass));
 router.route('/classes/:id').put(wrapAsync(editClass));
 router.route('/classes/:id').delete(wrapAsync(deleteClass));
+
+router.route('/classes/:id/fingerprint').delete(wrapAsync(initClassFingerList));
 
 module.exports = router;
