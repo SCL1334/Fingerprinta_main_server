@@ -1,5 +1,17 @@
 const User = require('../models/user_model');
 const Fingerprint = require('../models/fingerprint_model');
+const { sendResetEmail } = require('../util/mailer');
+
+const studentGetResetUrl = async (req, res) => {
+  const { email } = req.body;
+  const student = await User.getStudentProfile(email);
+  const result = await sendResetEmail(student.name, student.email, 'http://127.0.0.1:3000/student_signin.html');
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
+  } else {
+    res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
+  }
+};
 
 const createStudent = async (req, res) => {
   const {
@@ -263,6 +275,7 @@ module.exports = {
   deleteStaff,
   studentSignIn,
   studentChangePassword,
+  studentGetResetUrl,
   staffSignIn,
   signOut,
   getStudentProfile,
