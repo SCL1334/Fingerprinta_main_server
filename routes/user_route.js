@@ -3,6 +3,7 @@ const router = require('express').Router();
 const { wrapAsync } = require('../util/util');
 const {
   createStudent, editStudent, getStudents, deleteStudent, studentSignIn,
+  studentChangePassword,
   createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
   getStudentProfile, getStaffProfile,
@@ -19,7 +20,6 @@ const {
   applyLeave, getAllLeaves, getPersonLeaves, countLeavesHours, transferLackAttendance,
 } = require('../controllers/leave_controller');
 
-router.route('/students/profile').get(wrapAsync(getStudentProfile));
 router.route('/students/attendances').get(wrapAsync(getAllAttendances));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
@@ -35,6 +35,8 @@ router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch)
 router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
 
 router.route('/students/signin').post(wrapAsync(studentSignIn));
+router.route('/students/profile').get(wrapAsync(getStudentProfile));
+router.route('/students/password').put(wrapAsync(studentChangePassword));
 router.route('/students').post(wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));
 router.route('/students/:id').put(wrapAsync(editStudent));

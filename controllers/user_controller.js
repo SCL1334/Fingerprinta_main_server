@@ -18,8 +18,18 @@ const createStudent = async (req, res) => {
 
 const editStudent = async (req, res) => {
   const studentId = req.params.id;
-  const { name, email, class_id } = req.body;
-  const student = { name, email, class_id };
+  const { name, email, class_id: classId } = req.body;
+  const student = { name, email, class_id: classId };
+
+  console.log(student);
+
+  // remove blank value
+  Object.keys(student).forEach((key) => {
+    if (student[key] === undefined) {
+      delete student[key];
+    }
+  });
+
   const status = await User.editStudent(studentId, student);
   if (status.code < 2000) {
     res.status(200).json({ code: status.code, data: { message: 'Update successfully' } });
@@ -109,6 +119,20 @@ const studentSignIn = async (req, res) => {
   }
   req.session.user = { role: 'student', email };
   return res.status(200).json({ data: 'Signin successfully' });
+};
+
+const studentChangePassword = async (req, res) => {
+  const { user } = req.session;
+  const { email } = user;
+  const { password, new_password: newPassword } = req.body;
+  const result = await User.studentChangePassword(email, password, newPassword);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Update password failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Update password failed due to invalid input' } });
+  }
 };
 
 const staffSignIn = async (req, res) => {
@@ -225,7 +249,7 @@ const initFingerData = async (req, res) => {
   if (initRowStatus.code > 2000) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Internal server Errors' } }); }
   const deleteSensorFingerStatus = await Fingerprint.deleteOneSensorFinger(fingerId);
   if (deleteSensorFingerStatus.code > 2000 || (!deleteSensorFingerStatus.code)) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Sensor Errors' } }); }
-  res.status(200).json({ data: { message: 'Delete successfully' } });
+  return res.status(200).json({ data: { message: 'Delete successfully' } });
 };
 
 module.exports = {
@@ -238,6 +262,7 @@ module.exports = {
   getClassTeachers,
   deleteStaff,
   studentSignIn,
+  studentChangePassword,
   staffSignIn,
   signOut,
   getStudentProfile,

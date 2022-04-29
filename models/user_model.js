@@ -172,6 +172,39 @@ const studentSignIn = async (email, password) => {
   }
 };
 
+const studentChangePassword = async (email, password, newPassword) => {
+  try {
+    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
+    if (students.length === 1) {
+      const match = await bcrypt.compare(password, students[0].password);
+      if (match) {
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+        return { code: 1020 };
+      }
+    }
+    return { code: 4029 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2020 };
+  }
+};
+
+const studentResetPassword = async (email, newPassword) => {
+  try {
+    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
+    if (students.length === 1) {
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+      return { code: 1020 };
+    }
+    return { code: 4029 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2020 };
+  }
+};
+
 const staffSignIn = async (email, password) => {
   try {
     const [staffs] = await promisePool.query('SELECT email, password FROM staff WHERE email = ?', [email]);
@@ -264,6 +297,8 @@ module.exports = {
   getClassTeachers,
   deleteStaff,
   studentSignIn,
+  studentChangePassword,
+  studentResetPassword,
   staffSignIn,
   getStudentProfile,
   getStaffProfile,
