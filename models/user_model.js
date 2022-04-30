@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt');
 
 const salt = parseInt(process.env.BCRYPT_SALT, 10);
+const resetExpire = parseInt(process.env.RESET_EXPIRE, 10);
 const { promisePool } = require('./mysqlcon');
+const Cache = require('../util/cache');
 
 // account manage
 const createStudent = async (name, email, password, classId) => {
@@ -190,6 +192,36 @@ const studentChangePassword = async (email, password, newPassword) => {
   }
 };
 
+const setHashedMail = async (email) => {
+  if (!Cache.ready) {
+    console.log('Redis is not ready');
+    return { code: 2050 };
+  }
+  try {
+    const hash = await bcrypt.hash(email, salt);
+    await Cache.set(hash, email, { EX: resetExpire, NX: true });
+    return { code: 1010, data: { hash } };
+  } catch (err) {
+    console.log(err);
+    return { code: 2010 };
+  }
+};
+
+const getMailByHash = async (hash) => {
+  if (!Cache.ready) {
+    console.log('Redis is not ready');
+    return { code: 2050 };
+  }
+  try {
+    const email = await Cache.get(hash);
+    await Cache.del(hash);
+    return { code: 1000, data: { email } };
+  } catch (err) {
+    console.log(err);
+    return { code: 2000 };
+  }
+};
+
 const studentResetPassword = async (email, newPassword) => {
   try {
     const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
@@ -299,6 +331,8 @@ module.exports = {
   studentSignIn,
   studentChangePassword,
   studentResetPassword,
+  setHashedMail,
+  getMailByHash,
   staffSignIn,
   getStudentProfile,
   getStaffProfile,

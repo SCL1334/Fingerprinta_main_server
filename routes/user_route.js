@@ -3,7 +3,7 @@ const router = require('express').Router();
 const { wrapAsync } = require('../util/util');
 const {
   createStudent, editStudent, getStudents, deleteStudent, studentSignIn,
-  studentChangePassword, studentGetResetUrl,
+  studentChangePassword, studentGetResetUrl, studentResetPassword,
   createStaff, getStaffs, deleteStaff, staffSignIn,
   signOut,
   getStudentProfile, getStaffProfile,
@@ -38,6 +38,7 @@ router.route('/students/signin').post(wrapAsync(studentSignIn));
 router.route('/students/profile').get(wrapAsync(getStudentProfile));
 router.route('/students/password').put(wrapAsync(studentChangePassword));
 router.route('/students/forget').post(wrapAsync(studentGetResetUrl));
+router.route('/students/reset').post(wrapAsync(studentResetPassword));
 
 router.route('/students').post(wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));

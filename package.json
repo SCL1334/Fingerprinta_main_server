@@ -17,7 +17,7 @@
     "express": "^4.17.3",
     "express-session": "^1.17.2",
     "mysql2": "^2.3.3",
-    "nodemon": "^2.0.15",
+    "nodemon": "^2.0.16",
     "redis": "^4.0.6",
     "sib-api-v3-sdk": "^8.3.0"
   },

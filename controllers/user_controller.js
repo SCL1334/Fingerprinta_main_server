@@ -5,12 +5,14 @@ const { sendResetEmail } = require('../util/mailer');
 const studentGetResetUrl = async (req, res) => {
   const { email } = req.body;
   const student = await User.getStudentProfile(email);
-  const result = await sendResetEmail(student.name, student.email, 'http://127.0.0.1:3000/student_signin.html');
+  if (!student) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
+  const getHash = await User.setHashedMail(email);
+  if (getHash.code !== 1010) { return res.status(500).json({ code: getHash.code, error: { message: 'Fail to reset' } }); }
+  const result = await sendResetEmail(student.name, student.email, getHash.data.hash);
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
-  } else {
-    res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
+    return res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
   }
+  return res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
 };
 
 const createStudent = async (req, res) => {
@@ -32,8 +34,6 @@ const editStudent = async (req, res) => {
   const studentId = req.params.id;
   const { name, email, class_id: classId } = req.body;
   const student = { name, email, class_id: classId };
-
-  console.log(student);
 
   // remove blank value
   Object.keys(student).forEach((key) => {
@@ -147,6 +147,23 @@ const studentChangePassword = async (req, res) => {
   }
 };
 
+const studentResetPassword = async (req, res) => {
+  const hash = req.query.apply;
+  const newPassword = req.body.password;
+  const getEmail = await User.getMailByHash(hash);
+  if (getEmail.code >= 2000) { return res.status(500).json({ code: getEmail.code, error: { message: 'Fail to get data' } }); }
+  const { email } = getEmail.data;
+  if (!email) { return res.status(400).json({ code: 4000, error: { message: 'Request expired' } }); }
+  const result = await User.studentResetPassword(email, newPassword);
+  if (result.code < 2000) {
+    return res.status(200).json({ code: result.code, data: { message: 'Reset password successfully' } });
+  }
+  if (result.code < 3000) {
+    return res.status(500).json({ code: result.code, error: { message: 'Reset password failed' } });
+  }
+  return res.status(400).json({ code: result.code, error: { message: 'Reset password failed due to invalid input' } });
+};
+
 const staffSignIn = async (req, res) => {
   const { email, password } = req.body;
   const result = await User.staffSignIn(email, password);
@@ -230,7 +247,6 @@ const matchFingerprint = async (req, res) => {
 
   // send to sensor
   const enrollStatus = await Fingerprint.enrollId(fingerId);
-  console.log(enrollStatus);
   if (enrollStatus.code > 3000) {
     return res.status(400).json({
       code: enrollStatus.code,
@@ -275,6 +291,7 @@ module.exports = {
   deleteStaff,
   studentSignIn,
   studentChangePassword,
+  studentResetPassword,
   studentGetResetUrl,
   staffSignIn,
   signOut,

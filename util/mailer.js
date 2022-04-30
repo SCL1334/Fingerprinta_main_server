@@ -1,6 +1,8 @@
 require('dotenv').config();
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 
+const domain = process.env.DOMAIN;
+
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 
 const apiKey = defaultClient.authentications['api-key'];
@@ -9,7 +11,8 @@ apiKey.apiKey = process.env.MAIL_KEY;
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
-const sendResetEmail = async (name, email, url) => {
+const sendResetEmail = async (name, email, hash) => {
+  const url = `http://${domain}/reset.html?apply=${hash}`;
   sendSmtpEmail.to = [{ email, name }];
   sendSmtpEmail.sender = { email: 'sendinblue@sendinblue.com', name: 'Fingerprinta' };
   sendSmtpEmail.subject = '[Fingerprinta]忘記密碼提醒信';
@@ -28,8 +31,6 @@ const sendResetEmail = async (name, email, url) => {
           此連結在申請後1小時以內只能使用一次。<br>
           如果連結已無法使用，<br>
           煩請再次申請密碼。<br>
-          <br>
-          如果有任何疑問可以向管理員求助。<br>
           <br>
           Fingerprinta 敬上<br>
           <br>
