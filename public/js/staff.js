@@ -61,22 +61,22 @@ async function setPunchTime() {
     `;
 
     content.append(classRoutineForm);
-    const createStaffAccountModal = $('#class_routine_form');
-    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
+    const createRoutineModal = $('#class_routine_form');
+    createRoutineModal.on($.modal.BEFORE_CLOSE, () => {
       // clear last time data
-      createStaffAccountModal.find('input,select').val('').end();
+      createRoutineModal.find('input,select').val('').end();
       // remove listener
-      createStaffAccountModal.children('.submit').off();
+      createRoutineModal.children('.submit').off();
     });
 
     const createRoutineBtn = $('.call_create');
     createRoutineBtn.click(async (callCreate) => {
       callCreate.preventDefault();
-      createStaffAccountModal.modal('show');
-      createStaffAccountModal.children('.submit').click(async (submit) => {
+      createRoutineModal.modal('show');
+      createRoutineModal.children('.submit').click(async (submit) => {
         submit.preventDefault();
         try {
-          const editRoutineRes = await axios(classRoutineUrl, {
+          const createRoutineRes = await axios(classRoutineUrl, {
             method: 'POST',
             data: {
               class_type_id: $(submit.target).parent().children('.class_type').val(),
@@ -88,9 +88,9 @@ async function setPunchTime() {
               'content-type': 'application/json',
             },
           });
-          const editRoutineResult = editRoutineRes.data;
-          if (editRoutineResult) {
-            createStaffAccountModal.children('.close-modal').click();
+          const createRoutineResult = createRoutineRes.data;
+          if (createRoutineResult) {
+            createRoutineModal.children('.close-modal').click();
             setPunchTime();
           }
         } catch (err) {
@@ -167,46 +167,41 @@ async function setPunchTime() {
       fnDrawCallback(oSettings) {
         $('.routine_edit').click(async (callEdit) => {
           callEdit.preventDefault();
-          try {
-            const classRoutineId = $(callEdit.target).parent().parent().data('id');
-            const originClassTypeId = $(callEdit.target).parent().siblings('.class_type').data('class_type_id');
-            const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
-            const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
-            const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
-            createStaffAccountModal.children('.class_type').val(originClassTypeId);
-            createStaffAccountModal.children('.weekday').val(originWeekday);
-            createStaffAccountModal.children('.start_time').val(originStartTime);
-            createStaffAccountModal.children('.end_time').val(originEndTime);
-            createStaffAccountModal.modal('show');
-            createStaffAccountModal.children('.submit').click(async (submit) => {
-              submit.preventDefault();
-              try {
-                const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
-                  method: 'PUT',
-                  data: {
-                    class_type_id: $(submit.target).parent().children('.class_type').val(),
-                    weekday: $(submit.target).parent().children('.weekday').val(),
-                    start_time: $(submit.target).parent().children('.start_time').val(),
-                    end_time: $(submit.target).parent().children('.end_time').val(),
-                  },
-                  headers: {
-                    'content-type': 'application/json',
-                  },
-                });
-                const editRoutineResult = editRoutineRes.data;
-                if (editRoutineResult) {
-                  createStaffAccountModal.children('.close-modal').click();
-
-                  setPunchTime();
-                }
-              } catch (err) {
-                console.log(err);
-                alert('update fail');
+          const classRoutineId = $(callEdit.target).parent().parent().data('id');
+          const originClassTypeId = $(callEdit.target).parent().siblings('.class_type').data('class_type_id');
+          const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
+          const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
+          const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
+          createRoutineModal.children('.class_type').val(originClassTypeId);
+          createRoutineModal.children('.weekday').val(originWeekday);
+          createRoutineModal.children('.start_time').val(originStartTime);
+          createRoutineModal.children('.end_time').val(originEndTime);
+          createRoutineModal.modal('show');
+          createRoutineModal.children('.submit').click(async (submit) => {
+            submit.preventDefault();
+            try {
+              const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
+                method: 'PUT',
+                data: {
+                  class_type_id: $(submit.target).parent().children('.class_type').val(),
+                  weekday: $(submit.target).parent().children('.weekday').val(),
+                  start_time: $(submit.target).parent().children('.start_time').val(),
+                  end_time: $(submit.target).parent().children('.end_time').val(),
+                },
+                headers: {
+                  'content-type': 'application/json',
+                },
+              });
+              const editRoutineResult = editRoutineRes.data;
+              if (editRoutineResult) {
+                createRoutineModal.children('.close-modal').click();
+                setPunchTime();
               }
-            });
-          } catch (err) {
-            console.log(err);
-          }
+            } catch (err) {
+              console.log(err);
+              alert('update fail');
+            }
+          });
         });
         $('.routine_delete').click(async (event) => {
           try {
@@ -497,6 +492,397 @@ async function accountManage() {
   staffAccounts.click(staffManage);
 }
 
+// class setting
+async function classManage() {
+  $('.content').empty();
+  const classCompenents = $('<div></div>').attr('class', 'class_compenent');
+  const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式設定');
+  const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別設定');
+  const classes = $('<div></div>').attr('class', 'classes').text('班級基礎資訊設定');
+  const classManageBoard = $('<div></div>').attr('class', 'class_manage_board');
+  classCompenents.append(classes, classTypes, classGroups, classManageBoard);
+  $('.content').append(classCompenents);
+
+  // classes basic manage
+  async function classBasicSetting() {
+    classManageBoard.empty();
+    const classesUrl = '/api/1.0/classes';
+
+    // init table
+    const classTable = $('<table></table>').attr('id', 'classes_result');
+    const thead = $('<thead></thead>');
+    const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', '', ''];
+    const tr = $('<tr></tr>');
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    thead.append(tr);
+    classTable.append(thead);
+    classManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    classManageBoard.append(classTable);
+
+    // class Add form building
+    try {
+      const classTypesRaw = await axios.get(`${classesUrl}/types`);
+      const classGroupsRaw = await axios.get(`${classesUrl}/groups`);
+      const classTypes = classTypesRaw.data.data;
+      const classGroups = classGroupsRaw.data.data;
+      const classTypesOptions = classTypes.reduce((acc, cur) => {
+        acc += `<option value=${cur.id}>${cur.name}</option>`;
+        return acc;
+      }, '');
+      const classGroupsOptions = classGroups.reduce((acc, cur) => {
+        acc += `<option value=${cur.id}>${cur.name}</option>`;
+        return acc;
+      }, '');
+
+      const classForm = `
+        <div class="modal fade" id="class_form" role="dialog">
+          <form action="" method="">
+            <select id='class_type'>
+              <option value='disabled selected hidden'>請選擇班級培訓形式</option>
+              ${classTypesOptions}
+            </select>
+            <input id='class_batch' name='batch' type="number">
+            <select id='class_group'>
+              <option value='disabled selected hidden'>請選擇班級培訓班別</option>
+              ${classGroupsOptions}
+            </select>
+            <input id='class_start_date' name='start_date' type="date">
+            <input id='class_end_date' name='end_date' type="date">
+            <button class="submit" type="submit">送出</button>
+          </form>
+        </div>
+        `;
+      classManageBoard.append(classForm);
+      const classModal = $('#class_form');
+      classModal.on($.modal.BEFORE_CLOSE, () => {
+        classModal.children().find('input,select').val('').end();
+        classModal.children().children('.submit').off();
+      });
+
+      const addClassBtn = $('.call_create');
+      addClassBtn.click(async (callAdd) => {
+        callAdd.preventDefault();
+        classModal.modal('show');
+
+        classModal.children().children('.submit').click(async (submit) => {
+          submit.preventDefault();
+          try {
+            const addClassType = $(submit.target).siblings('#class_type').val();
+            const addClassBatch = $(submit.target).siblings('#class_batch').val();
+            const addClassGroup = $(submit.target).siblings('#class_group').val();
+            const addClassStart = $(submit.target).siblings('#class_start_date').val();
+            const addClassEnd = $(submit.target).siblings('#class_end_date').val();
+            const addClassRes = await axios(classesUrl, {
+              method: 'POST',
+              data: {
+                class_type_id: addClassType,
+                batch: addClassBatch,
+                class_group_id: addClassGroup,
+                start_date: addClassStart,
+                end_date: addClassEnd,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const addClassResult = addClassRes.data;
+            if (addClassResult) {
+              classModal.children('.close-modal').click();
+              classBasicSetting();
+            }
+          } catch (err) {
+            console.log(err);
+            alert('create fail');
+          }
+        });
+      });
+
+      // show all exist classes
+      try {
+        await classTable.DataTable({
+          ajax: {
+            url: classesUrl, // 要抓哪個地方的資料
+            type: 'GET', // 使用什麼方式抓
+            dataType: 'json', // 回傳資料的類型
+          },
+          columns: [
+            { data: 'id' },
+            { data: 'class_type_name' },
+            { data: 'batch' },
+            { data: 'class_group_name' },
+            { data: 'start_date' },
+            { data: 'end_date' },
+            {
+              data: 'edit_class',
+              render() {
+                return createBtn('class_edit', '編輯');
+              },
+            },
+            {
+              data: 'delete_class',
+              render() {
+                return createBtn('class_delete', '刪除');
+              },
+            },
+          ],
+          columnDefs: [
+            {
+              targets: 0,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('class', 'class_id');
+              },
+            },
+            {
+              targets: 1,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('data-class_type_id', rowData.class_type_id);
+                $(td).attr('class', 'class_type');
+              },
+            },
+            {
+              targets: 2,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('class', 'batch');
+              },
+            },
+            {
+              targets: 3,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('data-class_group_id', rowData.class_group_id);
+                $(td).attr('class', 'class_group');
+              },
+            },
+            {
+              targets: 4,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('class', 'start_date');
+              },
+            },
+            {
+              targets: 5,
+              createdCell(td, cellData, rowData, row, col) {
+                $(td).attr('class', 'end_date');
+              },
+            },
+          ],
+          fnDrawCallback(oSetting) {
+            $('.class_edit').click(async (callEdit) => {
+              callEdit.preventDefault();
+              const classId = $(callEdit.target).parent().siblings('.class_id').text();
+              const originClassTypeId = $(callEdit.target).parent().siblings('.class_type').data('class_type_id');
+              const originClassBatch = $(callEdit.target).parent().siblings('.batch').text();
+              const originClassGroupId = $(callEdit.target).parent().siblings('.class_group').data('class_group_id');
+              const originClassStart = $(callEdit.target).parent().siblings('.start_date').text();
+              const originClassEnd = $(callEdit.target).parent().siblings('.end_date').text();
+              classModal.children().children('#class_type').val(originClassTypeId);
+              classModal.children().children('#class_batch').val(originClassBatch);
+              classModal.children().children('#class_group').val(originClassGroupId);
+              classModal.children().children('#class_start_date').val(originClassStart);
+              classModal.children().children('#class_end_date').val(originClassEnd);
+              classModal.modal('show');
+              classModal.children().children('.submit').click(async (submit) => {
+                submit.preventDefault();
+                try {
+                  const editClassRes = await axios(`${classesUrl}/${classId}`, {
+                    method: 'PUT',
+                    data: {
+                      class_type_id: $(submit.target).siblings('#class_type').val(),
+                      batch: $(submit.target).siblings('#class_batch').val(),
+                      class_group_id: $(submit.target).siblings('#class_group').val(),
+                      start_date: $(submit.target).siblings('#class_start_date').val(),
+                      end_date: $(submit.target).siblings('#class_end_date').val(),
+                    },
+                    headers: {
+                      'content-type': 'application/json',
+                    },
+                  });
+                  const editClassResult = editClassRes.data;
+                  if (editClassResult) {
+                    classModal.children('.close-modal').click();
+                    classBasicSetting();
+                  }
+                } catch (err) {
+                  console.log(err);
+                  alert('update fail');
+                }
+              });
+            });
+            $('.class_delete').click(async (deleteEvent) => {
+              try {
+                const classId = $(deleteEvent.target).parent().siblings('.class_id').text();
+                const deleteClassRes = await axios.delete(`${classesUrl}/${classId}`);
+                const deleteClassResult = deleteClassRes.data;
+                if (deleteClassResult) {
+                  classBasicSetting();
+                }
+              } catch (err) {
+                console.log(err);
+              }
+            });
+          },
+        });
+      } catch (err) {
+        console.log(err);
+        console.log(err.response.data);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  classes.click(classBasicSetting);
+
+  // class type manage
+  classTypes.click(async () => {
+    const classTypeUrl = '/api/1.0/classes/types';
+    classManageBoard.empty();
+
+    const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').val('請輸入培訓形式名稱');
+    const addBtn = $('<button></button>').attr('class', 'add_class_type_btn').text('新增');
+    const table = $('<table></table>').attr('class', 'class_type_result');
+    const tr = $('<tr></tr>');
+    const heads = ['ID', '培訓形式名稱', ''];
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    table.append(tr);
+    classManageBoard.append(add, addBtn, table);
+
+    addBtn.click(async () => {
+      const newType = $('.add_class_type').val();
+      try {
+        const addTypeRes = await axios(classTypeUrl, {
+          method: 'POST',
+          data: {
+            type_name: newType,
+          },
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        const addTypeResult = addTypeRes.data;
+        if (addTypeResult) {
+          const tr = $('<tr></tr>');
+          const td_id = $('<td></td>').text(addTypeResult.data.insert_id);
+          const td_name = $('<td></td>').text(newType);
+          const td_delete = $('<td></td>');
+          const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+            const deleteTypeRes = await axios.delete(`${classTypeUrl}/${addTypeResult.data.insert_id}`);
+            const deleteTypeResult = deleteTypeRes.data;
+            if (deleteTypeResult) {
+              $(event.target).parent().parent().remove();
+            }
+          });
+          td_delete.append(delete_btn);
+          tr.append(td_id, td_name, td_delete);
+          table.append(tr);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
+    try {
+      const classTypeDetail = await axios.get(classTypeUrl);
+      const classTypeData = classTypeDetail.data;
+      classTypeData.data.forEach((classType) => {
+        const tr = $('<tr></tr>');
+        const td_id = $('<td></td>').text(classType.id);
+        const td_name = $('<td></td>').text(classType.name);
+        const td_delete = $('<td></td>');
+        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+          const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
+          const deleteTypeResult = deleteTypeRes.data;
+          if (deleteTypeResult) {
+            $(event.target).parent().parent().remove();
+          }
+        });
+        td_delete.append(delete_btn);
+        tr.append(td_id, td_name, td_delete);
+        table.append(tr);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  // class group manage
+  classGroups.click(async () => {
+    const classGroupUrl = '/api/1.0/classes/groups';
+    classManageBoard.empty();
+
+    const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').val('請輸入培訓班別名稱');
+    const addBtn = $('<button></button>').attr('class', 'add_class_group_btn').text('新增');
+    const table = $('<table></table>').attr('class', 'class_group_result');
+    const tr = $('<tr></tr>');
+    const heads = ['ID', '培訓班別名稱', ''];
+    heads.forEach((head) => {
+      const th = $('<th></th>').text(head);
+      tr.append(th);
+    });
+    table.append(tr);
+    classManageBoard.append(add, addBtn, table);
+
+    addBtn.click(async () => {
+      const newGroup = $('.add_class_group').val();
+      try {
+        const addGroupRes = await axios(classGroupUrl, {
+          method: 'POST',
+          data: {
+            group_name: newGroup,
+          },
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        const addGroupResult = addGroupRes.data;
+        if (addGroupResult) {
+          const tr = $('<tr></tr>');
+          const td_id = $('<td></td>').text(addGroupResult.data.insert_id);
+          const td_name = $('<td></td>').text(newGroup);
+          const td_delete = $('<td></td>');
+          const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+            const deleteGroupRes = await axios.delete(`${classGroupUrl}/${addGroupResult.data.insert_id}`);
+            const deleteGroupResult = deleteGroupRes.data;
+            if (deleteGroupResult) {
+              $(event.target).parent().parent().remove();
+            }
+          });
+          td_delete.append(delete_btn);
+          tr.append(td_id, td_name, td_delete);
+          table.append(tr);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
+    try {
+      const classGroupDetail = await axios.get(classGroupUrl);
+      const classGroupData = classGroupDetail.data;
+      classGroupData.data.forEach((classGroup) => {
+        const tr = $('<tr></tr>');
+        const td_id = $('<td></td>').text(classGroup.id);
+        const td_name = $('<td></td>').text(classGroup.name);
+        const td_delete = $('<td></td>');
+        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+          const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
+          const deleteGroupResult = deleteGroupRes.data;
+          if (deleteGroupResult) {
+            $(event.target).parent().parent().remove();
+          }
+        });
+        td_delete.append(delete_btn);
+        tr.append(td_id, td_name, td_delete);
+        table.append(tr);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  });
+}
+
 // holiday setting
 async function exceptionManage() {
   $('.content').empty();
@@ -773,298 +1159,7 @@ $(document).ready(async () => {
     account.click(accountManage);
 
     // class manage
-    $('.class_manage').click(async () => {
-      $('.content').empty();
-      const classCompenents = $('<div></div>').attr('class', 'class_compenent');
-      const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式設定');
-      const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別設定');
-      const classes = $('<div></div>').attr('class', 'classes').text('班級基礎資訊設定');
-      const classManageBoard = $('<div></div>').attr('class', 'class_manage_board');
-      classCompenents.append(classes, classTypes, classGroups, classManageBoard);
-      $('.content').append(classCompenents);
-
-      // classes manage
-      classes.click(async () => {
-        const classesUrl = '/api/1.0/classes';
-
-        // class Add form building
-        let classAddForm = '';
-        try {
-          const classTypesRaw = await axios.get(`${classesUrl}/types`);
-          const classGroupsRaw = await axios.get(`${classesUrl}/groups`);
-          const classTypes = classTypesRaw.data.data;
-          const classGroups = classGroupsRaw.data.data;
-          const classTypesOptions = classTypes.reduce((acc, cur) => {
-            acc += `<option value=${cur.id}>${cur.name}</option>`;
-            return acc;
-          }, '');
-          const classGroupsOptions = classGroups.reduce((acc, cur) => {
-            acc += `<option value=${cur.id}>${cur.name}</option>`;
-            return acc;
-          }, '');
-          classManageBoard.empty();
-          classAddForm = `
-          <div class="class_form">新增班級
-            <form action="${classesUrl}" method="POST">
-              <select id='class_type'>
-                <option value=null>請選擇班級培訓形式</option>
-                ${classTypesOptions}
-              </select>
-              <input id='class_batch' name='batch' type="number">
-              <select id='class_group'>
-                <option value=null>請選擇班級培訓班別</option>
-                ${classGroupsOptions}
-              </select>
-              <input id='class_start_date' name='start_date' type="date">
-              <input id='class_end_date' name='end_date' type="date">
-              <button type="submit">送出</button>
-            </form>
-          </div>
-          `;
-        } catch (err) {
-          console.log(err);
-          console.log(err.response.data);
-          return;
-        }
-        classManageBoard.append(classAddForm);
-
-        // Add new class trigger
-        $('.class_form form').submit(async (newClassSubmitEvent) => {
-          try {
-            newClassSubmitEvent.preventDefault();
-            const addClassType = $('#class_type').val();
-            const addClassBatch = $('#class_batch').val();
-            const addClassGroup = $('#class_group').val();
-            const addClassStart = $('#class_start_date').val();
-            const addClassEnd = $('#class_end_date').val();
-            const addClassRes = await axios(classesUrl, {
-              method: $('.class_form form').attr('method'),
-              data: {
-                class_type_id: addClassType,
-                batch: addClassBatch,
-                class_group_id: addClassGroup,
-                start_date: addClassStart,
-                end_date: addClassEnd,
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const addClassResult = addClassRes.data.data;
-            if (addClassResult) {
-              const tr = $('<tr></tr>');
-              const td_id = $('<td></td>').text(addClassResult.insert_id);
-              const td_class_type = $('<td></td>').text($('#class_type option:selected').text());
-              const td_class_batch = $('<td></td>').text(addClassBatch);
-              const td_class_group = $('<td></td>').text($('#class_group option:selected').text());
-              const td_class_start = $('<td></td>').text(addClassStart);
-              const td_class_end = $('<td></td>').text(addClassEnd);
-              const td_delete = $('<td></td>');
-              const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-                const deleteClassRes = await axios.delete(`${classesUrl}/${addClassResult.insert_id}`);
-                const deleteClassResult = deleteClassRes.data;
-                if (deleteClassResult) {
-                  $(deleteButtonEvent.target).parent().parent().remove();
-                }
-              });
-              td_delete.append(delete_btn);
-              tr.append(td_id, td_class_type, td_class_batch, td_class_group, td_class_start, td_class_end, td_delete);
-              table.append(tr);
-            }
-          } catch (err) {
-            console.log(err);
-            console.log(err.response.data);
-          }
-        });
-
-        // init table
-        const table = $('<table></table>').attr('class', 'classes_result');
-        const tr = $('<tr></tr>');
-        const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', ''];
-        heads.forEach((head) => {
-          const th = $('<th></th>').text(head);
-          tr.append(th);
-        });
-        table.append(tr);
-
-        // show all exist classes
-        try {
-          const classesDetail = await axios.get(classesUrl);
-          const classesData = classesDetail.data;
-          classesData.data.forEach((clas) => {
-            const tr = $('<tr></tr>');
-            const td_id = $('<td></td>').text(clas.id);
-            const td_class_type = $('<td></td>').text(clas.class_type_name);
-            const td_class_batch = $('<td></td>').text(clas.batch);
-            const td_class_group = $('<td></td>').text(clas.class_group_name);
-            const td_class_start = $('<td></td>').text(clas.start_date);
-            const td_class_end = $('<td></td>').text(clas.end_date);
-            const td_delete = $('<td></td>');
-            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-              const deleteClassRes = await axios.delete(`${classesUrl}/${clas.id}`);
-              const deleteClassResult = deleteClassRes.data;
-              if (deleteClassResult) {
-                $(event.target).parent().parent().remove();
-              }
-            });
-            td_delete.append(delete_btn);
-            tr.append(td_id, td_class_type, td_class_batch, td_class_group, td_class_start, td_class_end, td_delete);
-            table.append(tr);
-          });
-          classManageBoard.append(table);
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
-      // class type manage
-      classTypes.click(async () => {
-        const classTypeUrl = '/api/1.0/classes/types';
-        classManageBoard.empty();
-
-        const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').val('請輸入培訓形式名稱');
-        const addBtn = $('<button></button>').attr('class', 'add_class_type_btn').text('新增');
-        const table = $('<table></table>').attr('class', 'class_type_result');
-        const tr = $('<tr></tr>');
-        const heads = ['ID', '培訓形式名稱', ''];
-        heads.forEach((head) => {
-          const th = $('<th></th>').text(head);
-          tr.append(th);
-        });
-        table.append(tr);
-        classManageBoard.append(add, addBtn, table);
-
-        addBtn.click(async () => {
-          const newType = $('.add_class_type').val();
-          try {
-            const addTypeRes = await axios(classTypeUrl, {
-              method: 'POST',
-              data: {
-                type_name: newType,
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const addTypeResult = addTypeRes.data;
-            if (addTypeResult) {
-              const tr = $('<tr></tr>');
-              const td_id = $('<td></td>').text(addTypeResult.data.insert_id);
-              const td_name = $('<td></td>').text(newType);
-              const td_delete = $('<td></td>');
-              const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-                const deleteTypeRes = await axios.delete(`${classTypeUrl}/${addTypeResult.data.insert_id}`);
-                const deleteTypeResult = deleteTypeRes.data;
-                if (deleteTypeResult) {
-                  $(event.target).parent().parent().remove();
-                }
-              });
-              td_delete.append(delete_btn);
-              tr.append(td_id, td_name, td_delete);
-              table.append(tr);
-            }
-          } catch (err) {
-            console.log(err);
-          }
-        });
-        try {
-          const classTypeDetail = await axios.get(classTypeUrl);
-          const classTypeData = classTypeDetail.data;
-          classTypeData.data.forEach((classType) => {
-            const tr = $('<tr></tr>');
-            const td_id = $('<td></td>').text(classType.id);
-            const td_name = $('<td></td>').text(classType.name);
-            const td_delete = $('<td></td>');
-            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-              const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
-              const deleteTypeResult = deleteTypeRes.data;
-              if (deleteTypeResult) {
-                $(event.target).parent().parent().remove();
-              }
-            });
-            td_delete.append(delete_btn);
-            tr.append(td_id, td_name, td_delete);
-            table.append(tr);
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      });
-
-      // class group manage
-      classGroups.click(async () => {
-        const classGroupUrl = '/api/1.0/classes/groups';
-        classManageBoard.empty();
-
-        const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').val('請輸入培訓班別名稱');
-        const addBtn = $('<button></button>').attr('class', 'add_class_group_btn').text('新增');
-        const table = $('<table></table>').attr('class', 'class_group_result');
-        const tr = $('<tr></tr>');
-        const heads = ['ID', '培訓班別名稱', ''];
-        heads.forEach((head) => {
-          const th = $('<th></th>').text(head);
-          tr.append(th);
-        });
-        table.append(tr);
-        classManageBoard.append(add, addBtn, table);
-
-        addBtn.click(async () => {
-          const newGroup = $('.add_class_group').val();
-          try {
-            const addGroupRes = await axios(classGroupUrl, {
-              method: 'POST',
-              data: {
-                group_name: newGroup,
-              },
-              headers: {
-                'content-type': 'application/json',
-              },
-            });
-            const addGroupResult = addGroupRes.data;
-            if (addGroupResult) {
-              const tr = $('<tr></tr>');
-              const td_id = $('<td></td>').text(addGroupResult.data.insert_id);
-              const td_name = $('<td></td>').text(newGroup);
-              const td_delete = $('<td></td>');
-              const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-                const deleteGroupRes = await axios.delete(`${classGroupUrl}/${addGroupResult.data.insert_id}`);
-                const deleteGroupResult = deleteGroupRes.data;
-                if (deleteGroupResult) {
-                  $(event.target).parent().parent().remove();
-                }
-              });
-              td_delete.append(delete_btn);
-              tr.append(td_id, td_name, td_delete);
-              table.append(tr);
-            }
-          } catch (err) {
-            console.log(err);
-          }
-        });
-        try {
-          const classGroupDetail = await axios.get(classGroupUrl);
-          const classGroupData = classGroupDetail.data;
-          classGroupData.data.forEach((classGroup) => {
-            const tr = $('<tr></tr>');
-            const td_id = $('<td></td>').text(classGroup.id);
-            const td_name = $('<td></td>').text(classGroup.name);
-            const td_delete = $('<td></td>');
-            const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
-              const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
-              const deleteGroupResult = deleteGroupRes.data;
-              if (deleteGroupResult) {
-                $(event.target).parent().parent().remove();
-              }
-            });
-            td_delete.append(delete_btn);
-            tr.append(td_id, td_name, td_delete);
-            table.append(tr);
-          });
-        } catch (err) {
-          console.log(err);
-        }
-      });
-    });
+    $('.class_manage').click(classManage);
 
     // get attendance
     $('.get_attendances').click(async () => {
