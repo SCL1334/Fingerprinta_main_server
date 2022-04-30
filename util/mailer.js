@@ -11,8 +11,8 @@ apiKey.apiKey = process.env.MAIL_KEY;
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
-const sendResetEmail = async (name, email, hash) => {
-  const url = `http://${domain}/reset.html?apply=${hash}`;
+const sendResetEmail = async (role, name, email, hash) => {
+  const url = `http://${domain}/${role}_reset.html?apply=${hash}`;
   sendSmtpEmail.to = [{ email, name }];
   sendSmtpEmail.sender = { email: 'sendinblue@sendinblue.com', name: 'Fingerprinta' };
   sendSmtpEmail.subject = '[Fingerprinta]忘記密碼提醒信';

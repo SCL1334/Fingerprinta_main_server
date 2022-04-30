@@ -34,7 +34,7 @@ const editStudent = async (studentId, student) => {
       console.log('target not exist');
       return { code: 4020 };
     }
-    await promisePool.query('UPDATE student SET ? WHERE id = ?', [student, studentId]);
+    await promisePool.query('UPDATE student SET ? , last_update = CURRENT_TIMESTAMP WHERE id = ?', [student, studentId]);
     return { code: 1020 };
   } catch (error) {
     console.log(error);
@@ -174,14 +174,14 @@ const studentSignIn = async (email, password) => {
   }
 };
 
-const studentChangePassword = async (email, password, newPassword) => {
+const changePassword = async (role, email, password, newPassword) => {
   try {
-    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
-    if (students.length === 1) {
-      const match = await bcrypt.compare(password, students[0].password);
+    const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE email = ?`, [email]);
+    if (users.length === 1) {
+      const match = await bcrypt.compare(password, users[0].password);
       if (match) {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
-        await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE email = ?`, [hashedPassword, email]);
         return { code: 1020 };
       }
     }
@@ -222,12 +222,12 @@ const getMailByHash = async (hash) => {
   }
 };
 
-const studentResetPassword = async (email, newPassword) => {
+const resetPassword = async (role, email, newPassword) => {
   try {
-    const [students] = await promisePool.query('SELECT email, password FROM student WHERE email = ?', [email]);
-    if (students.length === 1) {
+    const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE email = ?`, [email]);
+    if (users.length === 1) {
       const hashedPassword = await bcrypt.hash(newPassword, salt);
-      await promisePool.query('UPDATE student SET password = ? WHERE email = ?', [hashedPassword, email]);
+      await promisePool.query(`UPDATE ${role} SET password = ? , password_default = 0 WHERE email = ?`, [hashedPassword, email]);
       return { code: 1020 };
     }
     return { code: 4029 };
@@ -273,8 +273,9 @@ const getStaffProfile = async (email) => {
   try {
     const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE email = ?;', [email]);
     const profile = profiles[0];
-    const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);
-    profile.classes = classes;
+    // no need to check staff classes currently
+    // const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);
+    // profile.classes = classes;
     return profile;
   } catch (err) {
     console.log(err);
@@ -329,8 +330,8 @@ module.exports = {
   getClassTeachers,
   deleteStaff,
   studentSignIn,
-  studentChangePassword,
-  studentResetPassword,
+  changePassword,
+  resetPassword,
   setHashedMail,
   getMailByHash,
   staffSignIn,

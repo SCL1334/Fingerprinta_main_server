@@ -2,19 +2,6 @@ const User = require('../models/user_model');
 const Fingerprint = require('../models/fingerprint_model');
 const { sendResetEmail } = require('../util/mailer');
 
-const studentGetResetUrl = async (req, res) => {
-  const { email } = req.body;
-  const student = await User.getStudentProfile(email);
-  if (!student) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
-  const getHash = await User.setHashedMail(email);
-  if (getHash.code !== 1010) { return res.status(500).json({ code: getHash.code, error: { message: 'Fail to reset' } }); }
-  const result = await sendResetEmail(student.name, student.email, getHash.data.hash);
-  if (result.code < 2000) {
-    return res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
-  }
-  return res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
-};
-
 const createStudent = async (req, res) => {
   const {
     name, email, password, class_id,
@@ -134,10 +121,12 @@ const studentSignIn = async (req, res) => {
 };
 
 const studentChangePassword = async (req, res) => {
+  const role = 'student';
   const { user } = req.session;
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
   const { email } = user;
   const { password, new_password: newPassword } = req.body;
-  const result = await User.studentChangePassword(email, password, newPassword);
+  const result = await User.changePassword(role, email, password, newPassword);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
   } else if (result.code < 3000) {
@@ -147,14 +136,29 @@ const studentChangePassword = async (req, res) => {
   }
 };
 
+const studentGetResetUrl = async (req, res) => {
+  const role = 'student';
+  const { email } = req.body;
+  const student = await User.getStudentProfile(email);
+  if (!student) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
+  const setHash = await User.setHashedMail(email);
+  if (setHash.code !== 1010) { return res.status(500).json({ code: setHash.code, error: { message: 'Fail to reset' } }); }
+  const result = await sendResetEmail(role, student.name, student.email, setHash.data.hash);
+  if (result.code < 2000) {
+    return res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
+  }
+  return res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
+};
+
 const studentResetPassword = async (req, res) => {
+  const role = 'student';
   const hash = req.query.apply;
   const newPassword = req.body.password;
   const getEmail = await User.getMailByHash(hash);
   if (getEmail.code >= 2000) { return res.status(500).json({ code: getEmail.code, error: { message: 'Fail to get data' } }); }
   const { email } = getEmail.data;
   if (!email) { return res.status(400).json({ code: 4000, error: { message: 'Request expired' } }); }
-  const result = await User.studentResetPassword(email, newPassword);
+  const result = await User.resetPassword(role, email, newPassword);
   if (result.code < 2000) {
     return res.status(200).json({ code: result.code, data: { message: 'Reset password successfully' } });
   }
@@ -175,6 +179,54 @@ const staffSignIn = async (req, res) => {
   }
   req.session.user = { role: 'staff', email };
   return res.status(200).json({ data: 'Signin successfully' });
+};
+
+const staffChangePassword = async (req, res) => {
+  const role = 'staff';
+  const { user } = req.session;
+  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const { email } = user;
+  const { password, new_password: newPassword } = req.body;
+  const result = await User.changePassword(role, email, password, newPassword);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Update password failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Update password failed due to invalid input' } });
+  }
+};
+
+const staffGetResetUrl = async (req, res) => {
+  const role = 'staff';
+  const { email } = req.body;
+  const staff = await User.getStaffProfile(email);
+  if (!staff) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
+  const setHash = await User.setHashedMail(email);
+  if (setHash.code !== 1010) { return res.status(500).json({ code: setHash.code, error: { message: 'Fail to reset' } }); }
+  const result = await sendResetEmail(role, staff.name, staff.email, setHash.data.hash);
+  if (result.code < 2000) {
+    return res.status(200).json({ code: result.code, data: { message: 'Mail has been send successfully' } });
+  }
+  return res.status(500).json({ code: result.code, error: { message: 'Failt to send mail' } });
+};
+
+const staffResetPassword = async (req, res) => {
+  const role = 'staff';
+  const hash = req.query.apply;
+  const newPassword = req.body.password;
+  const getEmail = await User.getMailByHash(hash);
+  if (getEmail.code >= 2000) { return res.status(500).json({ code: getEmail.code, error: { message: 'Fail to get data' } }); }
+  const { email } = getEmail.data;
+  if (!email) { return res.status(400).json({ code: 4000, error: { message: 'Request expired' } }); }
+  const result = await User.resetPassword(role, email, newPassword);
+  if (result.code < 2000) {
+    return res.status(200).json({ code: result.code, data: { message: 'Reset password successfully' } });
+  }
+  if (result.code < 3000) {
+    return res.status(500).json({ code: result.code, error: { message: 'Reset password failed' } });
+  }
+  return res.status(400).json({ code: result.code, error: { message: 'Reset password failed due to invalid input' } });
 };
 
 // maybe put in other route
@@ -294,6 +346,9 @@ module.exports = {
   studentResetPassword,
   studentGetResetUrl,
   staffSignIn,
+  staffChangePassword,
+  staffGetResetUrl,
+  staffResetPassword,
   signOut,
   getStudentProfile,
   getStaffProfile,

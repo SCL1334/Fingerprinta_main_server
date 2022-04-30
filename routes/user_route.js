@@ -5,6 +5,7 @@ const {
   createStudent, editStudent, getStudents, deleteStudent, studentSignIn,
   studentChangePassword, studentGetResetUrl, studentResetPassword,
   createStaff, getStaffs, deleteStaff, staffSignIn,
+  staffChangePassword, staffGetResetUrl, staffResetPassword,
   signOut,
   getStudentProfile, getStaffProfile,
   matchFingerprint, initFingerData,
@@ -49,6 +50,10 @@ router.route('/teachers/:id/classes').get(wrapAsync(getClasses));
 
 router.route('/staffs/profile').get(wrapAsync(getStaffProfile));
 router.route('/staffs/signin').post(wrapAsync(staffSignIn));
+router.route('/staffs/password').put(wrapAsync(staffChangePassword));
+router.route('/staffs/forget').post(wrapAsync(staffGetResetUrl));
+router.route('/staffs/reset').post(wrapAsync(staffResetPassword));
+
 router.route('/staffs').post(wrapAsync(createStaff));
 router.route('/staffs').get(wrapAsync(getStaffs));
 router.route('/staffs/:id').delete(wrapAsync(deleteStaff));
