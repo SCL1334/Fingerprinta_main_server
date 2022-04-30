@@ -201,14 +201,13 @@ const createClass = async (req, res) => {
 
 const editClass = async (req, res) => {
   const {
-    class_type_id, batch, class_group_id, teacher_id, start_date, end_date,
+    class_type_id, batch, class_group_id, start_date, end_date,
   } = req.body;
   const classId = req.params.id;
   const clas = {
     class_type_id,
     batch,
     class_group_id,
-    teacher_id,
     start_date,
     end_date,
   };
