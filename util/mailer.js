@@ -30,7 +30,7 @@ const sendResetEmail = async (role, name, email, hash) => {
           [請注意]<br>
           此連結在申請後1小時以內只能使用一次。<br>
           如果連結已無法使用，<br>
-          煩請再次申請密碼。<br>
+          煩請再次申請連結。<br>
           <br>
           Fingerprinta 敬上<br>
           <br>

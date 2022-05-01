@@ -4,9 +4,35 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+  <title>重設密碼</title>
 </head>
-<body>
-  <h1>student</h1>
+<body class="dark-mode">
+  <div class="message"></div>
+  <div class="reset card card-primary">
+    <div class="card-header">
+      <div class="card-title">
+        <h3>重新設定密碼</h3>
+      </div>
+    </div>
+    <form class="reset_form card-body" method="post" action="/api/1.0/students/reset">
+      <div class="form-group">
+        <label for="password">請輸入密碼</label>
+        <input id="password" name="password" type="password" placeholder="password" value="test" required>
+      </div>
+      <div class="form-group">
+        <label for="password">請再次輸入密碼</label>
+        <input id="confirm_password" name="confirm_password" type="password" placeholder="password" value="test" required>
+        <span id="match"></span>
+      </div>
+      <div class="card-footer">
+        <button type="submit">重設密碼</button>
+      </div>
+    </form>
+  </div>
+  <script src="./js/reset_password.js"></script>
 </body>
 </html>

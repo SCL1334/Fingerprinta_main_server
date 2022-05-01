@@ -21,6 +21,7 @@ $(document).ready(() => {
         location.href = location.href.replace('_signin.html', '.html');
       }
     } catch (err) {
+      alert('登入失敗');
       console.log(err);
       console.log(err.response.data);
     }
