@@ -1,7 +1,9 @@
 require('dotenv').config();
 const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 // Express Initialization
 const express = require('express');
+
 // routes
 const userRoute = require('./routes/user_route');
 const classRoute = require('./routes/class_route');
@@ -21,6 +23,7 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+  store: new RedisStore({ client: Cache }),
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,

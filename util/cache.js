@@ -6,6 +6,7 @@ const {
 } = process.env;
 
 const redisClient = redis.createClient({
+  legacyMode: true,
   host: CACHE_HOST,
   port: CACHE_PORT,
   user: CACHE_USER,

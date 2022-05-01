@@ -231,8 +231,13 @@ const staffResetPassword = async (req, res) => {
 
 // maybe put in other route
 const signOut = async (req, res) => {
-  req.session.account = null;
-  return res.json({ data: 'delete session' });
+  req.session.destroy((err) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ error: { message: 'delete session failed' } });
+    }
+    return res.status(200).json({ data: { message: 'delete session successfully' } });
+  });
 };
 
 const getStudentProfile = async (req, res) => {
