@@ -13,6 +13,75 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
+async function changePassword() {
+  content.text('');
+  const changePasswordForm = `
+  <div class="change card card-primary">
+    <div class="card-header">
+      <div class="card-title">
+        <h3>更改密碼</h3>
+      </div>
+    </div>
+    <form class="change_form card-body" method="put" action="/api/1.0/staffs/password">
+      <div class="form-group">
+        <label for="password">請輸入原始密碼</label>
+        <input id="password" name="password" type="password" placeholder="請輸入原始密碼" required>
+      </div>
+      <div class="form-group">
+        <label for="password">請輸入新密碼</label>
+        <input id="new_password" name="new_password" type="password" placeholder="請輸入新密碼" required>
+      </div>
+      <div class="form-group">
+        <label for="password">請再次輸入新密碼</label>
+        <input id="confirm_password" name="confirm_password" type="password" placeholder="請再次輸入新密碼" required>
+        <span id="match"></span>
+      </div>
+      <div class="card-footer">
+        <button type="submit">更改密碼</button>
+      </div>
+    </form>
+    <div class="message"></div>
+  </div>
+  `;
+  content.append(changePasswordForm);
+  const changeForm = $('.change_form');
+  let match = false;
+
+  $('#new_password, #confirm_password').on('keyup', () => {
+    if ($('#new_password').val() === $('#confirm_password').val()) {
+      match = true;
+      $('#match').html('密碼相符').css('background-color', 'green');
+    } else {
+      match = false;
+      $('#match').html('密碼不相符').css('background-color', 'red');
+    }
+  });
+  changeForm.submit(async (event) => {
+    event.preventDefault();
+    const message = $('.message');
+    try {
+      if (!match) { return; }
+      const changeRes = await axios(changeForm.attr('action'), {
+        method: changeForm.attr('method'),
+        data: {
+          password: $('#password').val(),
+          new_password: $('#new_password').val(),
+        },
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+      const changeResult = await changeRes.data;
+      if (changeResult) {
+        message.html('密碼更改成功').css('background-color', 'green');
+      }
+    } catch (err) {
+      console.log(err);
+      message.html('密碼更改失敗').css('background-color', 'red');
+    }
+  });
+}
+
 async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
@@ -1143,6 +1212,9 @@ $(document).ready(async () => {
     });
 
     // ----------------------------- temp route ----------------------------------
+    // change password
+    const editPassword = $('.edit_password');
+    editPassword.click(changePassword);
 
     const punchRule = $('.rule_setting');
     punchRule.click(genRuleManage());
