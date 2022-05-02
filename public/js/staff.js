@@ -1005,6 +1005,7 @@ async function exceptionManage() {
     try {
       newExceptionEvent.preventDefault();
       const addExceptionType = $('#exception_class_type').val();
+      const addExceptionTypeName = $('#exception_class_type option:selected').text();
       const addExceptionBatch = $('#exception_batch').val();
       const addExceptionDate = $('#exception_date').val();
       const addExceptionStart = $('#exception_start').val();
@@ -1026,7 +1027,7 @@ async function exceptionManage() {
       const addExceptionResult = addExceptionRes.data.data;
       if (addExceptionResult) {
         const tr = $('<tr></tr>');
-        const td_class_type = $('<td></td>').text($('#exception_class_type').text());
+        const td_class_type = $('<td></td>').text(addExceptionTypeName);
         const td_batch = $('<td></td>').text(addExceptionBatch);
         const td_date = $('<td></td>').text(addExceptionDate);
         const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
