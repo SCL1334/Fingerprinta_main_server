@@ -312,7 +312,7 @@ const findByFinger = async (fingerId) => {
       console.log('student not exist');
       return -1;
     }
-    return students[0].id;
+    return students[0].student_id;
   } catch (err) {
     console.log(err);
     return 0;
