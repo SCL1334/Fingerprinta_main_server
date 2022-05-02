@@ -112,6 +112,16 @@ const getFingerListOfClass = async (classId) => {
   }
 };
 
+const getFingerQuota = async () => {
+  try {
+    const [fingerQuotas] = await promisePool.query('SELECT * FROM fingerprint');
+    return fingerQuotas;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const matchStudent = async (fingerId, studentId) => {
   try {
     await promisePool.query('UPDATE fingerprint SET student_id = ?, status = 1 WHERE id = ?', [studentId, fingerId]);
@@ -194,6 +204,7 @@ const initTable = async () => {
 
 module.exports = {
   enrollId,
+  getFingerQuota,
   turnOnIdentify,
   stopSensor,
   deleteOneSensorFinger,
