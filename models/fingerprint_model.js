@@ -1,9 +1,8 @@
 const axios = require('axios');
 const { promisePool } = require('./mysqlcon');
 
-const { FINGERPRINT_HOST, SENSOR_API_VERISON } = process.env;
-const sensorFingerUrl = `${FINGERPRINT_HOST}/api/${SENSOR_API_VERISON}/fingerprints`;
-
+const { FINGERPRINT_HOST, FINGERPRINT_PORT, SENSOR_API_VERISON } = process.env;
+const sensorFingerUrl = `http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/api/${SENSOR_API_VERISON}/fingerprints`;
 const enrollId = async (fingerId) => {
   // fingerprint ID from 0 to 199
   try {

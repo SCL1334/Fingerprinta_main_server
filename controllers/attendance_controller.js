@@ -3,8 +3,15 @@ const Attendance = require('../models/attendance_model');
 const User = require('../models/user_model');
 
 const setPunch = async (req, res) => {
+  const sensorIp = process.env.FINGERPRINT_HOST;
+  const requestIp = req.connection.remoteAddress;
+  // reqIp Ipv4 ::1 / Ipv6 ::ffff:127.0.0.1
+  const reqIpDevide = requestIp.split(':');
+  // get last part od reqIp
+  if (sensorIp !== reqIpDevide[reqIpDevide.length - 1]) { return res.status(403).json({ error: { message: 'Only sensor server can punch' } }); }
   const { fingerId } = req.params;
   const studentId = await User.findByFinger(fingerId);
+
   const punchResult = await Attendance.setPunch(studentId);
   if (punchResult === 1) {
     res.status(200).json({ data: 'Punch in successfully' });
