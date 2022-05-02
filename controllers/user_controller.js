@@ -312,7 +312,7 @@ const matchFingerprint = async (req, res) => {
   }
 
   if (enrollStatus.code > 2000) {
-    res.status(500).json({ code: enrollStatus, error: { message: 'Match failed due to sensor issue' } });
+    return res.status(500).json({ code: enrollStatus, error: { message: 'Match failed due to sensor issue' } });
   }
   // valid student and valid fingerprint
   const result = await Fingerprint.matchStudent(fingerId, studentId);
