@@ -9,6 +9,7 @@ const userRoute = require('./routes/user_route');
 const classRoute = require('./routes/class_route');
 const calendarRoute = require('./routes/calendar_route');
 const leaveRoute = require('./routes/leave_route');
+const sensorRoute = require('./routes/sensor_route');
 
 const {
   PORT, API_VERSION,
@@ -34,7 +35,7 @@ app.use(session({
 
 // API routes
 app.use(`/api/${API_VERSION}`, [
-  userRoute, classRoute, calendarRoute, leaveRoute,
+  userRoute, classRoute, calendarRoute, leaveRoute, sensorRoute,
 ]);
 
 // server test

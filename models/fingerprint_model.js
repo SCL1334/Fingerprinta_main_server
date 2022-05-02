@@ -3,6 +3,7 @@ const { promisePool } = require('./mysqlcon');
 
 const { FINGERPRINT_HOST, FINGERPRINT_PORT, SENSOR_API_VERISON } = process.env;
 const sensorFingerUrl = `http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/api/${SENSOR_API_VERISON}/fingerprints`;
+
 const enrollId = async (fingerId) => {
   // fingerprint ID from 0 to 199
   try {
@@ -27,6 +28,34 @@ const enrollId = async (fingerId) => {
       return { code: 2011, message: 'Sensor internal error' };
     }
     throw new Error('unexpeted server Error: no sensor status');
+  } catch (err) {
+    console.log(err);
+    return { code: 2010 };
+  }
+};
+
+const turnOnIdentify = async () => {
+  try {
+    const sensorRes = await axios.post(`http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/identify`);
+    const sensorResult = sensorRes.data;
+    if (sensorResult) {
+      return { code: 1010 };
+    }
+    return { code: 2010 };
+  } catch (err) {
+    console.log(err);
+    return { code: 2010 };
+  }
+};
+
+const stopSensor = async () => {
+  try {
+    const sensorRes = await axios.post(`http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/turnoff`);
+    const sensorResult = sensorRes.data;
+    if (sensorResult) {
+      return { code: 1010 };
+    }
+    return { code: 3010 };
   } catch (err) {
     console.log(err);
     return { code: 2010 };
@@ -165,6 +194,8 @@ const initTable = async () => {
 
 module.exports = {
   enrollId,
+  turnOnIdentify,
+  stopSensor,
   deleteOneSensorFinger,
   deleteSensorFingerList,
   getFingerListOfClass,
