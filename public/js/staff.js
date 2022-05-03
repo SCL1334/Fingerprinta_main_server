@@ -392,7 +392,7 @@ async function accountManage() {
       // clear last time data
       studentCreateModal.find('input,select').val('').end();
       // remove listener
-      studentCreateModal.children('.submit').off();
+      studentCreateModal.children().children('.submit').off();
     });
 
     const studentEditModal = $('#student_edit_form');
@@ -400,7 +400,7 @@ async function accountManage() {
       // clear last time data
       studentEditModal.find('input,select').val('').end();
       // remove listener
-      studentEditModal.children('.submit').off();
+      studentEditModal.children().children('.submit').off();
     });
 
     const createStudentAccountBtn = $('.call_create');
