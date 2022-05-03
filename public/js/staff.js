@@ -319,7 +319,7 @@ async function accountManage() {
 
       const fingerpirntsStatus = `
       <div class="finger_status">
-        <select class='finger_option'>
+        <select id='finger_option'>
           <option value=null>請選擇欲登錄的指紋ID</option>
           ${fingerprintsOptions}
         </select>
@@ -527,7 +527,7 @@ async function accountManage() {
           enrrollEvent.preventDefault();
           const enrollBtn = $(enrrollEvent.target);
           const studentId = enrollBtn.parent().siblings('.student_id').text();
-          const fingerId = $('.finger_option').val();
+          const fingerId = $('#finger_option').val();
           try {
             const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint/${fingerId}`);
             const enrollFingerResult = enrollFingerRes.data.data;
