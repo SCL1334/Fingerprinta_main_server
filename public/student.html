@@ -11,10 +11,10 @@
   <link rel="stylesheet" href="./style/student.css">
 </head>
 <body>
-  <div class="page" sty>
+  <div class="page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin-bottom: 20px;">
       <div class="container-fluid">
-        <h4 style="color:white">學生頁面</h4>
+        <h3 style="color:white">學生頁面</h3>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -33,32 +33,33 @@
         </div>
       </div>
     </nav>
+    <div class="col-12" style="overflow:scroll">
+      <div class="leave_total"></div>
+    </div>
     <div class="container-fluid">
       <div class="row">
         <div class="col-2">
           <ul class="list-group list-group-flush">
             <li class="list-group-item">
-              <div class="leave_total"></div>
-              </li>
-            <li class="list-group-item">
-              <button type="button" class="btn btn-primary get_attendances">查詢出席</button>
+              <button type="button" class="btn btn-dark get_attendances">查詢出席</button>
             </li>
             <li class="list-group-item">
-              <button type="button" class="btn btn-primary apply_leave">請假申請</button>
+              <button type="button" class="btn btn-dark apply_leave">請假申請</button>
           </li>
             <li class="list-group-item">
-              <button type="button" class="btn btn-primary check_leave">請假紀錄</button>
+              <button type="button" class="btn btn-dark check_leave">請假紀錄</button>
               </li>
-
           </ul>
-          <div class="list-group">
-            <span href="#" class="list-group-item list-group-item-action list-group-item-success" aria-current="true">
-              <div class="punch_today">本日打卡紀錄</div>
-            </span>
-          </div>
         </div>
-        <div class="col-10" style="overflow:scroll">
+        <div class="col-8" style="overflow:scroll">
           <div class="content"></div>
+        </div>
+        <div class="col-2">
+          <span href="#" aria-current="true">
+            <div><h5>本日打卡紀錄</h5>
+              <table class="punch_today table"></table>
+            </div>
+          </span>
         </div>
       </div>
     </div>

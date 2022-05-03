@@ -14,25 +14,23 @@ function createBtn(clas, text) {
 }
 
 async function changePassword() {
-  content.text('');
+  console.log('text');
+  $('.content').text('');
   const changePasswordForm = `
-  <div class="change card card-primary">
+  <div class="change card">
     <div class="card-header">
       <div class="card-title">
         <h3>更改密碼</h3>
       </div>
     </div>
     <form class="change_form card-body" method="put" action="/api/1.0/staffs/password">
-      <div class="form-group">
-        <label for="password">請輸入原始密碼</label>
+      <div class="form-group form-floating">
         <input id="password" name="password" type="password" placeholder="請輸入原始密碼" required>
       </div>
-      <div class="form-group">
-        <label for="password">請輸入新密碼</label>
+      <div class="form-group form-floating">
         <input id="new_password" name="new_password" type="password" placeholder="請輸入新密碼" required>
       </div>
-      <div class="form-group">
-        <label for="password">請再次輸入新密碼</label>
+      <div class="form-group form-floating">
         <input id="confirm_password" name="confirm_password" type="password" placeholder="請再次輸入新密碼" required>
         <span id="match"></span>
       </div>
@@ -43,7 +41,7 @@ async function changePassword() {
     <div class="message"></div>
   </div>
   `;
-  content.append(changePasswordForm);
+  $('.content').append(changePasswordForm);
   const changeForm = $('.change_form');
   let match = false;
 
@@ -85,10 +83,10 @@ async function changePassword() {
 async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
-  content.empty();
+  $('.content').empty();
   const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
-  content.append(classRoutineTable);
-  content.append($('<div></div>').append(createBtn('call_create', '新增')));
+  $('.content').append(classRoutineTable);
+  $('.content').append($('<div></div>').append(createBtn('call_create', '新增')));
   const thead = $('<thead></thead>');
   const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
   const tr = $('<tr></tr>');
@@ -129,7 +127,7 @@ async function setPunchTime() {
     </div>
     `;
 
-    content.append(classRoutineForm);
+    $('.content').append(classRoutineForm);
     const createRoutineModal = $('#class_routine_form');
     createRoutineModal.on($.modal.BEFORE_CLOSE, () => {
       // clear last time data
@@ -297,8 +295,8 @@ async function accountManage() {
   $('.content').empty();
 
   const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
-  const studentAccounts = $('<div></div>').attr('class', 'student_account').text('學生帳號管理');
-  const staffAccounts = $('<div></div>').attr('class', 'staff_account').text('校務人員帳號管理');
+  const studentAccounts = $('<div></div>').attr('class', 'student_account btn btn-outline-dark ').text('學生帳號管理');
+  const staffAccounts = $('<div></div>').attr('class', 'staff_account btn btn-outline-dark').text('校務人員帳號管理');
   const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
   accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
   $('.content').append(accountCompenents);
@@ -888,9 +886,9 @@ async function accountManage() {
 async function classManage() {
   $('.content').empty();
   const classCompenents = $('<div></div>').attr('class', 'class_compenent');
-  const classTypes = $('<div></div>').attr('class', 'class_type').text('培訓形式設定');
-  const classGroups = $('<div></div>').attr('class', 'class_group').text('培訓班別設定');
-  const classes = $('<div></div>').attr('class', 'classes').text('班級基礎資訊設定');
+  const classTypes = $('<div></div>').attr('class', 'class_type btn btn-outline-dark').text('培訓形式設定');
+  const classGroups = $('<div></div>').attr('class', 'class_group btn btn-outline-dark').text('培訓班別設定');
+  const classes = $('<div></div>').attr('class', 'classes btn btn-outline-dark').text('班級基礎資訊設定');
   const classManageBoard = $('<div></div>').attr('class', 'class_manage_board');
   classCompenents.append(classes, classTypes, classGroups, classManageBoard);
   $('.content').append(classCompenents);
@@ -1134,7 +1132,7 @@ async function classManage() {
 
     const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').val('請輸入培訓形式名稱');
     const addBtn = $('<button></button>').attr('class', 'add_class_type_btn').text('新增');
-    const table = $('<table></table>').attr('class', 'class_type_result');
+    const table = $('<table></table>').attr('class', 'class_type_result table');
     const tr = $('<tr></tr>');
     const heads = ['ID', '培訓形式名稱', ''];
     heads.forEach((head) => {
@@ -1208,7 +1206,7 @@ async function classManage() {
 
     const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').val('請輸入培訓班別名稱');
     const addBtn = $('<button></button>').attr('class', 'add_class_group_btn').text('新增');
-    const table = $('<table></table>').attr('class', 'class_group_result');
+    const table = $('<table></table>').attr('class', 'class_group_result table');
     const tr = $('<tr></tr>');
     const heads = ['ID', '培訓班別名稱', ''];
     heads.forEach((head) => {
@@ -1315,7 +1313,7 @@ async function exceptionManage() {
   $('.content').append(exceptionForm);
 
   // init table
-  const table = $('<table></table>').attr('class', 'exception_result');
+  const table = $('<table></table>').attr('class', 'exception_result table');
   const tr = $('<tr></tr>');
   const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間'];
   heads.forEach((head) => {
@@ -1416,7 +1414,7 @@ function genRuleManage(date) {
     calendarTitle.append(yearDiv, monthDiv);
     calenderHead.append(lastMonthBtn, calendarTitle, nextMonthBtn);
     calendarBlock.append(calenderHead);
-    content.append(calendarBlock, tableDiv);
+    $('.content').append(calendarBlock, tableDiv);
 
     const changeMonth = $('.change_month');
     changeMonth.click((event) => {
@@ -1862,7 +1860,7 @@ $(document).ready(async () => {
             const leaveSearchRes = await axios.get(url);
             const leaveSearchResult = leaveSearchRes.data.data;
             // error handle
-            table = $('<table></table>').attr('class', 'leave_result');
+            table = $('<table></table>').attr('class', 'leave_result table');
             const tr = $('<tr></tr>');
             const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態', ''];
             heads.forEach((head) => {

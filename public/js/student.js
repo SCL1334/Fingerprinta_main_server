@@ -3,23 +3,20 @@ const content = $('.content');
 async function changePassword() {
   content.text('');
   const changePasswordForm = `
-  <div class="change card card-primary">
+  <div class="change card">
     <div class="card-header">
       <div class="card-title">
         <h3>更改密碼</h3>
       </div>
     </div>
     <form class="change_form card-body" method="put" action="/api/1.0/students/password">
-      <div class="form-group">
-        <label for="password">請輸入原始密碼</label>
+      <div class="form-group form-floating">
         <input id="password" name="password" type="password" placeholder="請輸入原始密碼" required>
       </div>
-      <div class="form-group">
-        <label for="password">請輸入新密碼</label>
+      <div class="form-group form-floating">
         <input id="new_password" name="new_password" type="password" placeholder="請輸入新密碼" required>
       </div>
-      <div class="form-group">
-        <label for="password">請再次輸入新密碼</label>
+      <div class="form-group form-floating">
         <input id="confirm_password" name="confirm_password" type="password" placeholder="請再次輸入新密碼" required>
         <span id="match"></span>
       </div>
@@ -72,7 +69,7 @@ async function changePassword() {
 $(document).ready(async () => {
   const leaveStatusTable = { 0: '審核中', 1: '已審核' };
   const attendanceColor = {
-    0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
+    0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
   };
   const today = new Date().toISOString().split('T')[0].replaceAll('-', '');
   try {
@@ -84,7 +81,18 @@ $(document).ready(async () => {
       id, name, email, batch, class_group_name, class_type_name,
     } = data.data;
     $('.userName').text(`你好 ${data.data.name}`);
-    $('.content').text(`培訓內容:${class_type_name} 梯次:${batch} 班別:${class_group_name}`);
+    $('.content').html(`
+      <div class="card" style="width: 18rem; margin: 0 auto;">
+        <div class="card-header">
+          班級基本資訊
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">培訓內容:${class_type_name}</li>
+          <li class="list-group-item">梯次:${batch}</li>
+          <li class="list-group-item">班別:${class_group_name}</li>
+        </ul>
+      </div>
+    `);
 
     // sign out btn
     $('.signout').click(async () => {
@@ -110,9 +118,9 @@ $(document).ready(async () => {
       const punchHead = ['上課打卡', '下課打卡'].reduce((acc, cur) => {
         acc.append($('<td></td>').text(cur));
         return acc;
-      }, $('<tr></tr>'));
+      }, $('<thead><tr></tr></thead>'));
       $('.punch_today').append(punchHead);
-      if (punchToday.length === 0) { $('.punch_today').append($('<div></div>').text('無紀錄')); }
+      if (punchToday.length === 0) { $('.punch_today').append($('<td colspan="2"></td>').text('無紀錄')); }
 
       const punchDetail = punchToday.reduce((acc, cur) => {
         const { punch_in: punchIn, punch_out: punchOut } = cur;
@@ -129,7 +137,7 @@ $(document).ready(async () => {
     try {
       const leavesTotalRes = await axios.get(`api/1.0/students/${id}/leaves/hours`);
       const leavesTotalResult = leavesTotalRes.data.data;
-      $('.leave_total').append($('<h3></h3>').text(`目前累計已核准請假時數: ${leavesTotalResult.leaves_hours}`));
+      $('.leave_total').append($('<h5></h5>').text(`目前已核准請假時數 累計:${leavesTotalResult.leaves_hours}小時`));
     } catch (err) {
       console.log(err);
     }
@@ -137,12 +145,12 @@ $(document).ready(async () => {
     $('.get_attendances').click(async () => {
       $('.content').text('');
 
-      const attendance = $('<div></div>').attr('class', 'attendance').text('出席記錄');
+      const attendance = $('<div></div>').attr('class', 'attendance').html('<h4>出席記錄查詢</h4>');
 
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
-      const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
-      attendance.append(searchFrom, searchTo, searchBtn);
+      const searchBtn = $('<button></button>').attr('class', 'search_btn btn-secondary').text('查詢');
+      attendance.append('<br>', searchFrom, '<br>', searchTo, '<br>', searchBtn);
       $('.content').append(attendance);
       $('.search_btn').click(async () => {
         try {
@@ -152,9 +160,9 @@ $(document).ready(async () => {
           const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
           const attendanceSearchRes = await axios.get(`/api/1.0/students/${id}/attendances${from}${to}`);
           const attendanceSearchResult = attendanceSearchRes.data.data;
-          table = $('<table></table>').attr('class', 'attendance_result').css('width', '100%');
+          table = $('<table></table>').attr('class', 'attendance_result table').css('width', '100%');
           const tr = $('<tr></tr>');
-          const heads = ['應出席日期', '應出席時間', '狀態'];
+          const heads = ['應出席日期', '應出席時間', '出席狀態'];
           heads.forEach((head) => {
             const th = $('<th></th>').text(head);
             tr.append(th);
@@ -172,7 +180,7 @@ $(document).ready(async () => {
             Object.keys(attendance).forEach((time) => {
               const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).css('width', '20px')
                 .css('height', '20px')
-                .css('margin', '5px');
+                .css('border', '0.5px black solid');
               attendanceTable.append(td_time_grid);
             });
             td_status.append(attendanceTable);
@@ -207,7 +215,7 @@ $(document).ready(async () => {
               <option>請選擇請假類型</option>
               ${options}
             </select>
-            <input id='leave_date' name='date' type="date" value="2022-04-20">
+            <input id='leave_date' name='date' type="date" value="2022-05-02">
             <input id='leave_start' name='start' type="time" value="13:00">
             <input id='leave_end' name='end' type="time" value="16:00">
             <input id='leave_reason' name='description' type="text" value="看牙醫">
@@ -272,7 +280,7 @@ $(document).ready(async () => {
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
             const responseData = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
             const { data } = responseData;
-            table = $('<table></table>').attr('class', 'leave_result');
+            table = $('<table></table>').attr('class', 'leave_result table');
             const tr = $('<tr></tr>');
             const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
             heads.forEach((head) => {
