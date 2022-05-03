@@ -1299,9 +1299,9 @@ async function exceptionManage() {
               ${classTypeOptions}
             </select>
             <input id='exception_batch' name='batch' type='number' value='15'>
-            <input id='exception_date' name='date' type='date' value='2022-04-26'>
-            <input id='exception_start' name='start_time' type='time' value='14:00'>
-            <input id='exception_end' name='end_time' type='time' value='17:00'>
+            <input id='exception_date' name='date' type='date' value='2022-05-02'>
+            <input id='exception_start' name='start_time' type='time' value='09:00'>
+            <input id='exception_end' name='end_time' type='time' value='14:00'>
             <button type="submit">送出</button>
           </form>
         </div>
