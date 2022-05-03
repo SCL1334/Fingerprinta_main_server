@@ -146,13 +146,13 @@ $(document).ready(async () => {
       $('.content').append(attendance);
       $('.search_btn').click(async () => {
         try {
-          let table = $('.attendance_result');
+          let table = $('.attendance_result').css('width', '100%');
           if (table) { table.text(''); }
           const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
           const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
           const attendanceSearchRes = await axios.get(`/api/1.0/students/${id}/attendances${from}${to}`);
           const attendanceSearchResult = attendanceSearchRes.data.data;
-          table = $('<table></table>').attr('class', 'attendance_result');
+          table = $('<table></table>').attr('class', 'attendance_result').css('width', '100%');
           const tr = $('<tr></tr>');
           const heads = ['應出席日期', '應出席時間', '狀態'];
           heads.forEach((head) => {
@@ -163,14 +163,16 @@ $(document).ready(async () => {
 
           $('.attendance').append(table);
           attendanceSearchResult.forEach((attendanceSearch) => {
-            const tr = $('<tr></tr>');
+            const tr = $('<tr></tr>').css('height', '60px');
             const td_date = $('<td></td>').attr('class', 'attendance_date').text(attendanceSearch.date);
             const td_punch_rule = $('<td></td>').attr('class', 'rule').text(`${attendanceSearch.start}-${attendanceSearch.end}`);
             const td_status = $('<td></td>').attr('class', 'attendance_status').append($('<div></div>'));
             const attendanceTable = $('<tr></tr>');
             const { attendance } = attendanceSearch;
             Object.keys(attendance).forEach((time) => {
-              const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
+              const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).css('width', '20px')
+                .css('height', '20px')
+                .css('margin', '5px');
               attendanceTable.append(td_time_grid);
             });
             td_status.append(attendanceTable);
