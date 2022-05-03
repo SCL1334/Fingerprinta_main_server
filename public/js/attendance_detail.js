@@ -50,7 +50,7 @@ $(document).ready(async () => {
       const leaveSearchRes = await axios.get(url);
       const leaveSearchResult = leaveSearchRes.data.data;
       // error handle
-      table = $('<table></table>').attr('class', 'leave_result');
+      table = $('<table></table>').attr('class', 'leave_result table');
       const tr = $('<tr></tr>');
       const heads = ['請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假事由', '狀態', '管理員備註', '', ''];
       heads.forEach((head) => {
@@ -154,7 +154,7 @@ $(document).ready(async () => {
         return acc;
       }, $('<tr></tr>'));
       $('.punch').append(punchHead);
-      if (punches.length === 0) { $('.punch').append($('<div></div>').text('無紀錄')); }
+      if (punches.length === 0) { $('.punch').append($('<td colspan="2"></td>').text('無紀錄')); }
 
       const punchDetail = punches.reduce((acc, cur) => {
         const { punch_in: punchIn, punch_out: punchOut } = cur;

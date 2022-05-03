@@ -255,7 +255,7 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
   });
 
   leaves.forEach((leave) => {
-    const [leaveStart, leaveEnd] = leave;
+    const [leaveStart, leaveEnd, approval] = leave;
     if (!leaveStart) { return; }
     const leaveStartHour = getStudentStart(leaveStart);
     const leaveEndHour = getStudentEnd(leaveEnd);
@@ -264,7 +264,13 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
       if (i > endHour) { break; }
       if (i === breakStartHour) { breakTime = true; }
       if (i === breakEndHour) { breakTime = false; }
-      if (breakTime === false) { attendance[toTime(i)] = 2; }
+      if (breakTime === false) {
+        if (approval === 0) { // check approval if 1 => OK if 0 need staff check
+          attendance[toTime(i)] = 2;
+        } else if (approval === 1) {
+          attendance[toTime(i)] = 0;
+        }
+      }
     }
   });
   return attendance;
@@ -806,7 +812,7 @@ const getAllAttendances = async (from, to) => {
 
       // 13 transfer leave to object
       const classLeaves = classLeavesRaw.reduce((acc, cur) => {
-        const leave = [cur.start, cur.end];
+        const leave = [cur.start, cur.end, cur.approval];
         delete cur.start;
         delete cur.end;
         if (!acc[cur.date]) { acc[cur.date] = {}; }

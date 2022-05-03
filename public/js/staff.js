@@ -4,7 +4,7 @@ const weekdayTable = {
 };
 // 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
 const attendanceColor = {
-  0: 'SteelBlue', 1: 'Pink', 2: 'Peru',
+  0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
 };
 const sensorUrl = 'http://127.0.0.1:5000';
 const content = $('.content');
@@ -1400,10 +1400,10 @@ function genRuleManage(date) {
     const monthDiv = $('<div></div>').attr('class', 'month').text(`${month}月`);
     const lastMonth = checkDate.subtract(1, 'month');
     const nextMonth = checkDate.add(1, 'month');
-    const lastMonthBtn = $(`<div class="change_month"><button data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
-    const nextMonthBtn = $(`<div class="change_month"><button data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
+    const lastMonthBtn = $(`<div class="change_month"><button class="btn-outline-secondary" data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
+    const nextMonthBtn = $(`<div class="change_month"><button class="btn-outline-secondary" data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
     const tableDiv = $('<div></div>').attr('class', 'calendar_table');
-    const table = $('<table></table>');
+    const table = $('<table></table>').attr('class', 'table');
     const tr = $('<tr></tr>');
     Object.keys(weekdayTable).forEach((head) => {
       const th = $('<th></th>').text(`星期${weekdayTable[head]}`);
@@ -1460,7 +1460,7 @@ function genRuleManage(date) {
         // first date, check lack tr
         if (index === 0) {
           for (let i = 0; i < dayjs(cell.date).day(); i += 1) {
-            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            const tdBlank = $('<td></td>').css('background-color', '#F2F2F2');
             tr.append(tdBlank);
           }
         }
@@ -1476,7 +1476,7 @@ function genRuleManage(date) {
         if (index === calendar.length - 1) {
           const lastDateDay = dayjs(cell.date).day();
           for (let i = lastDateDay; i < 6; i += 1) {
-            const tdBlank = $('<td></td>').css('background-color', 'gray');
+            const tdBlank = $('<td></td>').css('background-color', '#F2F2F2');
             tr.append(tdBlank);
             table.append(tr);
           }
@@ -1610,7 +1610,7 @@ $(document).ready(async () => {
       $('.content').append(attendance);
       $('.search_btn').click(async () => {
         try {
-          let table = $('.attendance_result');
+          let table = $('.attendance_result').css('width', '100%');
           if (table) { table.text(''); }
           const classOption = $('.class_options').val();
           const classPath = (classOption === '0' || !classOption) ? '' : `/classes/${classOption}/`;
@@ -1621,7 +1621,7 @@ $(document).ready(async () => {
           const url = `/api/1.0/${studentPath || classPath || 'students/'}attendances${from}${to}`;
           const attendanceSearchRes = await axios.get(url);
           const attendanceSearchResult = attendanceSearchRes.data.data;
-          table = $('<table></table>').attr('class', 'attendance_result');
+          table = $('<table></table>').attr('class', 'attendance_result table');
           const tr = $('<tr></tr>');
           const heads = ['打卡日期', '班級', '姓名', '應出席時間', '狀態', ''];
           heads.forEach((head) => {
@@ -1632,7 +1632,7 @@ $(document).ready(async () => {
 
           $('.attendance').append(table);
           attendanceSearchResult.forEach((attendanceSearch) => {
-            const tr = $('<tr></tr>');
+            const tr = $('<tr></tr>').css('height', '60px');
             const td_date = $('<td></td>').attr('class', 'attendance_date').text(attendanceSearch.date);
             const td_class = $('<td></td>').text(`
               ${attendanceSearch.class_type_name}-${attendanceSearch.batch}-${attendanceSearch.class_group_name}
@@ -1648,7 +1648,9 @@ $(document).ready(async () => {
             const attendanceTable = $('<tr></tr>');
             const { attendance } = attendanceSearch;
             Object.keys(attendance).forEach((time) => {
-              const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
+              const td_time_grid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).css('width', '20px')
+                .css('height', '20px')
+                .css('border', '0.5px black solid');
               attendanceTable.append(td_time_grid);
             });
             td_status.append(attendanceTable);
