@@ -1562,8 +1562,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance').text('出勤查詢');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-04-25');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-04');
       const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');

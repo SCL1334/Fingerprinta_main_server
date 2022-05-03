@@ -472,7 +472,7 @@ const getPersonAttendance = async (studentId, from, to) => {
 
     // 10. tranfer leave recording to object (dictionary)
     const studentLeaves = studentLeavesRaw.reduce((acc, cur) => {
-      const leave = [cur.start, cur.end];
+      const leave = [cur.start, cur.end, cur.approval];
       delete cur.start;
       delete cur.end;
       if (!acc[cur.date]) {
@@ -616,7 +616,7 @@ const getClassAttendance = async (classId, from, to) => {
 
     // 10. tranfer punch recording to object (dictionary)
     const classPunches = classPunchesRaw.reduce((acc, cur) => {
-      const punch = [cur.punch_in, cur.punch_out];
+      const punch = [cur.punch_in, cur.punch_out, cur.approval];
       delete cur.punch_in;
       delete cur.punch_out;
       if (!acc[cur.punch_date]) { acc[cur.punch_date] = {}; }
