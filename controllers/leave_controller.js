@@ -187,7 +187,7 @@ const applyLeave = async (req, res) => {
   }
 };
 
-const approveLeave = async (req, res) => {
+const auditLeave = async (req, res) => {
   const leaveId = req.params.id;
   const status = await Leave.updateLeave(leaveId, { approval: 1 });
   if (status < 2000) {
@@ -287,7 +287,7 @@ module.exports = {
   getPersonLeaves,
   countLeavesHours,
   applyLeave,
-  approveLeave,
+  auditLeave,
   updateLeave,
   deleteLeave,
   transferLackAttendance,
