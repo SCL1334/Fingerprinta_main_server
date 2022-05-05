@@ -224,7 +224,8 @@ const applyLeave = async (req, res) => {
 
 const auditLeave = async (req, res) => {
   const leaveId = req.params.id;
-  const status = await Leave.updateLeave(leaveId, { approval: 1 });
+  const audit = req.body.approval;
+  const status = await Leave.updateLeave(leaveId, { approval: audit });
   if (status < 2000) {
     res.status(200).json({ code: status, data: 'Approve successfully' });
   } else if (status < 3000) {
