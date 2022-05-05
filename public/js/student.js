@@ -209,19 +209,40 @@ $(document).ready(async () => {
         }, '');
         $('.content').text('');
         leaveForm = `
-        <div class="leave_form">請假申請
-          <form action="/api/1.0/students/${id}/leaves" method="POST">
-            <select id='leave_type'>
-              <option>請選擇請假類型</option>
+        <p class="font-monospace text-center fs-2">請假申請表單</p>
+        <div class="leave_form">
+        <form action="/api/1.0/students/${id}/leaves" method="POST">
+          <div class="mb-3">
+            <label for="leave_type" class="form-label">請假類型</label>
+            <select class="form-select" id='leave_type'>
               ${options}
             </select>
-            <input id='leave_date' name='date' type="date" value="2022-05-02">
-            <input id='leave_start' name='start' type="time" value="13:00">
-            <input id='leave_end' name='end' type="time" value="16:00">
-            <input id='leave_reason' name='description' type="text" value="看牙醫">
-            <button type="submit">送出</button>
-          </form>
-        </div>
+          </div>
+          <div class="mb-3">
+            <label for="leave_date" class="form-label">請假日期</label>
+            <input id='leave_date' name='date' class="form-control" type="date" value="2022-05-02">
+          </div>
+          <div class="mb-3">
+            <label for="leave_start" class="form-label">請假開始時間</label>
+            <input id='leave_start' name='start' class="form-control" type="time" value="13:00">
+          </div>
+          <div class="mb-3">
+            <label for="leave_end" class="form-label">請假結束時間</label>
+            <input id='leave_end' name='end' class="form-control" type="time" value="16:00">
+          </div>
+          <div class="mb-3">
+            <span class="input-group-text">請假緣由</span>
+            <textarea id="leave_reason" name="description" class="form-control" aria-label="請假緣由"></textarea>
+            <div class="form-text">上限50字</div>
+          </div>
+          <div class="input-group">
+            <span class="input-group-text">請假證明(圖片)</span>
+            <input id='leave_certificate' name='certificate' class="form-control" type="file" accept="inage/*">
+          </div>
+          <button type="submit" class="btn btn-dark">送出</button>
+          <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
+        </form>
+      </div>
         `;
       } catch (err) {
         console.log(err);
@@ -233,31 +254,61 @@ $(document).ready(async () => {
       $('.leave_form form').submit(async (event) => {
         try {
           event.preventDefault();
+          const leaveCertificate = $('#leave_certificate').val();
           const leaveTypeTd = $('#leave_type').val();
           const leaveDate = $('#leave_date').val();
           const leaveStart = $('#leave_start').val();
           const leaveEnd = $('#leave_end').val();
           const leaveReason = $('#leave_reason').val();
-          const responseData = await axios($('.leave_form form').attr('action'), {
+          let certificateUrl = '';
+          if (leaveCertificate !== '') {
+            Swal.fire({
+              text: '圖片上傳中...',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+            const certificateImg = $('#leave_certificate').prop('files')[0];
+            const s3UrlRes = await axios.get(`/api/1.0/students/${id}/s3url`);
+            const s3UrlResult = s3UrlRes.data;
+            if (!s3UrlResult) {
+              alert('檔案上傳失敗');
+              return;
+            }
+            const s3Url = s3UrlResult.data.url;
+            const uploadRes = await axios.put(s3Url, certificateImg, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            const uploadResult = uploadRes.data;
+            if (uploadResult) {
+              alert('檔案上傳失敗');
+              return;
+            }
+            [certificateUrl] = s3Url.split('?');
+          }
+          const leaveApplyRes = await axios($('.leave_form form').attr('action'), {
             method: $('.leave_form form').attr('method'),
             data: {
               leave_type_id: leaveTypeTd,
               date: leaveDate,
               start: leaveStart,
               end: leaveEnd,
-              description: leaveReason,
+              reason: leaveReason,
+              certificate_url: certificateUrl,
             },
             headers: {
               'content-type': 'application/json',
             },
           });
-          const { data } = await responseData;
-          if (data) {
-            $('.leave_form').text('已提交請假申請，請等候校務人員審核');
+          const leaveApplyResult = await leaveApplyRes.data;
+          if (leaveApplyResult) {
+            Swal.close();
+            $('.leave_form').html('<p class="font-monospace text-center fs-2">請假申請已提交，請等候校務人員審核</p>');
           }
         } catch (err) {
           console.log(err);
-          console.log(err.response.data);
         }
       });
     });
