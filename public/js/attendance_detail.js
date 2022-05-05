@@ -3,6 +3,7 @@ const attendanceColor = {
 };
 const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
 const manageAttendance = async function () {
+  const leavesUrl = 'api/1.0/leaves';
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
@@ -75,7 +76,9 @@ const manageAttendance = async function () {
         const tdStatus = $('<td></td>').attr('class', 'leave_status').text(leaveStatusTable[leaveSearch.approval]);
         const tdNote = $('<td></td>').text(leaveSearch.note);
         const tdAudit = $('<td></td>');
+        const tdCertificate = $('<td></td>');
         const getAuditBtn = (audit, text) => $('<button></button>').text(text).click(async (auditButtonEvent) => {
+          auditButtonEvent.preventDefault();
           // approve leave API path may be different
           const auditLeaveRes = await axios.patch(`/api/1.0/leaves/${leaveSearch.id}`, {
             approval: audit,
@@ -88,18 +91,37 @@ const manageAttendance = async function () {
         });
         const approveBtn = getAuditBtn(1, '核准');
         const rejectBtn = getAuditBtn(2, '拒絕');
+        if (leaveSearch.certificate_url) {
+          const checkCertificate = $('<button></button>').text('證明連結').click(async (checkEvent) => {
+            checkEvent.preventDefault();
+            Swal.fire({
+              imageUrl: leaveSearch.certificate_url,
+              imageAlt: 'leave certificate',
+            });
+          });
+          tdCertificate.append(checkCertificate);
+        }
+
         const tdEdit = $('<td></td>');
         const editBtn = $('<button></button>').text('修改').click(async (callEdit) => {
           console.log(callEdit.event);
         });
         const deleteBtn = $('<button></button>').text('刪除').click(async (deleteEvent) => {
           deleteEvent.preventDefault();
+          try {
+            const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
+            const deleteResult = deleteRes.data;
+            if (deleteResult) { location.reload(); }
+          } catch (err) {
+            console.log(err);
+            alert('刪除失敗');
+          }
         });
 
         // if has been approved no need approve btn
         if (leaveSearch.approval === 0) { tdAudit.append(approveBtn, rejectBtn); }
         tdEdit.append(editBtn, deleteBtn);
-        trLeave.append(tdType, tdStart, tdEnd, tdHours, tdReason, tdStatus, tdNote, tdAudit, tdEdit);
+        trLeave.append(tdType, tdStart, tdEnd, tdHours, tdReason, tdStatus, tdNote, tdAudit, tdEdit, tdCertificate);
         table.append(trLeave);
       });
     } catch (err) {
