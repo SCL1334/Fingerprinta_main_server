@@ -79,14 +79,16 @@ const manageAttendance = async function () {
         const tdCertificate = $('<td></td>');
         const getAuditBtn = (audit, text) => $('<button></button>').text(text).click(async (auditButtonEvent) => {
           auditButtonEvent.preventDefault();
+          const auditBtn = $(auditButtonEvent.target);
           // approve leave API path may be different
           const auditLeaveRes = await axios.patch(`/api/1.0/leaves/${leaveSearch.id}`, {
             approval: audit,
           });
           const auditLeaveResult = auditLeaveRes.data;
           if (auditLeaveResult) {
-            $(auditButtonEvent.target).parent().siblings('.leave_status').text(leaveStatusTable[audit]);
-            $(auditButtonEvent.target).remove();
+            auditBtn.parent().siblings('.leave_status').text(leaveStatusTable[audit]);
+            auditBtn.siblings('button').remove();
+            auditBtn.remove();
           }
         });
         const approveBtn = getAuditBtn(1, '核准');
