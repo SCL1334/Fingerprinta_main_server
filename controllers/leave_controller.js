@@ -103,18 +103,39 @@ const countLeavesHours = async (req, res) => {
 const transferLackAttendance = async (req, res) => {
   const studentId = req.params.id;
   const {
-    description, date, start, end, hours, note,
+    leave_type_id: leaveTypeId, date, start, end, hours, reason, note, certificate_url: certificateUrl,
   } = req.body;
+
+  let leaveHours;
+  const startMin = timeStringToMinutes(start);
+  const endMin = timeStringToMinutes(end);
+  const restStart = timeStringToMinutes('12:00:00');
+  const restEnd = timeStringToMinutes('13:00:00');
+
+  const minToHours = (min) => Math.ceil(min / 60);
+
+  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+    leaveHours = minToHours(restStart - startMin + endMin - restEnd);
+  } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
+    leaveHours = minToHours(endMin - startMin);
+  } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
+    leaveHours = minToHours(restStart - startMin);
+  } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
+    leaveHours = 0;
+  } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
+    leaveHours = minToHours(endMin - restEnd);
+  }
 
   const leave = {
     student_id: studentId,
-    leave_type_id: 3,
-    description,
+    leave_type_id: leaveTypeId,
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
-    hours,
+    hours: hours || leaveHours,
+    reason,
     note,
+    certificate_url: certificateUrl,
     approval: true,
   };
   const result = await Leave.applyLeave(leave);
@@ -202,7 +223,7 @@ const auditLeave = async (req, res) => {
 const updateLeave = async (req, res) => {
   const leaveId = req.params.id;
   const {
-    leave_type_id, description, date, start, end, approval, hours,
+    leave_type_id, reason, date, start, end, approval, hours,
   } = req.body;
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
@@ -234,7 +255,7 @@ const updateLeave = async (req, res) => {
 
   const leave = {
     leave_type_id,
-    description,
+    reason,
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
