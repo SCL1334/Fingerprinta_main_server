@@ -1661,19 +1661,19 @@ $(document).ready(async () => {
             const td_note = $('<td></td>').attr('class', 'note');
 
             const detail_btn = $('<button></button>').text('顯示詳細資料').click((detailButtonEvent) => {
-              const attendanceDetailPage = window.open('/attendance_detail.html');
-              const date = $(detailButtonEvent.target).parent().siblings('.attendance_date')
-                .text();
+              const date = $(detailButtonEvent.target).parent().siblings('.attendance_date').text()
+                .replaceAll('-', '');
               const studentId = $(detailButtonEvent.target).parent().siblings('.leave_student')
                 .data('student_id');
-              const studentName = $(detailButtonEvent.target).parent().siblings('.leave_student')
-                .text();
-              const rule = $(detailButtonEvent.target).parent().siblings('.rule')
-                .text();
-              const attendanceDetail = {
-                date, studentId, studentName, attendance, rule,
-              };
-              attendanceDetailPage.target = attendanceDetail;
+              // const studentName = $(detailButtonEvent.target).parent().siblings('.leave_student')
+              //   .text();
+              // const rule = $(detailButtonEvent.target).parent().siblings('.rule')
+              //   .text();
+              // const attendanceDetail = {
+              //   date, studentId, studentName, attendance, rule,
+              // };
+              const attendanceDetailPage = window.open(`/attendance_detail.html?student_id=${studentId}&date=${date}`);
+              // attendanceDetailPage.target = attendanceDetail;
             });
 
             td_detail_btn.append(detail_btn);

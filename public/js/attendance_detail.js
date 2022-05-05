@@ -1,5 +1,8 @@
-const leaveStatusTable = { 0: '待審核', 1: '審核成功', 2: '審核失敗' };
-$(document).ready(async () => {
+const attendanceColor = {
+  0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
+};
+const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
+const manageAttendance = async function () {
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
@@ -9,27 +12,25 @@ $(document).ready(async () => {
       id, name, email, leadClasses,
     } = data.data;
 
-    // const basicInfo = window.target;
-    // const {
-    //   date, studentId, studentName, attendance, rule,
-    // } = basicInfo;
-    // $('.student_name').text(studentName);
-    // $('.date').text(date);
-    // $('.rule').text(rule);
-
-    // 先不要顯示概況，和母畫面無法同步
-    // const attendanceTable = $('<tr></tr>');
-    // Object.keys(attendance).forEach((time) => {
-    //   const tdTimeGrid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
-    //   attendanceTable.append(tdTimeGrid);
-    // });
-    // $('.status').append(attendanceTable);
     const params = new Proxy(new URLSearchParams(window.location.search), {
       get: (searchParams, prop) => searchParams.get(prop),
     });
-    const { student, date } = params;
-    const student = await axios
-
+    const studentId = params.student_id;
+    const { date } = params;
+    // basic info of student and attendance
+    const attendanceRaw = await axios.get(`/api/1.0/students/${studentId}/attendances?from=${date}&to=${date}`);
+    const [attendanceData] = attendanceRaw.data.data;
+    $('.student_name').text(attendanceData.student_name);
+    $('.date').text(date);
+    $('.rule').text(`${attendanceData.start}-${attendanceData.end}`);
+    // generate attendance status form
+    const { attendance } = attendanceData;
+    const attendanceTable = $('<tr></tr>');
+    Object.keys(attendance).forEach((time) => {
+      const tdTimeGrid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
+      attendanceTable.append(tdTimeGrid);
+    });
+    $('.status').append(attendanceTable);
     // get leave_type
     try {
       const leaveTypesRaw = await axios.get('/api/1.0/leaves/types');
@@ -44,7 +45,7 @@ $(document).ready(async () => {
       console.log(err);
     }
 
-    // get attendance detail
+    // get leave detail
     try {
       let table = $('.leave');
       const url = `api/1.0/students/${studentId}/leaves?from=${date}&to=${date}`;
@@ -52,19 +53,9 @@ $(document).ready(async () => {
       const leaveSearchResult = leaveSearchRes.data.data;
       console.log(leaveSearchResult);
       // error handle
-<<<<<<< Updated upstream
-      table = $('<table></table>').attr('class', 'leave_result table');
-=======
-<<<<<<< Updated upstream
-      table = $('<table></table>').attr('class', 'leave_result');
->>>>>>> Stashed changes
-      const tr = $('<tr></tr>');
-      const heads = ['請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假事由', '狀態', '管理員備註', '', ''];
-=======
       table = $('<table></table>').attr('class', 'leave_result table');
       const trHead = $('<tr></tr>');
       const heads = ['請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '狀態', '管理員備註', '核准/拒絕', '修改', '請假證明'];
->>>>>>> Stashed changes
       heads.forEach((head) => {
         const th = $('<th></th>').text(head);
         trHead.append(th);
@@ -125,41 +116,45 @@ $(document).ready(async () => {
         const end = $('#leave_end').val();
         const hours = $('#leave_hours').val();
         const note = $('#leave_note').val();
+        const reason = $('#leave_reason').val();
+        const note = $('#leave_note').val();
+        console.log(leaveTypeId);
 
-        const addLeaveRes = await axios(createLeaveUrl, {
-          method: 'POST',
-          data: {
-            date,
-            start,
-            end,
-            hours,
-            note,
-            leave_type_id: leaveTypeId,
-          },
-          headers: {
-            'content-type': 'application/json',
-          },
-        });
-        const addLeaveResult = addLeaveRes.data;
-        if (addLeaveResult) {
-          alert('請假新增成功');
-          $('.none_leave').remove();
-          const table = $('.leave_result');
-          const tr = $('<tr></tr>');
-          const td_type = $('<td></td>').text($('#leave_type option:selected').text());
-          const td_start = $('<td></td>').text(start);
-          const td_end = $('<td></td>').text(end);
-          const td_hours = $('<td></td>').text(hours);
-          const td_description = $('<td></td>');
-          const td_status = $('<td></td>').attr('class', 'leave_status').text(leaveStatusTable[1]);
-          const td_note = $('<td></td>').text(note);
-          const td_approve = $('<td></td>');
-          const td_edit = $('<td></td>');
-          const edit_btn = $('<button></button>').text('修改');
-          td_edit.append(edit_btn);
-          tr.append(td_type, td_start, td_end, td_hours, td_description, td_status, td_note, td_approve, td_edit);
-          table.append(tr);
-        }
+        // const addLeaveRes = await axios(createLeaveUrl, {
+        //   method: 'POST',
+        //   data: {
+        //     date,
+        //     start,
+        //     end,
+        //     hours,
+        //     note,
+        //     leave_type_id: leaveTypeId,
+        //   },
+        //   headers: {
+        //     'content-type': 'application/json',
+        //   },
+        // });
+        // const addLeaveResult = addLeaveRes.data;
+        // if (addLeaveResult) {
+        //   alert('請假新增成功');
+        //   $('.none_leave').remove();
+        //   // const table = $('.leave_result');
+        //   // const tr = $('<tr></tr>');
+        //   // const td_type = $('<td></td>').text($('#leave_type option:selected').text());
+        //   // const td_start = $('<td></td>').text(start);
+        //   // const td_end = $('<td></td>').text(end);
+        //   // const td_hours = $('<td></td>').text(hours);
+        //   // const td_description = $('<td></td>');
+        //   // const td_status = $('<td></td>').attr('class', 'leave_status').text(leaveStatusTable[1]);
+        //   // const td_note = $('<td></td>').text(note);
+        //   // const td_approve = $('<td></td>');
+        //   // const td_edit = $('<td></td>');
+        //   // const edit_btn = $('<button></button>').text('修改');
+        //   // td_edit.append(edit_btn);
+        //   // tr.append(td_type, td_start, td_end, td_hours, td_description, td_status, td_note, td_approve, td_edit);
+        //   // table.append(tr);
+        //   manageAttendance();
+        // }
       } catch (err) {
         console.log(err);
         console.log(err.response.data);
@@ -190,6 +185,8 @@ $(document).ready(async () => {
     }
   } catch (err) {
     console.log(err);
-    location.href = '/staff_signin.html';
+    // location.href = '/staff_signin.html';
   }
-});
+};
+
+$(document).ready(manageAttendance);
