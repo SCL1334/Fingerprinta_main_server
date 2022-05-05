@@ -247,6 +247,14 @@ const getStudentProfile = async (req, res) => {
   res.status(200).json({ data: profile });
 };
 
+const getOneStudent = async (req, res) => {
+  const studentId = req.params.id;
+  const profile = await User.getOneStudent(studentId);
+  if (profile) {
+    res.status(200).json({ data: profile });
+  } else { res.status(500).json({ error: { message: 'Get data failed' } }); }
+};
+
 const getStaffProfile = async (req, res) => {
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
@@ -341,6 +349,7 @@ module.exports = {
   createStudent,
   editStudent,
   getStudents,
+  getOneStudent,
   deleteStudent,
   createStaff,
   getStaffs,
