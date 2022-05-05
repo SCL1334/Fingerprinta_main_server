@@ -1,4 +1,10 @@
 require('dotenv').config();
+const aws = require('aws-sdk');
+const dayjs = require('dayjs');
+
+const {
+  AWS_RESION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET,
+} = process.env;
 
 // reference: https://thecodebarbarian.com/80-20-guide-to-express-error-handling
 const wrapAsync = (fn) => function (req, res, next) {
@@ -6,6 +12,13 @@ const wrapAsync = (fn) => function (req, res, next) {
   // middleware in the chain, in this case the error handler.
   fn(req, res, next).catch(next);
 };
+
+const s3 = new aws.S3({
+  region: AWS_RESION,
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  signatureVersion: 'v4',
+});
 
 const timeStringToMinutes = (timeString) => {
   try {
@@ -26,6 +39,28 @@ const getCeilHourTime = (timeString) => minutesToTimeString(timeStringToMinutes(
 
 const minToFloorHourTime = (timeString) => `${Math.floor(timeString / 60)}:00:00`;
 
+const getS3Url = async (req, res) => {
+  const imageName = 'main';
+  // gen new name
+  const newProductId = parseInt(dayjs().format('YYYYMMDDHHmmss') + Math.floor(Math.random() * 10000), 10);
+  // set apply
+  const path = `test/${newProductId}/${imageName}`;
+  const params = {
+    Bucket: AWS_S3_BUCKET,
+    Key: path,
+    Expires: 60,
+  };
+  // apply to s3 and get url
+  const uploadURL = await s3.getSignedUrlPromise('putObject', params);
+  // send url to frontend
+  res.send({ id: newProductId, url: uploadURL });
+};
+
 module.exports = {
-  wrapAsync, timeStringToMinutes, minutesToTimeString, getCeilHourTime, minToFloorHourTime,
+  wrapAsync,
+  timeStringToMinutes,
+  minutesToTimeString,
+  getCeilHourTime,
+  minToFloorHourTime,
+  getS3Url,
 };
