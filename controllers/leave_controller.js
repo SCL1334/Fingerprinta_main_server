@@ -1,7 +1,7 @@
 require('dotenv').config();
 const dayjs = require('dayjs');
 const Leave = require('../models/leave_model');
-const { timeStringToMinutes } = require('../util/util');
+const { timeStringToMinutes, getS3Url } = require('../util/util');
 
 // Type Manage
 const getTypes = async (req, res) => {
@@ -130,7 +130,7 @@ const transferLackAttendance = async (req, res) => {
 const applyLeave = async (req, res) => {
   const studentId = req.params.id;
   const {
-    leave_type_id, description, date, start, end,
+    leave_type_id: leaveTyoeId, date, start, end, reason, note, certificate_url: certificateUrl,
   } = req.body;
   const accLeaveHours = await Leave.countLeavesHours(studentId).leaves_hours;
 
@@ -167,12 +167,14 @@ const applyLeave = async (req, res) => {
 
   const leave = {
     student_id: studentId,
-    leave_type_id,
-    description,
+    leave_type_id: leaveTyoeId,
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
+    reason,
+    note,
     hours: hours || leaveHours,
+    certificate_url: certificateUrl,
   };
 
   const result = await Leave.applyLeave(leave);
@@ -261,6 +263,21 @@ const deleteLeave = async (req, res) => {
   }
 };
 
+const getS3UrlForCertificate = async (req, res) => {
+  const { id } = req.params;
+  // gen new name
+  const newImageName = parseInt(dayjs().format('YYYYMMDDHHmmss') + Math.floor(Math.random() * 10000), 10);
+  // set apply
+  const path = `leave_certificate/students/${id}/${newImageName}.jpg`;
+  const uploadURL = await getS3Url(path);
+  // send url to frontend
+  if (uploadURL) {
+    res.status(200).json({ data: { url: uploadURL } });
+  } else {
+    res.status(500).json({ error: { message: 'Fail to get s3 url' } });
+  }
+};
+
 module.exports = {
   getTypes,
   createType,
@@ -274,4 +291,5 @@ module.exports = {
   updateLeave,
   deleteLeave,
   transferLackAttendance,
+  getS3UrlForCertificate,
 };

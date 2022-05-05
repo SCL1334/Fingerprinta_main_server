@@ -39,21 +39,21 @@ const getCeilHourTime = (timeString) => minutesToTimeString(timeStringToMinutes(
 
 const minToFloorHourTime = (timeString) => `${Math.floor(timeString / 60)}:00:00`;
 
-const getS3Url = async (req, res) => {
-  const imageName = 'main';
-  // gen new name
-  const newProductId = parseInt(dayjs().format('YYYYMMDDHHmmss') + Math.floor(Math.random() * 10000), 10);
-  // set apply
-  const path = `test/${newProductId}/${imageName}`;
+const getS3Url = async (targetPathName) => {
   const params = {
     Bucket: AWS_S3_BUCKET,
-    Key: path,
-    Expires: 60,
+    Key: targetPathName,
+    Expires: 60, // second
+    ContentType: 'image/jpeg',
   };
   // apply to s3 and get url
-  const uploadURL = await s3.getSignedUrlPromise('putObject', params);
-  // send url to frontend
-  res.send({ id: newProductId, url: uploadURL });
+  try {
+    const uploadURL = await s3.getSignedUrlPromise('putObject', params);
+    return uploadURL;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
 };
 
 module.exports = {

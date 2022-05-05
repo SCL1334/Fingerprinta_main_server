@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { wrapAsync, getS3Url } = require('../util/util');
+const { wrapAsync } = require('../util/util');
 const {
   createStudent, editStudent, getStudents, deleteStudent, studentSignIn,
   studentChangePassword, studentGetResetUrl, studentResetPassword,
@@ -17,11 +17,13 @@ const {
 
 const { getClasses } = require('../controllers/class_controller');
 
+const { getS3UrlForCertificate } = require('../controllers/leave_controller');
+
 const {
   applyLeave, getAllLeaves, getPersonLeaves, countLeavesHours, transferLackAttendance,
 } = require('../controllers/leave_controller');
 
-router.route('/students/s3url').get(wrapAsync(getS3Url));
+router.route('/students/:id/s3url').get(wrapAsync(getS3UrlForCertificate));
 router.route('/students/attendances').get(wrapAsync(getAllAttendances));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
