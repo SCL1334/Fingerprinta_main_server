@@ -111,14 +111,64 @@ const manageAttendance = async function () {
       try {
         createButtonEvent.preventDefault();
         const createLeaveUrl = `api/1.0/students/${studentId}/attendances/leaves`;
+        const leaveCertificate = $('#leave_certificate').val();
         const leaveTypeId = $('#leave_type').val();
         const start = $('#leave_start').val();
         const end = $('#leave_end').val();
         const hours = $('#leave_hours').val();
         const note = $('#leave_note').val();
         const reason = $('#leave_reason').val();
-        const note = $('#leave_note').val();
-        console.log(leaveTypeId);
+
+        let certificateUrl = '';
+        if (leaveCertificate !== '') {
+          Swal.fire({
+            text: '圖片上傳中...',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+          const certificateImg = $('#leave_certificate').prop('files')[0];
+          const s3UrlRes = await axios.get(`/api/1.0/students/${studentId}/s3url`);
+          const s3UrlResult = s3UrlRes.data;
+          if (!s3UrlResult) {
+            alert('檔案上傳失敗');
+            return;
+          }
+          const s3Url = s3UrlResult.data.url;
+          const uploadRes = await axios.put(s3Url, certificateImg, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          const uploadResult = uploadRes.data;
+          if (uploadResult) {
+            alert('檔案上傳失敗');
+            return;
+          }
+          [certificateUrl] = s3Url.split('?');
+        }
+
+        const leaveCreateRes = await axios(createLeaveUrl, {
+          method: $('.leave_form form').attr('method'),
+          data: {
+            leave_type_id: leaveTypeId,
+            date,
+            start,
+            end,
+            hours,
+            reason,
+            note,
+            certificate_url: certificateUrl,
+          },
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        const leaveCreateResult = await leaveCreateRes.data;
+        if (leaveCreateResult) {
+          Swal.close();
+          location.reload();
+        }
 
         // const addLeaveRes = await axios(createLeaveUrl, {
         //   method: 'POST',
@@ -156,8 +206,8 @@ const manageAttendance = async function () {
         //   manageAttendance();
         // }
       } catch (err) {
+        Swal.close();
         console.log(err);
-        console.log(err.response.data);
       }
     });
 

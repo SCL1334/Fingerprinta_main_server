@@ -217,18 +217,6 @@ $(document).ready(async () => {
             <select class="form-select" id='leave_type'>
               ${options}
             </select>
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-            <input id='leave_date' name='date' type="date" value="2022-04-20">
-            <input id='leave_start' name='start' type="time" value="13:00">
-            <input id='leave_end' name='end' type="time" value="16:00">
-            <input id='leave_reason' name='description' type="text" value="看牙醫">
-            <button type="submit">送出</button>
-          </form>
-        </div>
-=======
->>>>>>> Stashed changes
           </div>
           <div class="mb-3">
             <label for="leave_date" class="form-label">請假日期</label>
@@ -244,11 +232,7 @@ $(document).ready(async () => {
           </div>
           <div class="mb-3">
             <span class="input-group-text">請假緣由</span>
-<<<<<<< Updated upstream
-            <textarea id="leave_reason" name="description" class="form-control" aria-label="請假緣由"></textarea>
-=======
             <textarea id="leave_reason" name="reason" class="form-control" aria-label="請假緣由"></textarea>
->>>>>>> Stashed changes
             <div class="form-text">上限50字</div>
           </div>
           <div class="input-group">
@@ -259,10 +243,6 @@ $(document).ready(async () => {
           <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
         </form>
       </div>
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
         `;
       } catch (err) {
         console.log(err);
