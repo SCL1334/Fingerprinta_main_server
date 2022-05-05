@@ -103,27 +103,35 @@ const countLeavesHours = async (req, res) => {
 const transferLackAttendance = async (req, res) => {
   const studentId = req.params.id;
   const {
-    leave_type_id: leaveTypeId, date, start, end, hours, reason, note, certificate_url: certificateUrl,
+    leave_type_id: leaveTypeId, date, start, end, hours,
+    reason, note, certificate_url: certificateUrl,
   } = req.body;
 
-  let leaveHours;
-  const startMin = timeStringToMinutes(start);
-  const endMin = timeStringToMinutes(end);
-  const restStart = timeStringToMinutes('12:00:00');
-  const restEnd = timeStringToMinutes('13:00:00');
+  const leaveTypes = await Leave.getTypes();
+  const leaveTypesTable = leaveTypes.reduce((acc, cur) => {
+    acc[cur.id] = cur;
+    return acc;
+  }, {});
+  let leaveHours = 0;
+  if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
+    const startMin = timeStringToMinutes(start);
+    const endMin = timeStringToMinutes(end);
+    const restStart = timeStringToMinutes('12:00:00');
+    const restEnd = timeStringToMinutes('13:00:00');
 
-  const minToHours = (min) => Math.ceil(min / 60);
+    const minToHours = (min) => Math.ceil(min / 60);
 
-  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
-    leaveHours = minToHours(restStart - startMin + endMin - restEnd);
-  } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
-    leaveHours = minToHours(endMin - startMin);
-  } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
-    leaveHours = minToHours(restStart - startMin);
-  } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
-    leaveHours = 0;
-  } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
-    leaveHours = minToHours(endMin - restEnd);
+    if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+      leaveHours = minToHours(restStart - startMin + endMin - restEnd);
+    } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
+      leaveHours = minToHours(endMin - startMin);
+    } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
+      leaveHours = minToHours(restStart - startMin);
+    } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
+      leaveHours = 0;
+    } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
+      leaveHours = minToHours(endMin - restEnd);
+    }
   }
 
   const leave = {
@@ -151,7 +159,7 @@ const transferLackAttendance = async (req, res) => {
 const applyLeave = async (req, res) => {
   const studentId = req.params.id;
   const {
-    leave_type_id: leaveTyoeId, date, start, end, reason, note, certificate_url: certificateUrl,
+    leave_type_id: leaveTypeId, date, start, end, reason, note, certificate_url: certificateUrl,
   } = req.body;
   const accLeaveHours = await Leave.countLeavesHours(studentId).leaves_hours;
 
@@ -165,30 +173,36 @@ const applyLeave = async (req, res) => {
     }
     hours = null;
   }
+  const leaveTypes = await Leave.getTypes();
+  const leaveTypesTable = leaveTypes.reduce((acc, cur) => {
+    acc[cur.id] = cur;
+    return acc;
+  }, {});
+  let leaveHours = 0;
+  if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
+    const startMin = timeStringToMinutes(start);
+    const endMin = timeStringToMinutes(end);
+    const restStart = timeStringToMinutes('12:00:00');
+    const restEnd = timeStringToMinutes('13:00:00');
 
-  let leaveHours;
-  const startMin = timeStringToMinutes(start);
-  const endMin = timeStringToMinutes(end);
-  const restStart = timeStringToMinutes('12:00:00');
-  const restEnd = timeStringToMinutes('13:00:00');
+    const minToHours = (min) => Math.ceil(min / 60);
 
-  const minToHours = (min) => Math.ceil(min / 60);
-
-  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
-    leaveHours = minToHours(restStart - startMin + endMin - restEnd);
-  } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
-    leaveHours = minToHours(endMin - startMin);
-  } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
-    leaveHours = minToHours(restStart - startMin);
-  } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
-    leaveHours = 0;
-  } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
-    leaveHours = minToHours(endMin - restEnd);
+    if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+      leaveHours = minToHours(restStart - startMin + endMin - restEnd);
+    } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
+      leaveHours = minToHours(endMin - startMin);
+    } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
+      leaveHours = minToHours(restStart - startMin);
+    } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
+      leaveHours = 0;
+    } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
+      leaveHours = minToHours(endMin - restEnd);
+    }
   }
 
   const leave = {
     student_id: studentId,
-    leave_type_id: leaveTyoeId,
+    leave_type_id: leaveTypeId,
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
