@@ -142,7 +142,6 @@ const manageAttendance = async function () {
         const tdCertificate = $('<td></td>').attr('class', 'leave_certificate');
         const getAuditBtn = (audit, text) => $('<button></button>').text(text).click(async (auditButtonEvent) => {
           auditButtonEvent.preventDefault();
-          const auditBtn = $(auditButtonEvent.target);
           // approve leave API path may be different
           const auditLeaveRes = await axios.patch(`/api/1.0/leaves/${leaveSearch.id}`, {
             approval: audit,
@@ -318,84 +317,6 @@ const manageAttendance = async function () {
           Swal.close();
           location.reload();
         }
-
-        // const addLeaveRes = await axios(createLeaveUrl, {
-        //   method: 'POST',
-        //   data: {
-        //     date,
-        //     start,
-        //     end,
-        //     hours,
-        //     note,
-        //     leave_type_id: leaveTypeId,
-        //   },
-        //   headers: {
-        //     'content-type': 'application/json',
-        //   },
-        // });
-        // const addLeaveResult = addLeaveRes.data;
-        // if (addLeaveResult) {
-        //   alert('請假新增成功');
-        //   $('.none_leave').remove();
-        //   // const table = $('.leave_result');
-        //   // const tr = $('<tr></tr>');
-        //   // const td_type = $('<td></td>').text($('#leave_type option:selected').text());
-        //   // const td_start = $('<td></td>').text(start);
-        //   // const td_end = $('<td></td>').text(end);
-        //   // const td_hours = $('<td></td>').text(hours);
-        //   // const td_description = $('<td></td>');
-        //   // const td_status = $('<td></td>').attr('class', 'leave_status').text(leaveStatusTable[1]);
-        //   // const td_note = $('<td></td>').text(note);
-        //   // const td_approve = $('<td></td>');
-        //   // const td_edit = $('<td></td>');
-        //   // const edit_btn = $('<button></button>').text('修改');
-        //   // td_edit.append(edit_btn);
-        //   // tr.append(td_type, td_start, td_end, td_hours, td_description, td_status, td_note, td_approve, td_edit);
-        //   // table.append(tr);
-        //   manageAttendance();
-        // }
-
-      //   <div class="col-3">
-      //   <div class="leave_form modal fade" id="edit_leave_form" role="dialog">
-      //     <p class="font-monospace text-center fs-2">編輯假單</p>
-      //     <form action="/api/1.0/students/${id}/leaves" method="PUT">
-      //       <div class="mb-3">
-      //         <label for="leave_type" class="form-label">請假類型</label>
-      //         <select class="form-select" id='edit_type'>
-      //           ${leaveTypeOptions}
-      //         </select>
-      //       </div>
-      //       <div class="mb-3">
-      //         <label for="leave_start" class="form-label">請假開始時間</label>
-      //         <input id='edit_start' name='leave_start' class="form-control" type="time" value="13:00">
-      //       </div>
-      //       <div class="mb-3">
-      //         <label for="leave_end" class="form-label">請假結束時間</label>
-      //         <input id='edit_end' name='leave_end' class="form-control" type="time" value="16:00">
-      //       </div>
-      //       <div class="mb-3">
-      //         <label for="leave_hours" class="form-label">請假小時數</label>
-      //         <input id='edit_hours' name='leave_hour' class="form-control" type="number">
-      //       </div>
-      //       <div class="mb-3">
-      //         <span class="input-group-text">學生請假緣由</span>
-      //         <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
-      //         <div class="form-text">上限50字</div>
-      //       </div>
-      //       <div class="mb-3">
-      //         <span class="input-group-text">管理員備註</span>
-      //         <textarea id="edit_note" name="leave_note" class="form-control" aria-label="管理員備註"></textarea>
-      //         <div class="form-text">上限50字</div>
-      //       </div>
-      //       <div class="input-group">
-      //         <span class="input-group-text">請假證明(圖片)</span>
-      //         <input id='edit_certificate' name='leave_certificate' class="form-control" type="file" accept="inage/*">
-      //       </div>
-      //       <button type="submit" class="edit_leave btn btn-dark">送出</button>
-      //       <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
-      //     </form>
-      //   </div>
-      // </div>
       } catch (err) {
         Swal.close();
         console.log(err);
@@ -426,7 +347,7 @@ const manageAttendance = async function () {
     }
   } catch (err) {
     console.log(err);
-    // location.href = '/staff_signin.html';
+    location.href = '/staff_signin.html';
   }
 };
 
