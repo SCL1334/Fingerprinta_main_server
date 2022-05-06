@@ -238,8 +238,9 @@ const auditLeave = async (req, res) => {
 const updateLeave = async (req, res) => {
   const leaveId = req.params.id;
   const {
-    leave_type_id, reason, note, date, start, end, approval, hours,
+    leave_type_id, reason, note, date, start, end,
   } = req.body;
+  let { hours, approval } = req.body;
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
 
@@ -256,7 +257,7 @@ const updateLeave = async (req, res) => {
 
   const minToHours = (min) => Math.ceil(min / 60);
 
-  if (start <= restStart && end >= restEnd) { // 正常情況 start && end 都不在Rest範圍
+  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
     leaveHours = minToHours(restStart - startMin + endMin - restEnd);
   } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
     leaveHours = minToHours(endMin - startMin);
