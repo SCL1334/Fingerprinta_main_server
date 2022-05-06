@@ -1541,7 +1541,7 @@ async function auditLeave() {
       }, '');
       const editLeaveForm = `
         <div class="col-3 modal fade" role="dialog">
-          <div class="leave_form" id="edit_leave_form" >
+          <div class="leave_form" id="edit_leave_form">
             <p class="font-monospace text-center fs-2">編輯假單</p>
             <form action="/api/1.0/students/leaves" method="PUT">
               <div class="form-text" id="edit_date"></div>
@@ -1580,7 +1580,7 @@ async function auditLeave() {
               <select class="form-select" id='edit_status'>
                 ${leaveStatusOptions}
               </select>
-            </div>
+              </div>
               <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
               <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
             </form>
@@ -1713,6 +1713,7 @@ async function auditLeave() {
             $('#edit_note').val(note);
             $('#edit_status').val(status);
             editLeaveModal.modal('show');
+
             $('#edit_leave_btn').click(async (submit) => {
               submit.preventDefault();
               try {
@@ -1975,6 +1976,14 @@ $(document).ready(async () => {
               //   date, studentId, studentName, attendance, rule,
               // };
               const attendanceDetailPage = window.open(`/attendance_detail.html?student_id=${studentId}&date=${date}`);
+
+              // var receiveMessage = function (event) {
+              //   if (event.data.indexOf("SUCCESS") !== -1 && event.origin.indexOf('.remoteserver.com') !== -1) {
+              //     popup.close();
+              //   }
+              // };
+
+              // window.removeEventListener("message", receiveMessage);
               // attendanceDetailPage.target = attendanceDetail;
             });
 

@@ -246,7 +246,6 @@ $(document).ready(async () => {
         `;
       } catch (err) {
         console.log(err);
-        console.log(err.response.data);
         return;
       }
 
@@ -316,6 +315,7 @@ $(document).ready(async () => {
     // search leave application
     $('.check_leave').click(async () => {
       try {
+        const leavesUrl = 'api/1.0/leaves';
         $('.content').empty();
         const leave = $('<div></div>').attr('class', 'leave').text('請假記錄');
         const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
@@ -325,40 +325,238 @@ $(document).ready(async () => {
         $('.content').append(leave);
         $('.search_btn').click(async () => {
           try {
-            let table = $('.leave_result');
-            if (table) { table.empty(); }
+            $('.leave_result').remove();
             const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-            const responseData = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
-            const { data } = responseData;
-            table = $('<table></table>').attr('class', 'leave_result table');
+            const leaveSearchRes = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
+            const leaveSearchResult = leaveSearchRes.data.data;
+            const table = $('<table></table>').attr('class', 'leave_result table');
             const tr = $('<tr></tr>');
-            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '修改', '請假證明'];
             heads.forEach((head) => {
               const th = $('<th></th>').text(head);
               tr.append(th);
             });
             table.append(tr);
 
-            $('.leave').append(table);
-            data.data.forEach((leave) => {
-              const tr = $('<tr></tr>');
-              const td_date = $('<td></td>').text(leave.date);
-              const td_type = $('<td></td>').text(leave.leave_type_name);
-              const td_start = $('<td></td>').text(leave.start);
-              const td_end = $('<td></td>').text(leave.end);
-              const td_reason = $('<td></td>').text(leave.description);
-              const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
-              tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
-              table.append(tr);
+            try {
+              const leaveTypesRaw = await axios.get('/api/1.0/leaves/types');
+              const leaveTypes = leaveTypesRaw.data.data;
+              // insert into option
+              const leaveTypeOptions = leaveTypes.reduce((acc, leaveType) => {
+                const selected = (leaveType.id === 3) ? 'selected' : '';
+                const leaveTypeOption = `<option ${selected} value=${leaveType.id}>${leaveType.name}</option>`;
+                acc += leaveTypeOption;
+                return acc;
+              }, '');
+
+              const editLeaveForm = `
+              <div class="col-3 modal fade" role="dialog">
+                <div class="leave_form" id="edit_leave_form">
+                  <p class="font-monospace text-center fs-2">編輯假單</p>
+                  <form action="" method="PUT">
+                    <div class="form-text" id="edit_date"></div>
+                    <div class="mb-3">
+                      <label for="leave_type" class="form-label">請假類型</label>
+                      <select class="form-select" id='edit_type'>
+                        ${leaveTypeOptions}
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="leave_start" class="form-label">請假開始時間</label>
+                      <input id='edit_start' name='leave_start' class="form-control" type="time">
+                    </div>
+                    <div class="mb-3">
+                      <label for="leave_end" class="form-label">請假結束時間</label>
+                      <input id='edit_end' name='leave_end' class="form-control" type="time">
+                    </div>
+                    <div class="mb-3">
+                      <span class="input-group-text">學生請假緣由</span>
+                      <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
+                      <div class="form-text">上限50字</div>
+                    </div>
+                    <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
+                    <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
+                  </form>
+                </div>
+              </div>
+              `;
+
+              $('.content').append(editLeaveForm);
+            } catch (err) {
+              console.log(err);
+            }
+
+            const editLeaveModal = $('#edit_leave_form');
+            // const editLeaveModal = $('#test');
+            editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
+              // clear last time data
+              editLeaveModal.find('input,select').val('').end();
+              // remove listener
+              editLeaveModal.find('#edit_leave_btn').off('click');
             });
+
+            $('.leave').append(table);
+            leaveSearchResult.forEach((leaveSearch) => {
+              const trLeave = $(`<tr data-leave_id=${leaveSearch.id}></tr>`);
+              const tdDate = $('<td></td>').attr('class', 'leave_date').text(leaveSearch.date);
+              const tdType = $('<td></td>').attr('class', 'leave_type').attr('data-leave_type_id', leaveSearch.leave_type_id).text(leaveSearch.leave_type_name);
+              const tdStart = $('<td></td>').attr('class', 'leave_start').text(leaveSearch.start);
+              const tdEnd = $('<td></td>').attr('class', 'leave_end').text(leaveSearch.end);
+              const tdHours = $('<td></td>').attr('class', 'leave_hours').text(leaveSearch.hours);
+              const tdReason = $('<td></td>').attr('class', 'leave_reason').text(leaveSearch.reason);
+              const tdNote = $('<td></td>').attr('class', 'leave_note').text(leaveSearch.note);
+              const tdStatus = $('<td></td>').attr('class', 'leave_status').attr('data-leave_status', leaveSearch.approval).text(leaveStatusTable[leaveSearch.approval]);
+              const tdCertificate = $('<td></td>').attr('class', 'leave_certificate');
+
+              if (leaveSearch.certificate_url) {
+                const checkCertificate = $('<button></button>').text('證明連結').click(async (checkEvent) => {
+                  checkEvent.preventDefault();
+                  Swal.fire({
+                    imageUrl: leaveSearch.certificate_url,
+                    imageAlt: 'leave certificate',
+                  });
+                });
+                tdCertificate.append(checkCertificate);
+              }
+
+              const tdEdit = $('<td></td>');
+              const editBtn = $('<button></button>').text('修改').click(async (callEdit) => {
+                callEdit.preventDefault();
+                // const callEditBtn = $(callEdit.target);
+                const date = $(callEdit.target).parent().siblings('.leave_date').text();
+                const leaveId = $(callEdit.target).parent().parent().data('leave_id');
+                const leaveTypeId = $(callEdit.target).parent().siblings('.leave_type').data('leave_type_id');
+                const reason = $(callEdit.target).parent().siblings('.leave_reason').text();
+                const start = $(callEdit.target).parent().siblings('.leave_start').text();
+                const end = $(callEdit.target).parent().siblings('.leave_end').text();
+                const hours = $(callEdit.target).parent().siblings('.leave_hours').text();
+                $('#edit_date').text(date);
+                $('#edit_type').val(leaveTypeId);
+                $('#edit_start').val(start);
+                $('#edit_end').val(end);
+                $('#edit_hours').val(hours);
+                $('#edit_reason').val(reason);
+
+                editLeaveModal.modal('show');
+                $('#edit_leave_btn').click(async (submit) => {
+                  submit.preventDefault();
+                  try {
+                    const editLeaveRes = await axios(`${leavesUrl}/${leaveId}`, {
+                      method: 'PUT',
+                      data: {
+                        date,
+                        leave_type_id: $('#edit_type').val(),
+                        start: $('#edit_start').val(),
+                        end: $('#edit_end').val(),
+                        reason: $('#edit_reason').val(),
+
+                      },
+                      headers: {
+                        'content-type': 'application/json',
+                      },
+                    });
+                    const editLeaveResult = editLeaveRes.data;
+                    if (editLeaveResult) {
+                      editLeaveModal.children('.close-modal').click();
+                      editLeaveModal.remove();
+                      $('.search_btn').trigger('click');
+                    }
+                  } catch (err) {
+                    console.log(err);
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops...',
+                      text: '更改失敗，請重新操作',
+                    });
+                  }
+                });
+              });
+              const deleteBtn = $('<button></button>').text('刪除').click(async (deleteEvent) => {
+                deleteEvent.preventDefault();
+                try {
+                  const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
+                  const deleteResult = deleteRes.data;
+                  if (deleteResult) { $('.search_btn').trigger('click'); }
+                } catch (err) {
+                  console.log(err);
+                  alert('刪除失敗');
+                }
+              });
+
+              // if has been approved no need approve btn
+              if (leaveSearch.approval === 0) { tdEdit.append(editBtn, deleteBtn); }
+              trLeave.append(
+                tdDate,
+                tdType,
+                tdStart,
+                tdEnd,
+                tdHours,
+                tdReason,
+                tdNote,
+                tdStatus,
+                tdEdit,
+                tdCertificate,
+              );
+              table.append(trLeave);
+            });
+            //   data.data.forEach((leave) => {
+            //     const tr = $('<tr></tr>');
+            //     const td_date = $('<td></td>').text(leave.date);
+            //     const td_type = $('<td></td>').text(leave.leave_type_name);
+            //     const td_start = $('<td></td>').text(leave.start);
+            //     const td_end = $('<td></td>').text(leave.end);
+            //     const td_reason = $('<td></td>').text(leave.description);
+            //     const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
+            //     tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
+            //     table.append(tr);
+            //   });
+            // } catch (err) {
+            //   console.log(err);
+            // }
+            // });
+            // $('.content').empty();
+            // const leave = $('<div></div>').attr('class', 'leave').text('請假記錄');
+            // const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
+            // const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+            // const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
+            // leave.append(searchFrom, searchTo, searchBtn);
+            // $('.content').append(leave);
+            // $('.search_btn').click(async () => {
+            //   try {
+            //     let table = $('.leave_result');
+            //     if (table) { table.empty(); }
+            //     const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
+            //     const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
+            //     const responseData = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
+            //     const { data } = responseData;
+            //     table = $('<table></table>').attr('class', 'leave_result table');
+            //     const tr = $('<tr></tr>');
+            //     const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假理由', '狀態'];
+            //     heads.forEach((head) => {
+            //       const th = $('<th></th>').text(head);
+            //       tr.append(th);
+            //     });
+            //     table.append(tr);
+
+            //     $('.leave').append(table);
+            //     data.data.forEach((leave) => {
+            //       const tr = $('<tr></tr>');
+            //       const td_date = $('<td></td>').text(leave.date);
+            //       const td_type = $('<td></td>').text(leave.leave_type_name);
+            //       const td_start = $('<td></td>').text(leave.start);
+            //       const td_end = $('<td></td>').text(leave.end);
+            //       const td_reason = $('<td></td>').text(leave.description);
+            //       const td_status = $('<td></td>').text(leaveStatusTable[leave.approval]);
+            //       tr.append(td_date, td_type, td_start, td_end, td_reason, td_status);
+            //       table.append(tr);
+            //     });
           } catch (err) {
             console.log(err);
           }
         });
       } catch (err) {
         console.log(err);
-        location.href = location.href.replace('.html', '_signin.html');
       }
     });
   } catch (err) {
