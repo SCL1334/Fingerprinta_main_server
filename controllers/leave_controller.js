@@ -238,7 +238,7 @@ const auditLeave = async (req, res) => {
 const updateLeave = async (req, res) => {
   const leaveId = req.params.id;
   const {
-    leave_type_id, reason, date, start, end, approval, hours,
+    leave_type_id, reason, note, date, start, end, approval, hours,
   } = req.body;
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
@@ -271,6 +271,7 @@ const updateLeave = async (req, res) => {
   const leave = {
     leave_type_id,
     reason,
+    note,
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
