@@ -25,7 +25,7 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  store: new RedisStore({ client: Cache }),
+  store: (Cache.ready === true) ? new RedisStore({ client: Cache }) : '',
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
