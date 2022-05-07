@@ -100,6 +100,15 @@ const countLeavesHours = async (req, res) => {
   }
 };
 
+const countAllLeavesHours = async (req, res) => {
+  const leavesHours = await Leave.countAllLeavesHours();
+  if (!leavesHours) {
+    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
+  } else {
+    res.status(200).json({ code: 1000, data: leavesHours });
+  }
+};
+
 const transferLackAttendance = async (req, res) => {
   const studentId = req.params.id;
   const {
@@ -324,6 +333,7 @@ module.exports = {
   getClassLeaves,
   getPersonLeaves,
   countLeavesHours,
+  countAllLeavesHours,
   applyLeave,
   auditLeave,
   updateLeave,

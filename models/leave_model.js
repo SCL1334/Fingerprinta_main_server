@@ -55,7 +55,7 @@ const getAllLeaves = async (from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.*, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
+        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
@@ -83,7 +83,7 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.*, s.name AS student_name, 
+        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, 
         c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
@@ -113,7 +113,7 @@ const checkStudentValidLeaves = async (studentId, from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.reason, sl.date, sl.start, sl.end, sl.hours, sl.note,  s.name AS student_name, 
+        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.reason, sl.date, sl.start, sl.end, sl.hours, sl.note, s.name AS student_name, 
         c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
@@ -144,7 +144,7 @@ const getClassLeaves = async (classId, from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.*, s.name AS student_name, 
+        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, 
         c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
@@ -214,6 +214,25 @@ const countLeavesHours = async (studentId) => {
   }
 };
 
+const countAllLeavesHours = async () => {
+  try {
+    const [leaves] = await promisePool.query('SELECT student_id, hours FROM student_leave WHERE approval = 1');
+    const eachTotalHours = leaves.reduce((acc, cur) => {
+      if (!acc[cur.student_id]) {
+        acc[cur.student_id] = {};
+        acc[cur.student_id].leaves_hours = cur.hours;
+      } else {
+        acc[cur.student_id].leaves_hours += cur.hours;
+      }
+      return acc;
+    }, {});
+    return eachTotalHours;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 const applyLeave = async (leave) => {
   try {
     const [result] = await promisePool.query('INSERT INTO student_leave SET ?', leave);
@@ -266,6 +285,7 @@ module.exports = {
   getPersonLeaves,
   checkStudentValidLeaves,
   countLeavesHours,
+  countAllLeavesHours,
   applyLeave,
   updateLeave,
   deleteLeave,
