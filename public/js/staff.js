@@ -302,46 +302,10 @@ async function accountManage() {
   $('.content').append(accountCompenents);
   // student account part
   async function studentManage() {
-    // const filter = `
-    //   <div class="filter">
-    //     <select id="filter_comparator">
-    //       <option value="eq">=</option>
-    //       <option value="gt">&gt;=</option>
-    //       <option value="lt">&lt;=</option>
-    //       <option value="ne">!=</option>
-    //     </select>
-    //     <input type="text" id="filter_value">
-    //   </div>
-    //   `;
-
     const studentUrl = '/api/1.0/students';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
-    // accountManageBoard.append(filter);
 
-    try {
-      const fingerprintsRaw = await axios.get('/api/1.0/fingerprints');
-      const fingerpinrts = fingerprintsRaw.data.data;
-      const fingerprintsOptions = fingerpinrts.reduce((acc, cur) => {
-        const disable = (cur.status === 0) ? '' : 'disabled';
-        const remind = (cur.status === 0) ? '' : '已配對';
-        const fingerOption = `<option value=${cur.id} ${disable}>${cur.id}${remind}</option>`;
-        acc += fingerOption;
-        return acc;
-      }, '');
-
-      const fingerpirntsStatus = `
-      <div class="finger_status">
-        <select id='finger_option'>
-          <option value=null>請選擇欲登錄的指紋ID</option>
-          ${fingerprintsOptions}
-        </select>
-      </div>`;
-
-      accountManageBoard.append(fingerpirntsStatus);
-    } catch (err) {
-      console.log(err);
-    }
     const studentTable = $('<table></table>').attr('class', 'students_account_table');
     accountManageBoard.append(studentTable);
     const thead = $('<thead></thead>');
@@ -543,13 +507,13 @@ async function accountManage() {
           },
         },
         {
-          targets: 4,
+          targets: 5,
           createdCell(td, cellData, rowData, row, col) {
             $(td).attr('class', 'finger_id');
           },
         },
         // {
-        //   targets: 5,
+        //   targets: 6,
         //   createdCell(td, cellData, rowData, row, col) {
         //     // if (rowData.finger_id !== null) {
         //     $(td).children().attr('disabled');
@@ -557,7 +521,7 @@ async function accountManage() {
         //   },
         // },
         // {
-        //   targets: 6,
+        //   targets: 7,
         //   createdCell(td, cellData, rowData, row, col) {
         //     if (rowData.finger_id === null) {
         //       $(td).children().attr('disabled');
@@ -570,16 +534,19 @@ async function accountManage() {
           enrrollEvent.preventDefault();
           const enrollBtn = $(enrrollEvent.target);
           const studentId = enrollBtn.parent().siblings('.student_id').text();
-          const fingerId = $('#finger_option').val();
           try {
-            const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint/${fingerId}`);
+            const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
             const enrollFingerResult = enrollFingerRes.data.data;
             if (enrollFingerResult) {
-              alert('配對成功');
+              Swal.fire('配對成功');
               studentManage();
             }
           } catch (err) {
-            alert('配對失敗');
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '配對失敗',
+            });
             console.log(err);
           }
         });
@@ -590,12 +557,17 @@ async function accountManage() {
           try {
             const removeFingerRes = await axios.delete(`${studentUrl}/fingerprint/${fingerId}`);
             const removeFingerResult = removeFingerRes.data.data;
+            console.log(removeFingerResult);
             if (removeFingerResult) {
-              alert('移除成功');
+              Swal.fire('移除成功');
               studentManage();
             }
           } catch (err) {
-            alert('移除失敗');
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '移除失敗',
+            });
             console.log(err);
           }
         });
@@ -663,150 +635,6 @@ async function accountManage() {
   }
 
   studentAccounts.click(studentManage);
-
-  // const studentAccountModal = $('#student_form');
-  // studentAccountModal.on($.modal.BEFORE_CLOSE, () => {
-  //   // clear last time data
-  //   studentAccountModal.find('input,select').val('').end();
-  //   // remove listener
-  //   studentAccountModal.children('.submit').off();
-  // });
-
-  // const createStudentAccountBtn = $('.call_create');
-  // createStudentAccountBtn.click(async (callCreate) => {
-  //   callCreate.preventDefault();
-  //   accountManageBoard.append(studentAddForm);
-  //   const createStaffAccountModal = $('#create_staff_account_form');
-  //   createStudentAccountBtn.modal('show');
-  //   createStudentAccountBtn.children('.submit').click(async (submit) => {
-  //     submit.preventDefault();
-  //     try {
-  //       const studentAccountRes = await axios(studentUrl, {
-  //         method: 'POST',
-  //         data: {
-  //           name: $(submit.target).siblings('.create_name').val(),
-  //           email: $(submit.target).siblings('.create_email').val(),
-  //           password: $(submit.target).siblings('.create_password').val(),
-  //         },
-  //         headers: {
-  //           'content-type': 'application/json',
-  //         },
-  //       });
-  //       const staffAccountResult = staffAccountRes.data;
-  //       if (staffAccountResult) {
-  //         createStaffAccountModal.children('.close-modal').click();
-  //         staffManage();
-  //       }
-  //     } catch (err) {
-  //       console.log(err);
-  //       alert('帳號創建失敗');
-  //     }
-  //   });
-  // });
-
-  // })
-
-  //   // Add new student trigger
-  //   $('.student_form form').submit(async (newStudentSubmitEvent) => {
-  //     try {
-  //       newStudentSubmitEvent.preventDefault();
-  //       const addStudentName = $('#student_name').val();
-  //       const addStudentEmail = $('#student_email').val();
-  //       const addStudentPassword = $('#student_password').val();
-  //       const addStudentClass = $('#student_class').val();
-  //       const addStudentRes = await axios(studentUrl, {
-  //         method: 'POST',
-  //         data: {
-  //           name: addStudentName,
-  //           email: addStudentEmail,
-  //           password: addStudentPassword,
-  //           class_id: addStudentClass,
-  //         },
-  //         headers: {
-  //           'content-type': 'application/json',
-  //         },
-  //       });
-  //       const addStudentResult = addStudentRes.data.data;
-  //       if (addStudentResult) {
-  //         const tr = $('<tr></tr>');
-  //         const td_id = $('<td></td>').text(addStudentResult.insert_id);
-  //         const td_student_name = $('<td></td>').text(addStudentName);
-  //         const td_student_email = $('<td></td>').text(addStudentEmail);
-  //         const td_student_class = $('<td></td>').text($('#student_class option:selected').text());
-  //         const td_student_finger = $('<td></td>').attr('class', 'finger_id').text('未註冊');
-  //         const td_delete = $('<td></td>');
-  //         const td_enroll = $('<td></td>');
-  //         const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-  //           const deleteStudentRes = await axios.delete(`${studentUrl}/${addStudentResult.insert_id}`);
-  //           const deleteStudentResult = deleteStudentRes.data;
-  //           if (deleteStudentResult) {
-  //             $(deleteButtonEvent.target).parent().parent().remove();
-  //           }
-  //         });
-  //         const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-  //           const enrollFingerRes = await axios.post(`${studentUrl}/${addStudentResult.insert_id}/fingerprint`);
-  //           const enrollFingerResult = enrollFingerRes.data.data;
-  //           if (enrollFingerResult) {
-  //             $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-  //           }
-  //         });
-  //         td_enroll.append(enroll_btn);
-  //         td_delete.append(delete_btn);
-  //         tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-  //         table.append(tr);
-  //       }
-  //     } catch (err) {
-  //       console.log(err);
-  //       console.log(err.response.data);
-  //     }
-  //   });
-
-  //   // init table
-  //   const table = $('<table></table>').attr('class', 'students_result');
-  //   const tr = $('<tr></tr>');
-  //   const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '', ''];
-  //   heads.forEach((head) => {
-  //     const th = $('<th></th>').text(head);
-  //     tr.append(th);
-  //   });
-  //   table.append(tr);
-  //   accountManageBoard.append(table);
-  //   // show all exists students
-  //   try {
-  //     const studentsDetail = await axios.get(studentUrl);
-  //     const studentsData = studentsDetail.data.data;
-  //     studentsData.forEach((student) => {
-  //       const tr = $('<tr></tr>');
-  //       const td_id = $('<td></td>').text(student.id);
-  //       const td_student_name = $('<td></td>').text(student.name);
-  //       const td_student_email = $('<td></td>').text(student.email);
-  //       const td_student_class = $('<td></td>').text(`${student.class_type_name}-${student.batch}-${student.class_group_name}`);
-  //       const td_student_finger = $('<td></td>').attr('class', 'finger_id').text(student.finger_id || '未註冊');
-  //       const td_delete = $('<td></td>');
-  //       const td_enroll = $('<td></td>');
-  //       const delete_btn = $('<button></button>').text('刪除').click(async (deleteButtonEvent) => {
-  //         const deleteStudentRes = await axios.delete(`${studentUrl}/${student.id}`);
-  //         const deleteStudentResult = deleteStudentRes.data;
-  //         if (deleteStudentResult) {
-  //           $(deleteButtonEvent.target).parent().parent().remove();
-  //         }
-  //       });
-  //       const enroll_btn = $('<button></button>').text('註冊指紋').click(async (enrollButtonEvent) => {
-  //         const enrollFingerRes = await axios.post(`${studentUrl}/${student.id}/fingerprint`);
-  //         const enrollFingerResult = enrollFingerRes.data.data;
-  //         if (enrollFingerResult) {
-  //           $(enrollButtonEvent.target).parent().siblings('.finger_id').text(enrollFingerResult.finger_id);
-  //         }
-  //       });
-  //       td_enroll.append(enroll_btn);
-  //       td_delete.append(delete_btn);
-  //       tr.append(td_id, td_student_name, td_student_email, td_student_class, td_student_finger, td_enroll, td_delete);
-  //       table.append(tr);
-  //     });
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // });
 
   // staff account part
   async function staffManage() {
