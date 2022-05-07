@@ -4,20 +4,21 @@ const { promisePool } = require('./mysqlcon');
 const { FINGERPRINT_HOST, FINGERPRINT_PORT, SENSOR_API_VERISON } = process.env;
 const sensorFingerUrl = `http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/api/${SENSOR_API_VERISON}/fingerprints`;
 
-const enrollId = async (fingerId) => {
+const matchStudent = async (studentId, fingerId) => {
   // fingerprint ID from 0 to 199
   try {
     const sensorRes = await axios
       .post(`${sensorFingerUrl}/${fingerId}`);
+
     const sensorResult = sensorRes.data;
-    console.log(sensorResult);
+    // console.log(sensorResult);
     const statusCode = sensorResult.code;
     if (statusCode) {
       // success
       if (statusCode === 1001) {
         // in this case, Sensor has recorded the finger ID
         // It's better to record the data in db as well to track the sensor status
-        await promisePool.query('UPDATE fingerprint SET status = 1 WHERE id = ?', [fingerId]);
+        await promisePool.query('UPDATE fingerprint SET status = 1, student_id = ? WHERE id = ?', [studentId, fingerId]);
         return { code: 1010 };
       }
       // operation error
@@ -122,17 +123,17 @@ const getFingerQuota = async () => {
   }
 };
 
-const matchStudent = async (fingerId, studentId) => {
-  try {
-    await promisePool.query('UPDATE fingerprint SET student_id = ?, status = 1 WHERE id = ?', [studentId, fingerId]);
-    return { code: 1020 };
-  } catch (err) {
-    console.log(err);
-    // mark as abnormal
-    await promisePool.query('UPDATE fingerprint SET status = 2 WHERE id = ?', [fingerId]);
-    return { code: 2020 };
-  }
-};
+// const matchStudent = async (fingerId, studentId) => {
+//   try {
+//     await promisePool.query('UPDATE fingerprint SET student_id = ?, status = 1 WHERE id = ?', [studentId, fingerId]);
+//     return { code: 1020 };
+//   } catch (err) {
+//     console.log(err);
+//     // mark as abnormal
+//     await promisePool.query('UPDATE fingerprint SET status = 2 WHERE id = ?', [fingerId]);
+//     return { code: 2020 };
+//   }
+// };
 
 const initOneRow = async (fingerId) => {
   try {
@@ -202,8 +203,17 @@ const initTable = async () => {
   }
 };
 
+const getAvailableId = async () => {
+  try {
+    const [fingerIds] = await promisePool.query('SELECT id FROM fingerprint WHERE status = 0');
+    return fingerIds;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
 module.exports = {
-  enrollId,
   getFingerQuota,
   turnOnIdentify,
   stopSensor,
@@ -216,5 +226,5 @@ module.exports = {
   findStudent,
   initTable,
   checkStudentEnroll,
-
+  getAvailableId,
 };

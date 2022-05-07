@@ -34,7 +34,7 @@ router.route('/students/:id/punches').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
 router.route('/students/:id/attendances/leaves').post(wrapAsync(transferLackAttendance));
 
-router.route('/students/:studentId/fingerprint/:fingerId').post(wrapAsync(matchFingerprint));
+router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));
 
 router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
