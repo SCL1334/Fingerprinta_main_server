@@ -6,7 +6,7 @@ const weekdayTable = {
 const attendanceColor = {
   0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
 };
-const sensorUrl = 'http://127.0.0.1:5000';
+const sensorApiUrl = '/api/1.0/sensor';
 const content = $('.content');
 
 function createBtn(clas, text) {
@@ -1865,22 +1865,22 @@ $(document).ready(async () => {
 
     // sensor operation
     $('#sensor_identify').click(async () => {
-      const sensorIdentifyRes = await axios.post(`${sensorUrl}/identify`);
+      const sensorIdentifyRes = await axios.post(`${sensorApiUrl}/identify`);
       const sensorIdentifyResult = sensorIdentifyRes.data;
       if (sensorIdentifyResult) {
-        alert('指紋機：正在切換到打卡模式');
+        Swal.fire('指紋機：正在切換到打卡模式');
       } else {
-        alert('指紋機：打卡模式啟動失敗');
+        Swal.fire('指紋機：打卡模式啟動失敗');
       }
     });
 
     $('#sensor_stop').click(async () => {
-      const sensorStopRes = await axios.post(`${sensorUrl}/turnoff`);
+      const sensorStopRes = await axios.post(`${sensorApiUrl}/stop`);
       const sensorStopResult = sensorStopRes.data;
       if (sensorStopResult) {
-        alert('指紋機：切換到待機模式');
+        Swal.fire('指紋機：切換到待機模式');
       } else {
-        alert('指紋機：待機模式啟動失敗');
+        Swal.fire('指紋機：待機模式啟動失敗');
       }
     });
 
