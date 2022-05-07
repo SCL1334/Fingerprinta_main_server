@@ -302,9 +302,22 @@ async function accountManage() {
   $('.content').append(accountCompenents);
   // student account part
   async function studentManage() {
+    // const filter = `
+    //   <div class="filter">
+    //     <select id="filter_comparator">
+    //       <option value="eq">=</option>
+    //       <option value="gt">&gt;=</option>
+    //       <option value="lt">&lt;=</option>
+    //       <option value="ne">!=</option>
+    //     </select>
+    //     <input type="text" id="filter_value">
+    //   </div>
+    //   `;
+
     const studentUrl = '/api/1.0/students';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    // accountManageBoard.append(filter);
 
     try {
       const fingerprintsRaw = await axios.get('/api/1.0/fingerprints');
@@ -332,14 +345,22 @@ async function accountManage() {
     const studentTable = $('<table></table>').attr('class', 'students_account_table');
     accountManageBoard.append(studentTable);
     const thead = $('<thead></thead>');
-    const heads = ['ID', '名稱', 'email', '班級', '指紋ID', '設定指紋', '移除指紋', '更改資訊', '刪除帳號'];
+    const heads = ['ID', '名稱', 'email', '班級', '累計請假時數', '指紋ID', '設定指紋', '移除指紋', '更改資訊', '刪除帳號'];
     const tr = $('<tr></tr>');
     heads.forEach((head) => {
-      const th = $('<th></th>').text(head);
+      const th = $('<th></th>').html(head);
       tr.append(th);
     });
     thead.append(tr);
     studentTable.append(thead);
+
+    let studentsLeavesHoursTable = {};
+    try {
+      const studentsLeavesHoursRaw = await axios.get('/api/1.0/students/leaves/hours');
+      studentsLeavesHoursTable = studentsLeavesHoursRaw.data.data;
+    } catch (err) {
+      console.log(err);
+    }
 
     let studentAddForm = '';
     let studentEditForm = '';
@@ -431,7 +452,23 @@ async function accountManage() {
         }
       });
     });
-    studentTable.DataTable({
+
+    $.fn.dataTableExt.afnFiltering.push(
+      (oSettings, aData, iDataIndex) => {
+        const columnIndex = 4; // 5rd column
+        let value = $('#filter_value').val();
+
+        if (value && value.length > 0 && !Number.isNaN(parseInt(value, 10))) {
+          value = parseInt(value, 10);
+          const rowData = parseInt(aData[columnIndex], 10);
+          return rowData >= value;
+        }
+        return true;
+      },
+    );
+
+    const studentShow = studentTable.DataTable({
+      pageLength: 20,
       ajax: {
         url: studentUrl, // 要抓哪個地方的資料
         type: 'GET', // 使用什麼方式抓
@@ -443,8 +480,14 @@ async function accountManage() {
         { data: 'email' },
         {
           data: null,
-          render(data, typem, row) {
+          render(data, typm, row) {
             return `${row.class_type_name}-${row.batch}-${row.class_group_name}`;
+          },
+        },
+        {
+          data: null,
+          render(data, type, row) {
+            return (studentsLeavesHoursTable[row.id]) ? studentsLeavesHoursTable[row.id].leaves_hours : 0;
           },
         },
         { data: 'finger_id' },
@@ -610,6 +653,13 @@ async function accountManage() {
         });
       },
     });
+    /* Add event listeners to the filtering inputs */
+    // $('#filter_comparator').change(() => { studentShow.fnDraw(); });
+    // $('#filter_value').keyon((e) => { if (e.key === 'Enter') { studentShow.fnDraw(); } });
+    const leavesHoursFilter = $('<input type="number" id="filter_value">');
+    leavesHoursFilter.keypress((e) => { if (e.which === 13) { studentShow.draw(); } });
+    $('<label>搜尋請假時數大於</label>').append(leavesHoursFilter).insertAfter($('#DataTables_Table_0_length'));
+    $('#DataTables_Table_0_length').remove();
   }
 
   studentAccounts.click(studentManage);
