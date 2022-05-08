@@ -491,7 +491,11 @@ async function accountManage() {
                 }
               } catch (err) {
                 console.log(err);
-                alert('帳號創建失敗');
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  text: '帳號創建失敗',
+                });
               }
               // workbook.SheetNames.forEach((sheet) => {
               //   const rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
@@ -1352,14 +1356,74 @@ async function exceptionManage() {
 function genRuleManage(date) {
   return async function () {
     $('.content').empty();
-    const calendarUrl = '/api/1.0/calendar/months';
+    const calendarUrl = '/api/1.0/calendar';
     const dateUrl = '/api/1.0/calendar/date';
     const checkDate = (date === null || date === undefined) ? dayjs() : dayjs(date);
     const yearMonth = checkDate.format('YYYYMM');
     const year = checkDate.format('YYYY');
     const month = checkDate.format('MM');
     // create table and head
-    const calendarBlock = $('<div></div>').attr('class', 'calendar');
+    const calendarBlock = $('<div></div>').attr('class', 'calendar row');
+    const calendarMain = $('<div></div>').attr('class', 'calendar_main col-9');
+    const calendarEdit = $('<div></div>').attr('class', 'calendar_edit col-3');
+
+    // edit calendar form
+    const calendarEditForm = `
+    <div class="calendar_form">
+      <div class="create_calendar row">
+        <p class="font-monospace text-center fs-5">新增月曆資料</p>
+        <div class="form-text">*請至<a class="link-success" href="https://data.gov.tw/dataset/14718">政府網站</a>下載對應年份的JSON檔案</div>
+        <form action="#" method="GET">
+          <div class="mb-3">
+            <label for="default_calendar" class="form-label">國定假日資料</label>
+            <input id='default_calendar' name='default_calendar' class="form-control" type="file" accept="application/JSON" required="required">
+          </div>
+          <div class="float-end">
+            <button type="submit" id="init_calendar" class="btn btn-outline-success">新增</button>
+          </div>
+        </form>
+      </div>
+      <br>
+      <div class="delete_calendar row">
+        <p class="font-monospace text-center fs-5">刪除月曆資料</p>
+        <div class="form-text">請輸入欲刪除西元年份</div>
+        <form action="#" method="GET">
+          <div class="mb-3">
+            <input id='delete_year' name='delete_year' class="form-control" type="number" required="required">
+          </div>
+          <div class="float-end">
+            <button type="submit" id="delete_calendar" class="btn btn-outline-danger">刪除</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    `;
+    calendarEdit.append(calendarEditForm);
+
+    //   try {
+    //     const createRoutineRes = await axios(classRoutineUrl, {
+    //       method: 'POST',
+    //       data: {
+    //         class_type_id: $(submit.target).parent().children('.class_type').val(),
+    //         weekday: $(submit.target).parent().children('.weekday').val(),
+    //         start_time: $(submit.target).parent().children('.start_time').val(),
+    //         end_time: $(submit.target).parent().children('.end_time').val(),
+    //       },
+    //       headers: {
+    //         'content-type': 'application/json',
+    //       },
+    //     });
+    //     const createRoutineResult = createRoutineRes.data;
+    //     if (createRoutineResult) {
+    //       createRoutineModal.children('.close-modal').click();
+    //       setPunchTime();
+    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //     alert('create fail');
+    //   }
+    // });
+
     const calenderHead = $('<div></div>').attr('class', 'calendar_head');
     const yearDiv = $('<div></div>').attr('class', 'year text-center text-muted h3').text(`西元${year}年`);
     const calendarMonth = $('<div></div>').attr('class', 'calendar_title row');
@@ -1380,8 +1444,68 @@ function genRuleManage(date) {
 
     calendarMonth.append(lastMonthBtn, monthDiv, nextMonthBtn);
     calenderHead.append(yearDiv, calendarMonth);
-    calendarBlock.append(calenderHead);
-    $('.content').append(calendarBlock, tableDiv);
+    calendarMain.append(calenderHead, tableDiv);
+    calendarBlock.append(calendarMain, calendarEdit);
+    $('.content').append(calendarBlock);
+
+    $('#init_calendar').click((click) => click.preventDefault());
+
+    $('#default_calendar').on('change', (upload) => {
+      const selectedFile = upload.target.files[0];
+      $('#init_calendar').click(async (initCalendar) => {
+        initCalendar.preventDefault();
+        const fileReader = new FileReader();
+        fileReader.readAsText(selectedFile);
+        fileReader.onload = async (event) => {
+          const strCalendar = event.target.result;
+          const jsonCalendar = JSON.parse(strCalendar);
+          try {
+            const initCalendarRes = await axios(`${calendarUrl}`, {
+              method: 'POST',
+              data: {
+                calendar: jsonCalendar,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const initCalendarResult = initCalendarRes.data;
+
+            if (initCalendarResult) {
+              Swal.fire('行事曆初始化成功');
+              $('.rule_setting').click();
+            }
+          } catch (err) {
+            console.log(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '行事曆初始化失敗',
+            });
+          }
+        };
+      });
+    });
+
+    $('#delete_calendar').click(async (deleteCalendar) => {
+      deleteCalendar.preventDefault();
+      const year = $('#delete_year').val();
+      try {
+        const deleteCalendarRes = await axios.delete(`${calendarUrl}/years/${year}`);
+        const deleteCalendarResult = deleteCalendarRes.data;
+        if (deleteCalendarResult) {
+          Swal.fire('刪除成功');
+          $('.rule_setting').click();
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '刪除失敗',
+        });
+        console.log(err);
+      }
+    });
 
     const changeMonth = $('.change_month');
     changeMonth.click((event) => {
@@ -1392,12 +1516,16 @@ function genRuleManage(date) {
     });
 
     try {
-      const calendarRaw = await axios.get(`${calendarUrl}/${yearMonth}`);
+      const calendarRaw = await axios.get(`${calendarUrl}/months/${yearMonth}`);
       const calendar = calendarRaw.data.data;
       // get week day
       let tr = $('<tr></tr>');
       calendar.forEach((cell, index) => {
-        const tdDate = $('<td></td>').text(dayjs(cell.date).format('DD'));
+        const tdDate = $('<td></td>').css('height', '60px').attr('class', 'position-relative');
+        const textDate = $('<div></div>').css('height', '50px').css('width', '52px')
+          .attr('class', 'position-relative fs-3 top-0')
+          .text(dayjs(cell.date).format('DD'));
+        tdDate.append(textDate);
         //  .css('background-color', schoolDay[cell.need_punch]);
         // const btn = $(`<a href="${calendarUrl}/${dayjs(cell.date).format('YYYYMMDD')}"
         // class="btn btn-info" role="button">🔘</a>`);
