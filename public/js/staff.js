@@ -808,7 +808,7 @@ async function classManage() {
       }, '');
 
       const classForm = `
-        <div class="modal fade" id="class_form" role="dialog">
+        <div class="modal fade show" id="class_form" role="dialog">
           <form action="" method="">
             <select id='class_type'>
               <option value='disabled selected hidden'>請選擇班級培訓形式</option>
