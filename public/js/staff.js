@@ -84,9 +84,10 @@ async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
   $('.content').empty();
+  $('body').children('.modal').remove();
   const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
-  $('.content').append(classRoutineTable);
   $('.content').append($('<div></div>').append(createBtn('call_create', '新增')));
+  $('.content').append(classRoutineTable);
   const thead = $('<thead></thead>');
   const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
   const tr = $('<tr></tr>');
@@ -293,7 +294,7 @@ async function setPunchTime() {
 // Account Manage
 async function accountManage() {
   $('.content').empty();
-
+  $('body').children('.modal').remove();
   const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
   const studentAccounts = $('<div></div>').attr('class', 'student_account btn btn-outline-dark ').text('學生帳號管理');
   const staffAccounts = $('<div></div>').attr('class', 'staff_account btn btn-outline-dark').text('校務人員帳號管理');
@@ -384,6 +385,7 @@ async function accountManage() {
       studentEditModal.find('input,select').val('').end();
       // remove listener
       studentEditModal.children().children('.submit').off();
+      // $('body').children('.modal').remove();
     });
 
     const createStudentAccountBtn = $('.call_create');
@@ -1164,6 +1166,7 @@ async function exceptionManage() {
       if (!acc[cur.id]) { acc[cur.id] = cur; }
       return acc;
     }, {});
+    console.log(classTypeTable);
     const classTypeOptions = classTypes.reduce((acc, cur) => {
       acc += `<option value=${cur.id}>${cur.name}</option>`;
       return acc;
@@ -1248,12 +1251,12 @@ async function exceptionManage() {
     const exceptionResult = exceptionRes.data.data;
     exceptionResult.forEach((edate) => {
       const tr = $('<tr></tr>');
-      const td_class_ttype = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
+      const td_class_type = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
       const td_batch = $('<td></td>').text(edate.batch);
       const td_date = $('<td></td>').text(edate.date);
       const td_start = $('<td></td>').text(edate.start);
       const td_end = $('<td></td>').text(edate.end);
-      tr.append(td_class_ttype, td_batch, td_date, td_start, td_end);
+      tr.append(td_class_type, td_batch, td_date, td_start, td_end);
       table.append(tr);
     });
   } catch (err) {
@@ -1261,7 +1264,7 @@ async function exceptionManage() {
   }
 }
 
-async function genRuleManage(date) {
+function genRuleManage(date) {
   return async function () {
     $('.content').empty();
     const calendarUrl = '/api/1.0/calendar/months';
