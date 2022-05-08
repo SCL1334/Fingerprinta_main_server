@@ -109,7 +109,7 @@ async function setPunchTime() {
       return acc;
     }, '');
     const classRoutineForm = `
-    <div class="modal fade" id="class_routine_form" role="dialog">
+    <div class="modal fade show" id="class_routine_form" role="dialog">
       <label for="class_type"></label>
       <select class="class_type" name="class_type">
         <option value="disabled selected hidden">請選擇培訓班級類型</option>
@@ -303,6 +303,7 @@ async function accountManage() {
   $('.content').append(accountCompenents);
   // student account part
   async function studentManage() {
+    $('body').children('.modal').remove();
     const studentUrl = '/api/1.0/students';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
@@ -337,19 +338,62 @@ async function accountManage() {
         return acc;
       }, '');
       studentAddForm = `
-      <div class="modal fade show" id="student_create_form" role="dialog">
-        <form action="${studentUrl}" method="POST">
-          <select class='create_class'>
-            <option value=null>請選擇學生班級</option>
-            ${classesOptions}
-          </select>
-          <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
-          <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
-          <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
-          <button class='submit' type="submit">送出</button>
+      <div class="col-3 modal fade" role="dialog">
+        <div class="leave_form" id="student_create_form">
+          <p class="font-monospace text-center fs-2">新增單一學生</p>
+          <form action="${studentUrl}" method="POST">
+            <div class="mb-3">
+              <label for="student_class" class="form-label">學生班級</label>
+                <select name="student_class" id="create_class" class="form-select">
+                  ${classesOptions}
+                </select>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">學生名稱</label>
+              <input id="create_name" class="form-control" name='name' type='text'>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">學生Email</label>
+              <input id="create_email" class="form-control" name='email' type='email'>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">密碼</label>
+              <input id="create_password" class="form-control" name='password' type='password'>
+            </div>
+            <button type="submit" id="create_student_btn" class="submit btn btn-dark">送出</button>
+          </form>
+          <p class="font-monospace text-center fs-2">新增多位學生</p>
+          <form  method="POST">
+          <div class="mb-3">
+            <label for="student_class" class="form-label">學生班級</label>
+              <select name="student_class" id="multi_create_class" class="form-select">
+                ${classesOptions}
+              </select>
+          </div>
+          <div class="mb-3">
+            <label for="name" class="form-label">學生名單(Excel)</label>
+            <input class="form-control" type="file" id="students_list" accept=".xls,.xlsx"  >
+         </div>
+          <button type="submit" id="create_students_btn" class="submit btn btn-dark">送出</button>
         </form>
+        </div>
       </div>
       `;
+
+      // studentAddForm = `
+      // <div class="modal fade show" id="student_create_form" role="dialog">
+      //   <form action="${studentUrl}" method="POST">
+      //     <select class='create_class'>
+      //       <option value=null>請選擇學生班級</option>
+      //       ${classesOptions}
+      //     </select>
+      //     <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
+      //     <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
+      //     <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
+      //     <button class='submit' type="submit">送出</button>
+      //   </form>
+      // </div>
+      // `;
 
       studentEditForm = `
       <div class="modal fade show" id="student_edit_form" role="dialog">
@@ -385,23 +429,22 @@ async function accountManage() {
       studentEditModal.find('input,select').val('').end();
       // remove listener
       studentEditModal.children().children('.submit').off();
-      // $('body').children('.modal').remove();
     });
 
     const createStudentAccountBtn = $('.call_create');
     createStudentAccountBtn.click(async (callCreate) => {
       callCreate.preventDefault();
       studentCreateModal.modal('show');
-      studentCreateModal.children().children('.submit').click(async (submit) => {
+      $('#create_student_btn').click(async (submit) => {
         submit.preventDefault();
         try {
           const studentAccountRes = await axios(studentUrl, {
             method: 'POST',
             data: {
-              class_id: $(submit.target).siblings('.create_class').val(),
-              name: $(submit.target).siblings('.create_name').val(),
-              email: $(submit.target).siblings('.create_email').val(),
-              password: $(submit.target).siblings('.create_password').val(),
+              class_id: $('#create_class').val(),
+              name: $('#create_name').val(),
+              email: $('#create_email').val(),
+              password: $('#create_password').val(),
             },
             headers: {
               'content-type': 'application/json',
@@ -416,6 +459,47 @@ async function accountManage() {
           console.log(err);
           alert('帳號創建失敗');
         }
+      });
+      $('#students_list').on('change', (upload) => {
+        const selectedFile = upload.target.files[0];
+        $('#create_students_btn').click(async (submit) => {
+          submit.preventDefault();
+          if (selectedFile) {
+            const fileReader = new FileReader();
+            fileReader.readAsBinaryString(selectedFile);
+            fileReader.onload = async (event) => {
+              const data = event.target.result;
+              const workbook = XLSX.read(data, { type: 'binary' });
+              // consume only one sheet
+              const studentsList = XLSX.utils.sheet_to_row_object_array(
+                workbook.Sheets[workbook.SheetNames[0]],
+              );
+              try {
+                const studentAccountRes = await axios(`/api/1.0/classes/${$('#multi_create_class').val()}/students`, {
+                  method: 'POST',
+                  data: {
+                    students: studentsList,
+                  },
+                  headers: {
+                    'content-type': 'application/json',
+                  },
+                });
+                const studentAccountResult = studentAccountRes.data;
+                if (studentAccountResult) {
+                  studentCreateModal.children('.close-modal').click();
+                  studentManage();
+                }
+              } catch (err) {
+                console.log(err);
+                alert('帳號創建失敗');
+              }
+              // workbook.SheetNames.forEach((sheet) => {
+              //   const rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
+              //   console.log(rowObject);
+              // });
+            };
+          }
+        });
       });
     });
 
@@ -640,6 +724,7 @@ async function accountManage() {
 
   // staff account part
   async function staffManage() {
+    $('body').children('.modal').remove();
     const staffUrl = '/api/1.0/staffs';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
