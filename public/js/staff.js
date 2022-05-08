@@ -1361,13 +1361,14 @@ function genRuleManage(date) {
     // create table and head
     const calendarBlock = $('<div></div>').attr('class', 'calendar');
     const calenderHead = $('<div></div>').attr('class', 'calendar_head');
-    const calendarTitle = $('<div></div>').attr('class', 'calendar_title');
-    const yearDiv = $('<div></div>').attr('class', 'year').text(`西元${year}年`);
-    const monthDiv = $('<div></div>').attr('class', 'month').text(`${month}月`);
+    const yearDiv = $('<div></div>').attr('class', 'year text-center text-muted h3').text(`西元${year}年`);
+    const calendarMonth = $('<div></div>').attr('class', 'calendar_title row');
+
+    const monthDiv = $('<div></div>').attr('class', 'month col-4 text-center display-4').text(`${month}月`);
     const lastMonth = checkDate.subtract(1, 'month');
     const nextMonth = checkDate.add(1, 'month');
-    const lastMonthBtn = $(`<div class="change_month"><button class="btn-outline-secondary" data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
-    const nextMonthBtn = $(`<div class="change_month"><button class="btn-outline-secondary" data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
+    const lastMonthBtn = $(`<div class="col-4 text-center"><button class="change_month btn-outline-secondary" data-month="${lastMonth.format('YYYYMM')}">上個月</button></div>`);
+    const nextMonthBtn = $(`<div class="col-4 text-center"><button class="change_month btn-outline-secondary" data-month="${nextMonth.format('YYYYMM')}">下個月</button></div>`);
     const tableDiv = $('<div></div>').attr('class', 'calendar_table');
     const table = $('<table></table>').attr('class', 'table');
     const tr = $('<tr></tr>');
@@ -1377,13 +1378,15 @@ function genRuleManage(date) {
     });
     table.append(tr);
 
-    calendarTitle.append(yearDiv, monthDiv);
-    calenderHead.append(lastMonthBtn, calendarTitle, nextMonthBtn);
+    calendarMonth.append(lastMonthBtn, monthDiv, nextMonthBtn);
+    calenderHead.append(yearDiv, calendarMonth);
     calendarBlock.append(calenderHead);
     $('.content').append(calendarBlock, tableDiv);
 
     const changeMonth = $('.change_month');
     changeMonth.click((event) => {
+      console.log(event.target);
+      event.preventDefault();
       const targetMonth = $(event.target).data('month');
       genRuleManage(`${targetMonth}`)();
     });
