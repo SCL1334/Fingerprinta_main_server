@@ -21,14 +21,13 @@ const createClassStudents = async (req, res) => {
   const classId = req.params.id;
   const { students } = req.body;
   const result = await User.createClassStudents(students, classId);
-  res.json({ data: result });
-  // if (result.code < 2000) {
-  //   res.status(200).json({ code: result.code, data: { message: 'Create successfully' } });
-  // } else if (result.code < 3000) {
-  //   res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
-  // } else {
-  //   res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
-  // }
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  } else {
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
+  }
 };
 
 const editStudent = async (req, res) => {
