@@ -14,8 +14,8 @@ const getMonthHolidays = async (req, res) => {
 };
 
 const initYearHolidays = async (req, res) => {
-  const { year } = req.params;
-  const status = await Calendar.initYearHolidays(year);
+  const { calendar } = req.body;
+  const status = await Calendar.initYearHolidays(calendar);
   if (status < 2000) {
     res.status(200).json({ code: status, data: { message: 'Create successfully' } });
   } else if (status < 3000) {

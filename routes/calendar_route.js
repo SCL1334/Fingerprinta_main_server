@@ -7,7 +7,7 @@ const {
 } = require('../controllers/calendar_controller');
 
 router.route('/calendar/months/:monthWithYear').get(wrapAsync(getMonthHolidays));
-router.route('/calendar/years/:year').post(wrapAsync(initYearHolidays));
+router.route('/calendar').post(wrapAsync(initYearHolidays));
 router.route('/calendar/date/:date').put(wrapAsync(editHoliday));
 router.route('/calendar/years/:year').delete(wrapAsync(deleteYearHolidays));
 router.route('/calendar/months/:monthWithYear/punchExceptions').get(wrapAsync(getPunchException));
