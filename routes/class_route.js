@@ -10,7 +10,7 @@ const {
   initClassFingerList,
 } = require('../controllers/class_controller');
 
-const { getStudents, getClassTeachers } = require('../controllers/user_controller');
+const { getStudents, createClassStudents, getClassTeachers } = require('../controllers/user_controller');
 
 const { getClassPunch, getClassAttendances } = require('../controllers/attendance_controller');
 
@@ -31,6 +31,7 @@ router.route('/classes/routines/:id').delete(wrapAsync(deleteRoutine));
 router.route('/classes/:id/leaves').get(wrapAsync(getClassLeaves));
 router.route('/classes/:id/attendances').get(wrapAsync(getClassAttendances));
 router.route('/classes/:id/students').get(wrapAsync(getStudents));
+router.route('/classes/:id/students').post(wrapAsync(createClassStudents));
 router.route('/classes/:id/teachers').get(wrapAsync(getClassTeachers));
 router.route('/classes/:classId/teachers/:teacherId').post(wrapAsync(addTeacher));
 router.route('/classes/:classId/teachers/:teacherId').delete(wrapAsync(removeTeacher));

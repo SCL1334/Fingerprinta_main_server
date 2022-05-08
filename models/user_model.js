@@ -27,6 +27,39 @@ const createStudent = async (name, email, password, classId) => {
   }
 };
 
+// create a list of students
+const createClassStudents = async (students, classId) => {
+  // students [{name, email, birth}, ... , ...]
+  try {
+    const forEachAsync = async (array, callback) => {
+      for (let i = 0; i < array.length; i += 1) {
+        await callback(array[i]);
+      }
+    };
+
+    await forEachAsync(students, async (student) => {
+      student.password = await bcrypt.hash(student.birth, salt);
+      delete student.birth;
+    });
+
+    const studentAccounts = Object.keys(students).reduce((acc, cur) => {
+      acc.push([students[cur].name, students[cur].email, students[cur].password, classId]);
+      return acc;
+    }, []);
+
+    await promisePool.query('INSERT INTO student (name, email, password, class_id) VALUES ?', [studentAccounts]);
+
+    return { code: 1010 };
+  } catch (err) {
+    console.log(err);
+    const { errno } = err;
+    if (errno === 1452 || errno === 1062 || errno === 1264) {
+      return { code: 3010 };
+    }
+    return { code: 2010 };
+  }
+};
+
 const editStudent = async (studentId, student) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM student WHERE id = ?', [studentId]);
@@ -328,6 +361,7 @@ const findByFinger = async (fingerId) => {
 
 module.exports = {
   createStudent,
+  createClassStudents,
   editStudent,
   getStudents,
   getOneStudent,
