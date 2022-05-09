@@ -2,7 +2,9 @@ const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
 const weekdayTable = {
   0: '日', 1: 'ㄧ', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六',
 };
-// 0: 缺紀錄(缺席) 1: 正常打卡 2: 請假未審核 3: 請假已審核 4:請假已審核&不算時數 (遠距假 喪假) '#3B3936'
+const attendanceStatus = {
+  0: '缺紀錄(缺席)', 1: '正常打卡', 2: '請假未審核', 3: '請假已審核&算時數(e.g.事假)', 4: '請假已審核&不算時數(e.g.喪假)',
+};
 const attendanceColor = {
   0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
 };
@@ -2164,6 +2166,7 @@ $(document).ready(async () => {
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-04-25');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-04');
       const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
+      const checkBtn = $('<button></button>').attr('class', 'check_btn float-right').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');
       classOptions.append(classInitOption);
@@ -2205,8 +2208,38 @@ $(document).ready(async () => {
         }
       });
 
-      attendance.append(classOptions, studentOptions, searchFrom, searchTo, searchBtn);
-      $('.content').append(attendance);
+      const attendanceSquares = Object.keys(attendanceColor).reduce((acc, cur) => {
+        acc += `<div style="height:30px; width:30px; background-color:${attendanceColor[cur]}"></div><span>${attendanceStatus[cur]}</span>`;
+        return acc;
+      }, '');
+
+      const explainColor = `
+      <div class="col-3 modal fade" role="dialog" id="remind_modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">出勤狀況對應顏色</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              ${attendanceSquares}
+            </div>
+          </div>
+        </div>
+      </div>    
+      `;
+      const attendanceHead = $('<div></div>');
+      attendanceHead.append(classOptions, studentOptions, searchFrom, searchTo, searchBtn, checkBtn);
+      attendance.append(attendanceHead);
+
+      $('.content').append(explainColor, attendance);
+
+      const remindModal = new bootstrap.Modal($('#remind_modal'));
+      $('.check_btn').click((remindEvent) => {
+        remindEvent.preventDefault();
+        remindModal.show();
+      });
+
       $('.search_btn').click(async () => {
         try {
           let table = $('.attendance_result').css('width', '100%');
