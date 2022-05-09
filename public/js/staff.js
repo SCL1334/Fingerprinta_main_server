@@ -788,7 +788,7 @@ async function accountManage() {
 
   // staff account part
   async function staffManage() {
-    $('body').children('.modal').remove();
+    // $('body').children('.modal').remove();
     const staffUrl = '/api/1.0/staffs';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
@@ -805,37 +805,58 @@ async function accountManage() {
     staffAccountTable.append(thead);
 
     const createStaffAccountForm = `
-      <div class="modal fade show" id="create_staff_account_form" role="dialog">
-        <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
-        <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
-        <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
-        <button type="submit" class="submit">新增帳號</button>
-      </div>
+      <div class="modal fade" role="dialog" id="staff_create_form">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">新增校務人員帳號</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form>
+                <div class="mb-3">
+                  <label for="name" class="form-label">名稱</label>
+                  <input id="create_name" class="form-control" name='name' type='text'>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input id="create_email" class="form-control" name='email' type='email'>
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">密碼</label>
+                  <input id="create_password" class="form-control" name='password' type='password'>
+                </div>
+                <button type="submit" id="create_staff_btn" class="submit btn btn-dark">新增帳號</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>   
       `;
 
     accountManageBoard.append(createStaffAccountForm);
 
-    const createStaffAccountModal = $('#create_staff_account_form');
-    createStaffAccountModal.on('hidden.bs.modal', () => {
+    const createStaffAccountModal = new bootstrap.Modal($('#staff_create_form'));
+    $('#staff_create_form').on('hidden.bs.modal', () => {
       // clear last time data
-      createStaffAccountModal.find('input,select').val('').end();
+      $('#staff_create_form').find('input,select').val('').end();
       // remove listener
-      createStaffAccountModal.children('.submit').off();
+      $('#create_staff_btn').off();
     });
 
     const createStaffAccountBtn = $('.call_create');
     createStaffAccountBtn.click(async (callCreate) => {
       callCreate.preventDefault();
-      createStaffAccountModal.modal('show');
-      createStaffAccountModal.children('.submit').click(async (submit) => {
+      createStaffAccountModal.show();
+      $('#create_staff_btn').click(async (submit) => {
         submit.preventDefault();
         try {
           const staffAccountRes = await axios(staffUrl, {
             method: 'POST',
             data: {
-              name: $(submit.target).siblings('.create_name').val(),
-              email: $(submit.target).siblings('.create_email').val(),
-              password: $(submit.target).siblings('.create_password').val(),
+              name: $('#create_name').val(),
+              email: $('#create_email').val(),
+              password: $('#create_password').val(),
             },
             headers: {
               'content-type': 'application/json',
@@ -843,12 +864,16 @@ async function accountManage() {
           });
           const staffAccountResult = staffAccountRes.data;
           if (staffAccountResult) {
-            createStaffAccountModal.children('.close-modal').click();
+            createStaffAccountModal.hide();
             staffManage();
           }
         } catch (err) {
           console.log(err);
-          alert('帳號創建失敗');
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '帳號創建失敗',
+          });
         }
       });
     });
