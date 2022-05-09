@@ -29,7 +29,7 @@ router.route('/classes/routines/:id').put(wrapAsync(editRoutine));
 router.route('/classes/routines/:id').delete(wrapAsync(deleteRoutine));
 
 router.route('/classes/:id/leaves').get(wrapAsync(getClassLeaves));
-router.route('/classes/:id/backup/leaves').get(wrapAsync(backupClassLeaves));
+router.route('/classes/:id/backup/leaves').post(wrapAsync(backupClassLeaves));
 
 router.route('/classes/:id/attendances').get(wrapAsync(getClassAttendances));
 router.route('/classes/:id/students').get(wrapAsync(getStudents));
