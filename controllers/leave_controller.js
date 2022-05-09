@@ -1,6 +1,7 @@
 require('dotenv').config();
 const dayjs = require('dayjs');
 const Leave = require('../models/leave_model');
+const Class = require('../models/class_model');
 const { timeStringToMinutes, getS3Url } = require('../util/util');
 
 // Type Manage
@@ -87,6 +88,27 @@ const getPersonLeaves = async (req, res) => {
     res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ code: 1000, data: leaves });
+  }
+};
+
+const backupClassLeaves = async (req, res) => {
+  const classId = req.params.id;
+  const clas = await Class.getOneClass(classId);
+  const className = `${clas.class_type_name}-${clas.batch}-${clas.class_group_name}`;
+  const leavesRaw = await Leave.checkClassValidLeaves(classId);
+  const leaves = leavesRaw.reduce((acc, cur) => {
+    acc.push([cur.student_name, cur.date, cur.start, cur.end,
+      cur.hours, cur.leave_type_name, cur.reason, cur.note]);
+    return acc;
+  }, [['學生姓名', '請假日期', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假類型', '請假原因', '校務人員註記']]);
+  const result = await Leave.backupClassLeaves(className, leaves);
+  if (result.code < 2000) {
+    res.status(200).json({
+      code: result.code,
+      data: { message: result.message, location: result.location },
+    });
+  } else {
+    res.status(500).json({ code: result.code, error: { message: result.message } });
   }
 };
 
@@ -331,6 +353,7 @@ module.exports = {
   deleteType,
   getAllLeaves,
   getClassLeaves,
+  backupClassLeaves,
   getPersonLeaves,
   countLeavesHours,
   countAllLeavesHours,

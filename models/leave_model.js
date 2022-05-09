@@ -1,4 +1,6 @@
 const dayjs = require('dayjs');
+const xlsx = require('xlsx');
+const { s3 } = require('../util/util');
 const { promisePool } = require('./mysqlcon');
 
 const getTypes = async () => {
@@ -172,7 +174,7 @@ const getClassLeaves = async (classId, from = null, to = null) => {
 const checkClassValidLeaves = async (classId, from = null, to = null) => {
   try {
     const sqlFilter = (from !== null || to !== null) ? 'AND date >= ? AND date <= ?' : '';
-    const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
+    const sqlSort = ' ORDER BY  student_id ASC, date ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
         SELECT sl.id, sl.student_id, sl.leave_type_id, sl.reason, sl.date, sl.start, sl.end, sl.hours, sl.note, s.name AS student_name, 
@@ -197,6 +199,34 @@ const checkClassValidLeaves = async (classId, from = null, to = null) => {
   } catch (err) {
     console.log(err);
     return null;
+  }
+};
+
+const backupClassLeaves = async (className, leaves) => {
+  const arrayWorkSheet = xlsx.utils.aoa_to_sheet(leaves);
+  const backup = `請假紀錄:${className}`;
+  const sheets = {};
+  sheets[backup] = arrayWorkSheet;
+  const workBook = {
+    SheetNames: [backup],
+    Sheets: sheets,
+  };
+  const sheetDataBuffer = xlsx.write(workBook, { bookType: 'xlsx', type: 'buffer', bookSST: false });
+  try {
+    const uploadResult = await s3.upload({
+      Key: `test/backup/${backup}.xlsx`,
+      Bucket: 'fingerprinta',
+      Body: sheetDataBuffer,
+      ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ContentEncoding: 'base64',
+    }).promise();
+    console.log('upload successed');
+    console.log(uploadResult);
+    return { code: 1010, message: 'upload successed', location: uploadResult.Location };
+  } catch (err) {
+    console.log('upload failed');
+    console.log(err);
+    return { code: 2010, message: 'upload failed' };
   }
 };
 
@@ -282,6 +312,7 @@ module.exports = {
   getAllLeaves,
   getClassLeaves,
   checkClassValidLeaves,
+  backupClassLeaves,
   getPersonLeaves,
   checkStudentValidLeaves,
   countLeavesHours,

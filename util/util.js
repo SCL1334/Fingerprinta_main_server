@@ -63,4 +63,5 @@ module.exports = {
   getCeilHourTime,
   minToFloorHourTime,
   getS3Url,
+  s3,
 };
