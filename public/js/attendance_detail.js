@@ -51,49 +51,56 @@ const manageAttendance = async function () {
         return acc;
       }, '');
       const editLeaveForm = `
-        <div class="col-3 modal fade">
-          <div class="leave_form" id="edit_leave_form">
-            <p class="font-monospace text-center fs-2">編輯假單</p>
-            <form action="/api/1.0/students/leaves" method="PUT">
-              <div class="mb-3">
-                <label for="leave_type" class="form-label">請假類型</label>
-                <select class="form-select" id='edit_type'>
-                  ${leaveTypeOptions}
-                </select>
+        <div class="col-3 modal fade" role="dialog" id="edit_leave_form">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">編輯假單</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div class="mb-3">
-                <label for="leave_start" class="form-label">請假開始時間</label>
-                <input id='edit_start' name='leave_start' class="form-control" type="time">
+              <div class="modal-body">
+                <form action="/api/1.0/students/leaves" method="PUT">
+                  <div class="mb-3">
+                    <label for="leave_type" class="form-label">請假類型</label>
+                    <select class="form-select" id='edit_type'>
+                      ${leaveTypeOptions}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="leave_start" class="form-label">請假開始時間</label>
+                    <input id='edit_start' name='leave_start' class="form-control" type="time">
+                  </div>
+                  <div class="mb-3">
+                    <label for="leave_end" class="form-label">請假結束時間</label>
+                    <input id='edit_end' name='leave_end' class="form-control" type="time">
+                  </div>
+                  <div class="mb-3">
+                    <label for="leave_hours" class="form-label">請假小時數</label>
+                    <input id='edit_hours' name='leave_hour' class="form-control" type="number">
+                  </div>
+                  <div class="mb-3">
+                    <span class="input-group-text">學生請假緣由</span>
+                    <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
+                    <div class="form-text">上限50字</div>
+                  </div>
+                  <div class="mb-3">
+                    <span class="input-group-text">管理員備註</span>
+                    <textarea id="edit_note" name="leave_note" class="form-control" aria-label="管理員備註"></textarea>
+                    <div class="form-text">上限50字</div>
+                  </div>
+                  <div class="mb-3">
+                  <label for="leave_status" class="form-label">狀態</label>
+                  <select class="form-select" id='edit_status'>
+                    ${leaveStatusOptions}
+                  </select>
+                  </div>
+                  <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
+                  <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
+                </form>
               </div>
-              <div class="mb-3">
-                <label for="leave_end" class="form-label">請假結束時間</label>
-                <input id='edit_end' name='leave_end' class="form-control" type="time">
-              </div>
-              <div class="mb-3">
-                <label for="leave_hours" class="form-label">請假小時數</label>
-                <input id='edit_hours' name='leave_hour' class="form-control" type="number">
-              </div>
-              <div class="mb-3">
-                <span class="input-group-text">學生請假緣由</span>
-                <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
-                <div class="form-text">上限50字</div>
-              </div>
-              <div class="mb-3">
-                <span class="input-group-text">管理員備註</span>
-                <textarea id="edit_note" name="leave_note" class="form-control" aria-label="管理員備註"></textarea>
-                <div class="form-text">上限50字</div>
-              </div>
-              <div class="mb-3">
-              <label for="leave_status" class="form-label">狀態</label>
-              <select class="form-select" id='edit_status'>
-                ${leaveStatusOptions}
-              </select>
             </div>
-              <button type="submit" id="edit_leave_btn" class="btn btn-dark">送出</button>
-              <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
-            </form>
           </div>
-        </div>
+        </div>              
         `;
       // $('.content').append(editLeaveForm);
       $('body').append(editLeaveForm);
@@ -101,13 +108,13 @@ const manageAttendance = async function () {
       console.log(err);
     }
 
-    const editLeaveModal = $('#edit_leave_form');
+    const editLeaveModal = new bootstrap.Modal($('#edit_leave_form'));
     // const editLeaveModal = $('#test');
-    editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
+    $('#edit_leave_form').on('hidden.bs.modal', () => {
       // clear last time data
-      editLeaveModal.find('input,select').val('').end();
+      $('#edit_leave_form').find('input,select').val('').end();
       // remove listener
-      editLeaveModal.children('.submit').off();
+      $('#edit_leave_btn').off();
     });
 
     // get leave detail
@@ -186,7 +193,8 @@ const manageAttendance = async function () {
           $('#edit_reason').val(reason);
           $('#edit_note').val(note);
           $('#edit_status').val(status);
-          editLeaveModal.modal('show');
+          editLeaveModal.show();
+
           $('#edit_leave_btn').click(async (submit) => {
             submit.preventDefault();
             try {
@@ -208,7 +216,7 @@ const manageAttendance = async function () {
               });
               const editLeaveResult = editLeaveRes.data;
               if (editLeaveResult) {
-                editLeaveModal.children('.close-modal').click();
+                editLeaveModal.hide();
                 location.reload();
               }
             } catch (err) {
@@ -229,7 +237,11 @@ const manageAttendance = async function () {
             if (deleteResult) { location.reload(); }
           } catch (err) {
             console.log(err);
-            alert('刪除失敗');
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '刪除失敗，請重新操作',
+            });
           }
         });
 
