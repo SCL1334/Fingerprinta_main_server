@@ -1965,22 +1965,36 @@ $(document).ready(async () => {
 
     // sensor operation
     $('#sensor_identify').click(async () => {
-      const sensorIdentifyRes = await axios.post(`${sensorApiUrl}/identify`);
-      const sensorIdentifyResult = sensorIdentifyRes.data;
-      if (sensorIdentifyResult) {
-        Swal.fire('指紋機：正在切換到打卡模式');
-      } else {
-        Swal.fire('指紋機：打卡模式啟動失敗');
+      try {
+        const sensorIdentifyRes = await axios.post(`${sensorApiUrl}/identify`);
+        const sensorIdentifyResult = sensorIdentifyRes.data;
+        if (sensorIdentifyResult) {
+          Swal.fire('指紋機：正在切換到打卡模式');
+        }
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '指紋機：打卡模式啟動失敗',
+        });
       }
     });
 
     $('#sensor_stop').click(async () => {
-      const sensorStopRes = await axios.post(`${sensorApiUrl}/stop`);
-      const sensorStopResult = sensorStopRes.data;
-      if (sensorStopResult) {
-        Swal.fire('指紋機：切換到待機模式');
-      } else {
-        Swal.fire('指紋機：待機模式啟動失敗');
+      try {
+        const sensorStopRes = await axios.post(`${sensorApiUrl}/stop`);
+        const sensorStopResult = sensorStopRes.data;
+        if (sensorStopResult) {
+          Swal.fire('指紋機：切換到待機模式');
+        }
+      } catch (err) {
+        console.log(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '指紋機：待機模式啟動失敗',
+        });
       }
     });
 
