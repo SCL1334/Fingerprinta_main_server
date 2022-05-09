@@ -360,7 +360,6 @@ $(document).ready(async () => {
                     </div>
                     <div class="modal-body">
                       <form action="" method="PUT">
-                        <div class="form-text" id="edit_date"></div>
                         <div class="mb-3">
                           <label for="leave_type" class="form-label">請假類型</label>
                           <select class="form-select" id='edit_type'>
@@ -394,7 +393,7 @@ $(document).ready(async () => {
               console.log(err);
             }
 
-            const editLeaveModal = new bootstrap.Modal(document.getElementById('edit_leave_form'));
+            const editLeaveModal = new bootstrap.Modal($('#edit_leave_form'));
 
             // editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
             $('#edit_leave_form').on('hidden.bs.modal', () => {
@@ -493,7 +492,11 @@ $(document).ready(async () => {
                   if (deleteResult) { $('.search_btn').trigger('click'); }
                 } catch (err) {
                   console.log(err);
-                  alert('刪除失敗');
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: '刪除失敗，請重新操作',
+                  });
                 }
               });
 

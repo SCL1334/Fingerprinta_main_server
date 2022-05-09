@@ -83,7 +83,10 @@ async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
   $('.content').empty();
-  $('body').children('.modal').remove();
+
+  // temp remove --------------------
+  // $('body').children('.modal').remove();
+
   const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
   $('.content').append($('<div></div>').append(createBtn('call_create', '新增')));
   $('.content').append(classRoutineTable);
@@ -108,48 +111,67 @@ async function setPunchTime() {
       return acc;
     }, '');
     const classRoutineForm = `
-    <div class="modal fade show" id="class_routine_form" role="dialog">
-      <label for="class_type"></label>
-      <select class="class_type" name="class_type">
-        <option value="disabled selected hidden">請選擇培訓班級類型</option>
-        ${classTypeOptions}
-      </select>
-      <label for="weekday"></label>
-      <select class="weekday" name="weekday">
-        <option value="disabled selected hidden">請選擇星期</option>
-        ${weekdayOptions}
-      </select>
-      <label for="start_time">上課時間</label>
-      <input class="start_time" type="time">
-      <label for="end_time">下課時間</label>
-      <input class="end_time" type="time">
-      <button type="submit" class="submit">送出</button>
-    </div>
+    <div class="modal fade" id="class_routine_form">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">新增班級出勤規則</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="class_type" class="form-label">請假類型</label>
+                <select id="routine_class_type" class="form-select class_type" name="class_type">
+                  ${classTypeOptions}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="weekday" class="form-label">星期</label>
+                <select id="routine_weekday" class="form-select weekday" name="weekday">
+                  ${weekdayOptions}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="start_time" class="form-label">上課時間</label>
+                <input id="routine_start_time" name="start_time" class="form-control start_time" type="time">
+              </div>
+              <div class="mb-3">
+                <label for="end_time" class="form-label">請假結束時間</label>
+                <input id="routine_end_time" name='end_time' class="form-control end_time" type="time">
+              </div>
+              <button id="routine_btn" type="submit" class="submit btn btn-dark">送出</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>    
     `;
 
     $('.content').append(classRoutineForm);
-    const createRoutineModal = $('#class_routine_form');
-    createRoutineModal.on('hidden.bs.modal', () => {
+    const routineModal = new bootstrap.Modal($('#class_routine_form'));
+    $('#class_routine_form').on('hidden.bs.modal', () => {
       // clear last time data
-      createRoutineModal.find('input,select').val('').end();
+      $('#class_routine_form').on('#class_routine_form').find('input,select').val('')
+        .end();
       // remove listener
-      createRoutineModal.children('.submit').off();
+      $('#routine_btn').off('click');
     });
 
     const createRoutineBtn = $('.call_create');
     createRoutineBtn.click(async (callCreate) => {
       callCreate.preventDefault();
-      createRoutineModal.modal('show');
-      createRoutineModal.children('.submit').click(async (submit) => {
+      routineModal.show();
+      $('#routine_btn').click(async (submit) => {
         submit.preventDefault();
         try {
           const createRoutineRes = await axios(classRoutineUrl, {
             method: 'POST',
             data: {
-              class_type_id: $(submit.target).parent().children('.class_type').val(),
-              weekday: $(submit.target).parent().children('.weekday').val(),
-              start_time: $(submit.target).parent().children('.start_time').val(),
-              end_time: $(submit.target).parent().children('.end_time').val(),
+              class_type_id: $('#routine_class_type').val(),
+              weekday: $('#routine_weekday').val(),
+              start_time: $('#routine_start_time').val(),
+              end_time: $('#routine_end_time').val(),
             },
             headers: {
               'content-type': 'application/json',
@@ -157,12 +179,16 @@ async function setPunchTime() {
           });
           const createRoutineResult = createRoutineRes.data;
           if (createRoutineResult) {
-            createRoutineModal.children('.close-modal').click();
+            routineModal.hide();
             setPunchTime();
           }
         } catch (err) {
           console.log(err);
-          alert('create fail');
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '新增失敗，請重新操作',
+          });
         }
       });
     });
@@ -239,21 +265,25 @@ async function setPunchTime() {
           const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
           const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
           const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
-          createRoutineModal.children('.class_type').val(originClassTypeId);
-          createRoutineModal.children('.weekday').val(originWeekday);
-          createRoutineModal.children('.start_time').val(originStartTime);
-          createRoutineModal.children('.end_time').val(originEndTime);
-          createRoutineModal.modal('show');
-          createRoutineModal.children('.submit').click(async (submit) => {
+          // class_type_id: $('#routine_class_type').val(),
+          // weekday: $('#routine_weekday').val(),
+          // start_time: $('#routine_start_time').val(),
+          // end_time: $('#routine_end_time').val(),
+          $('#routine_class_type').val(originClassTypeId);
+          $('#routine_weekday').val(originWeekday);
+          $('#routine_start_time').val(originStartTime);
+          $('#routine_end_time').val(originEndTime);
+          routineModal.show();
+          $('#routine_btn').click(async (submit) => {
             submit.preventDefault();
             try {
               const editRoutineRes = await axios(`${classRoutineUrl}/${classRoutineId}`, {
                 method: 'PUT',
                 data: {
-                  class_type_id: $(submit.target).parent().children('.class_type').val(),
-                  weekday: $(submit.target).parent().children('.weekday').val(),
-                  start_time: $(submit.target).parent().children('.start_time').val(),
-                  end_time: $(submit.target).parent().children('.end_time').val(),
+                  class_type_id: $('#routine_class_type').val(),
+                  weekday: $('#routine_weekday').val(),
+                  start_time: $('#routine_start_time').val(),
+                  end_time: $('#routine_end_time').val(),
                 },
                 headers: {
                   'content-type': 'application/json',
@@ -261,7 +291,7 @@ async function setPunchTime() {
               });
               const editRoutineResult = editRoutineRes.data;
               if (editRoutineResult) {
-                createRoutineModal.children('.close-modal').click();
+                routineModal.hide();
                 setPunchTime();
               }
             } catch (err) {
@@ -1468,7 +1498,7 @@ function genRuleManage(date) {
     //     });
     //     const createRoutineResult = createRoutineRes.data;
     //     if (createRoutineResult) {
-    //       createRoutineModal.children('.close-modal').click();
+    //       routineModal.children('.close-modal').click();
     //       setPunchTime();
     //     }
     //   } catch (err) {
