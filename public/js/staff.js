@@ -719,8 +719,8 @@ async function accountManage() {
     // $('#filter_value').keyon((e) => { if (e.key === 'Enter') { studentShow.fnDraw(); } });
     const leavesHoursFilter = $('<input type="number" id="filter_value">');
     leavesHoursFilter.keypress((e) => { if (e.which === 13) { studentShow.draw(); } });
-    $('<label>搜尋請假時數大於</label>').append(leavesHoursFilter).insertAfter($('#DataTables_Table_0_length'));
-    $('#DataTables_Table_0_length').remove();
+    $('<label>搜尋請假時數大於</label>').append(leavesHoursFilter).insertAfter($('.dataTables_length'));
+    $('.dataTables_length').remove();
   }
 
   studentAccounts.click(studentManage);
