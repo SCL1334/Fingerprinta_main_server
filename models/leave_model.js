@@ -57,7 +57,8 @@ const getAllLeaves = async (from = null, to = null) => {
     const sqlSort = ' ORDER BY date DESC, student_id ASC, start ASC';
     const [leaves] = await promisePool.query(
       `
-        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
+        SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name,
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name, lt.need_calculate
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
@@ -86,7 +87,7 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name, lt.need_calculate
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id
@@ -147,7 +148,7 @@ const getClassLeaves = async (classId, from = null, to = null) => {
     const [leaves] = await promisePool.query(
       `
         SELECT sl.id, sl.student_id, sl.leave_type_id, sl.date, sl.start, sl.end, sl.hours, sl.approval, sl.reason, sl.note, sl.certificate_url, s.name AS student_name, 
-        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name
+        c.batch, cg.name AS class_group_name, ct.name AS class_type_name, lt.name AS leave_type_name, lt.need_calculate
         FROM student_leave AS sl
         LEFT OUTER JOIN student AS s ON s.id = sl.student_id
         LEFT OUTER JOIN class AS c ON c.id = s.class_id

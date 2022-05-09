@@ -215,7 +215,6 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
 
   const getStudentStart = (time) => {
     let minutes = timeStringToMinutes(time) - LATE_BUFFER;
-    console.log(minutes);
     if (minutes < timeStringToMinutes(start)) { minutes = timeStringToMinutes(start); }
     const hour = Math.ceil(minutes / 30);
     return hour;
@@ -234,13 +233,14 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
   const breakStartHour = getHalfHourFromStr(breakStart) * 2;
   const breakEndHour = getHalfHourFromStr(breakEnd) * 2;
 
+  // {0: no record, 1: punch, 2: leave not approval, 3: leave approval need count time, 4: leave approval no count}
   // init attendance
   const attendance = {};
   let pauseFlag = false;
   for (let i = startHour; i < endHour; i += 1) {
     if (i === breakStartHour) { pauseFlag = true; }
     if (i === breakEndHour) { pauseFlag = false; }
-    if (pauseFlag === false) { attendance[toTime(i)] = 1; }
+    if (pauseFlag === false) { attendance[toTime(i)] = 0; }
   }
 
   punches.forEach((punch) => {
@@ -253,12 +253,12 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
       if (i > endHour) { break; }
       if (i === breakStartHour) { breakTime = true; }
       if (i === breakEndHour) { breakTime = false; }
-      if (breakTime === false) { attendance[toTime(i)] = 0; }
+      if (breakTime === false) { attendance[toTime(i)] = 1; }
     }
   });
 
   leaves.forEach((leave) => {
-    const [leaveStart, leaveEnd, approval] = leave;
+    const [leaveStart, leaveEnd, approval, needCalculate] = leave;
     if (!leaveStart) { return; }
     const leaveStartHour = getStudentStart(leaveStart);
     const leaveEndHour = getStudentEnd(leaveEnd);
@@ -271,7 +271,11 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
         if (approval === 0) { // check approval if 1 => OK if 0 need staff check
           attendance[toTime(i)] = 2;
         } else if (approval === 1) {
-          attendance[toTime(i)] = 0;
+          if (needCalculate === 1) {
+            attendance[toTime(i)] = 3;
+          } else {
+            attendance[toTime(i)] = 4;
+          }
         }
       }
     }
@@ -475,7 +479,7 @@ const getPersonAttendance = async (studentId, from, to) => {
 
     // 10. tranfer leave recording to object (dictionary)
     const studentLeaves = studentLeavesRaw.reduce((acc, cur) => {
-      const leave = [cur.start, cur.end, cur.approval];
+      const leave = [cur.start, cur.end, cur.approval, cur.need_calculate];
       delete cur.start;
       delete cur.end;
       if (!acc[cur.date]) {
@@ -619,7 +623,7 @@ const getClassAttendance = async (classId, from, to) => {
 
     // 10. tranfer punch recording to object (dictionary)
     const classPunches = classPunchesRaw.reduce((acc, cur) => {
-      const punch = [cur.punch_in, cur.punch_out, cur.approval];
+      const punch = [cur.punch_in, cur.punch_out, cur.approval, cur.need_calculate];
       delete cur.punch_in;
       delete cur.punch_out;
       if (!acc[cur.punch_date]) { acc[cur.punch_date] = {}; }
@@ -815,7 +819,7 @@ const getAllAttendances = async (from, to) => {
 
       // 13 transfer leave to object
       const classLeaves = classLeavesRaw.reduce((acc, cur) => {
-        const leave = [cur.start, cur.end, cur.approval];
+        const leave = [cur.start, cur.end, cur.approval, cur.need_calculate];
         delete cur.start;
         delete cur.end;
         if (!acc[cur.date]) { acc[cur.date] = {}; }
