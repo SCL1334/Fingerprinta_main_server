@@ -1,5 +1,5 @@
 const attendanceColor = {
-  0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
+  0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
 };
 const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
 const manageAttendance = async function () {

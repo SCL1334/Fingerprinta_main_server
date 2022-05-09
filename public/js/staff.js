@@ -2,9 +2,9 @@ const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
 const weekdayTable = {
   0: '日', 1: 'ㄧ', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六',
 };
-// 0: 正常 1: 缺席 2: 請假未審核 3: 請假已審核 4:不算時數 (遠距假 喪假)
+// 0: 缺紀錄(缺席) 1: 正常打卡 2: 請假未審核 3: 請假已審核 4:請假已審核&不算時數 (遠距假 喪假) '#3B3936'
 const attendanceColor = {
-  0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
+  0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
 };
 const sensorApiUrl = '/api/1.0/sensor';
 
@@ -129,7 +129,7 @@ async function setPunchTime() {
 
     $('.content').append(classRoutineForm);
     const createRoutineModal = $('#class_routine_form');
-    createRoutineModal.on($.modal.BEFORE_CLOSE, () => {
+    createRoutineModal.on('hidden.bs.modal', () => {
       // clear last time data
       createRoutineModal.find('input,select').val('').end();
       // remove listener
@@ -415,7 +415,7 @@ async function accountManage() {
     accountManageBoard.append(studentEditForm);
 
     const studentCreateModal = $('#student_create_form');
-    studentCreateModal.on($.modal.BEFORE_CLOSE, () => {
+    studentCreateModal.on('hidden.bs.modal', () => {
       // clear last time data
       studentCreateModal.find('input,select').val('').end();
       // remove listener
@@ -423,7 +423,7 @@ async function accountManage() {
     });
 
     const studentEditModal = $('#student_edit_form');
-    studentEditModal.on($.modal.BEFORE_CLOSE, () => {
+    studentEditModal.on('hidden.bs.modal', () => {
       // clear last time data
       studentEditModal.find('input,select').val('').end();
       // remove listener
@@ -755,7 +755,7 @@ async function accountManage() {
     accountManageBoard.append(createStaffAccountForm);
 
     const createStaffAccountModal = $('#create_staff_account_form');
-    createStaffAccountModal.on($.modal.BEFORE_CLOSE, () => {
+    createStaffAccountModal.on('hidden.bs.modal', () => {
       // clear last time data
       createStaffAccountModal.find('input,select').val('').end();
       // remove listener
@@ -915,7 +915,7 @@ async function classManage() {
         `;
       classManageBoard.append(classForm);
       const classModal = $('#class_form');
-      classModal.on($.modal.BEFORE_CLOSE, () => {
+      classModal.on('hidden.bs.modal', () => {
         classModal.children().find('input,select').val('').end();
         classModal.children().children('.submit').off();
       });
@@ -1745,7 +1745,7 @@ async function auditLeave() {
 
     const editLeaveModal = $('#edit_leave_form');
     // const editLeaveModal = $('#test');
-    editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
+    editLeaveModal.on('hidden.bs.modal', () => {
       // clear last time data
       editLeaveModal.find('input,select').val('').end();
       // remove listener
@@ -2112,6 +2112,7 @@ $(document).ready(async () => {
             const td_punch_out = $('<td></td>');
             const td_status = $('<td></td>').attr('class', 'attendance_status').append($('<div></div>'));
 
+            // 0: 缺紀錄(缺席) 1: 正常打卡 2: 請假未審核 3: 請假已審核 4:請假已審核&不算時數 (遠距假 喪假)
             const attendanceTable = $('<tr></tr>');
             const { attendance } = attendanceSearch;
             Object.keys(attendance).forEach((time) => {

@@ -1,3 +1,6 @@
+const attendanceColor = {
+  0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
+};
 const content = $('.content');
 
 async function changePassword() {
@@ -68,9 +71,6 @@ async function changePassword() {
 
 $(document).ready(async () => {
   const leaveStatusTable = { 0: '審核中', 1: '審核成功', 2: '審核失敗' };
-  const attendanceColor = {
-    0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
-  };
   const today = new Date().toISOString().split('T')[0].replaceAll('-', '');
   try {
     // init page, check if valid signin
@@ -389,7 +389,8 @@ $(document).ready(async () => {
 
             const editLeaveModal = $('#edit_leave_form');
             // const editLeaveModal = $('#test');
-            editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
+            // editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
+            editLeaveModal.on('hidden.bs.modal', () => {
               // clear last time data
               editLeaveModal.find('input,select').val('').end();
               // remove listener
