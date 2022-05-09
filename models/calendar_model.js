@@ -72,9 +72,13 @@ const deleteYearHolidays = async (year) => {
 
 const getPunchException = async (year, month) => {
   try {
+    // for demo get all, original:
+    // const [punchExceptions] = await promisePool.query(
+    //   'SELECT * FROM punch_exception WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
+    //   [year, month],
+    // );
     const [punchExceptions] = await promisePool.query(
-      'SELECT * FROM punch_exception WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
-      [year, month],
+      'SELECT * FROM punch_exception  ORDER BY date ASC;',
     );
     punchExceptions.forEach((date) => {
       date.date = dayjs(date.date).format('YYYY-MM-DD');
