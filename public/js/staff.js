@@ -7,7 +7,6 @@ const attendanceColor = {
   0: '#B2BEBF', 1: '#BD2A2E', 2: '#3B3936',
 };
 const sensorApiUrl = '/api/1.0/sensor';
-const content = $('.content');
 
 function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
@@ -1246,6 +1245,7 @@ async function classManage() {
 // holiday setting
 async function exceptionManage() {
   $('.content').empty();
+  const exceptionUrl = '/api/1.0/calendar/punchExceptions';
   let exceptionForm = '';
   let classTypeTable = '';
   try {
@@ -1255,7 +1255,6 @@ async function exceptionManage() {
       if (!acc[cur.id]) { acc[cur.id] = cur; }
       return acc;
     }, {});
-    console.log(classTypeTable);
     const classTypeOptions = classTypes.reduce((acc, cur) => {
       acc += `<option value=${cur.id}>${cur.name}</option>`;
       return acc;
@@ -1285,7 +1284,7 @@ async function exceptionManage() {
   // init table
   const table = $('<table></table>').attr('class', 'exception_result table');
   const tr = $('<tr></tr>');
-  const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間'];
+  const heads = ['訓練班級類型', 'Batch', '日期', '開始時間', '結束時間', ''];
   heads.forEach((head) => {
     const th = $('<th></th>').text(head);
     tr.append(th);
@@ -1302,7 +1301,7 @@ async function exceptionManage() {
       const addExceptionDate = $('#exception_date').val();
       const addExceptionStart = $('#exception_start').val();
       const addExceptionEnd = $('#exception_end').val();
-      const addExceptionRes = await axios('/api/1.0/calendar/punchExceptions', {
+      const addExceptionRes = await axios(exceptionUrl, {
         method: 'POST',
         data: {
           class_type_id: addExceptionType,
@@ -1324,7 +1323,16 @@ async function exceptionManage() {
         const td_date = $('<td></td>').text(addExceptionDate);
         const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
         const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
-        tr.append(td_class_type, td_batch, td_date, td_start, td_end);
+        const td_delete = $('<td></td>');
+        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+          const deleteTypeRes = await axios.delete(`${exceptionUrl}/${addExceptionResult.insert_id}`);
+          const deleteTypeResult = deleteTypeRes.data;
+          if (deleteTypeResult) {
+            $(event.target).parent().parent().remove();
+          }
+        });
+        td_delete.append(delete_btn);
+        tr.append(td_class_type, td_batch, td_date, td_start, td_end, td_delete);
         table.append(tr);
       }
     } catch (err) {
@@ -1345,7 +1353,16 @@ async function exceptionManage() {
       const td_date = $('<td></td>').text(edate.date);
       const td_start = $('<td></td>').text(edate.start);
       const td_end = $('<td></td>').text(edate.end);
-      tr.append(td_class_type, td_batch, td_date, td_start, td_end);
+      const td_delete = $('<td></td>');
+      const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+        const deleteTypeRes = await axios.delete(`${exceptionUrl}/${edate.id}`);
+        const deleteTypeResult = deleteTypeRes.data;
+        if (deleteTypeResult) {
+          $(event.target).parent().parent().remove();
+        }
+      });
+      td_delete.append(delete_btn);
+      tr.append(td_class_type, td_batch, td_date, td_start, td_end, td_delete);
       table.append(tr);
     });
   } catch (err) {
