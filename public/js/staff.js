@@ -265,10 +265,6 @@ async function setPunchTime() {
           const originWeekday = $(callEdit.target).parent().siblings('.weekday').data('weekday');
           const originStartTime = $(callEdit.target).parent().siblings('.start_time').text();
           const originEndTime = $(callEdit.target).parent().siblings('.end_time').text();
-          // class_type_id: $('#routine_class_type').val(),
-          // weekday: $('#routine_weekday').val(),
-          // start_time: $('#routine_start_time').val(),
-          // end_time: $('#routine_end_time').val(),
           $('#routine_class_type').val(originClassTypeId);
           $('#routine_weekday').val(originWeekday);
           $('#routine_start_time').val(originStartTime);
@@ -323,7 +319,7 @@ async function setPunchTime() {
 // Account Manage
 async function accountManage() {
   $('.content').empty();
-  $('body').children('.modal').remove();
+  // $('body').children('.modal').remove();
   const accountCompenents = $('<div></div>').attr('class', 'account_compenent');
   const studentAccounts = $('<div></div>').attr('class', 'student_account btn btn-outline-dark ').text('學生帳號管理');
   const staffAccounts = $('<div></div>').attr('class', 'staff_account btn btn-outline-dark').text('校務人員帳號管理');
@@ -332,7 +328,7 @@ async function accountManage() {
   $('.content').append(accountCompenents);
   // student account part
   async function studentManage() {
-    $('body').children('.modal').remove();
+    // $('body').children('.modal').remove();
     const studentUrl = '/api/1.0/students';
     accountManageBoard.empty();
     accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
@@ -367,44 +363,52 @@ async function accountManage() {
         return acc;
       }, '');
       studentAddForm = `
-      <div class="col-3 modal fade" role="dialog">
-        <div class="leave_form" id="student_create_form">
-          <p class="font-monospace text-center fs-2">新增單一學生</p>
-          <form action="${studentUrl}" method="POST">
-            <div class="mb-3">
-              <label for="student_class" class="form-label">學生班級</label>
-                <select name="student_class" id="create_class" class="form-select">
-                  ${classesOptions}
-                </select>
+      <div class="col-3 modal fade" role="dialog" id="student_create_form">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">新增學生帳號</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-              <label for="name" class="form-label">學生名稱</label>
-              <input id="create_name" class="form-control" name='name' type='text'>
+            <div class="modal-body">
+              <p class="font-monospace text-center fs-2">新增多位學生</p>
+              <form  method="POST">
+                <div class="mb-3">
+                  <label for="student_class" class="form-label">學生班級</label>
+                    <select name="student_class" id="multi_create_class" class="form-select">
+                      ${classesOptions}
+                    </select>
+                </div>
+                <div class="mb-3">
+                  <label for="name" class="form-label">學生名單(Excel)</label>
+                  <input class="form-control" type="file" id="students_list" accept=".xls,.xlsx"  >
+                </div>
+                <button type="submit" id="create_students_btn" class="submit btn btn-dark">送出</button>
+              </form>
+              <p class="font-monospace text-center fs-2">新增單一學生</p>
+              <form action="${studentUrl}" method="POST">
+                <div class="mb-3">
+                  <label for="student_class" class="form-label">學生班級</label>
+                  <select name="student_class" id="create_class" class="form-select">
+                    ${classesOptions}
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="name" class="form-label">學生名稱</label>
+                  <input id="create_name" class="form-control" name='name' type='text'>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">學生Email</label>
+                  <input id="create_email" class="form-control" name='email' type='email'>
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">密碼</label>
+                  <input id="create_password" class="form-control" name='password' type='password'>
+                </div>
+                <button type="submit" id="create_student_btn" class="submit btn btn-dark">送出</button>
+              </form>
             </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">學生Email</label>
-              <input id="create_email" class="form-control" name='email' type='email'>
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">密碼</label>
-              <input id="create_password" class="form-control" name='password' type='password'>
-            </div>
-            <button type="submit" id="create_student_btn" class="submit btn btn-dark">送出</button>
-          </form>
-          <p class="font-monospace text-center fs-2">新增多位學生</p>
-          <form  method="POST">
-          <div class="mb-3">
-            <label for="student_class" class="form-label">學生班級</label>
-              <select name="student_class" id="multi_create_class" class="form-select">
-                ${classesOptions}
-              </select>
           </div>
-          <div class="mb-3">
-            <label for="name" class="form-label">學生名單(Excel)</label>
-            <input class="form-control" type="file" id="students_list" accept=".xls,.xlsx"  >
-         </div>
-          <button type="submit" id="create_students_btn" class="submit btn btn-dark">送出</button>
-        </form>
         </div>
       </div>
       `;
@@ -425,17 +429,35 @@ async function accountManage() {
       // `;
 
       studentEditForm = `
-      <div class="modal fade show" id="student_edit_form" role="dialog">
-        <form action="${studentUrl}" method="POST">
-          <select class='edit_class'>
-            <option value=null>請選擇學生班級</option>
-            ${classesOptions}
-          </select>
-          <input class='edit_name' name='name' type='text' placeholder='請輸入名稱'>
-          <input class='edit_email' name='email' type='email' placeholder='請輸入Email'>
-          <button class='submit' type="submit">送出</button>
-        </form>
-      </div>
+      <div class="col-3 modal fade" role="dialog" id="student_edit_form">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">編輯學生帳號</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form action="${studentUrl}" method="POST">
+                <div class="mb-3">
+                  <label for="student_class" class="form-label">學生班級</label>
+                  <select name="student_class" id="edit_class" class="form-select">
+                    ${classesOptions}
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="name" class="form-label">學生名稱</label>
+                  <input id="edit_name" class="form-control" name='name' type='text'>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">學生Email</label>
+                  <input id="edit_email" class="form-control" name='email' type='email'>
+                </div>
+                <button type="submit" id="edit_student_btn" class="submit btn btn-dark">送出</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>    
       `;
     } catch (err) {
       console.log(err);
@@ -444,26 +466,26 @@ async function accountManage() {
     accountManageBoard.append(studentAddForm);
     accountManageBoard.append(studentEditForm);
 
-    const studentCreateModal = $('#student_create_form');
-    studentCreateModal.on('hidden.bs.modal', () => {
+    const studentCreateModal = new bootstrap.Modal($('#student_create_form'));
+    $('#student_create_form').on('hidden.bs.modal', () => {
       // clear last time data
-      studentCreateModal.find('input,select').val('').end();
+      $('#student_create_form').find('input,select').val('').end();
       // remove listener
-      studentCreateModal.children().children('.submit').off();
+      $('#create_student_btn').off();
     });
 
-    const studentEditModal = $('#student_edit_form');
-    studentEditModal.on('hidden.bs.modal', () => {
+    const studentEditModal = new bootstrap.Modal($('#student_edit_form'));
+    $('#student_edit_form').on('hidden.bs.modal', () => {
       // clear last time data
-      studentEditModal.find('input,select').val('').end();
+      $('#student_edit_form').find('input,select').val('').end();
       // remove listener
-      studentEditModal.children().children('.submit').off();
+      $('#edit_student_btn').off();
     });
 
     const createStudentAccountBtn = $('.call_create');
     createStudentAccountBtn.click(async (callCreate) => {
       callCreate.preventDefault();
-      studentCreateModal.modal('show');
+      studentCreateModal.show();
       $('#create_student_btn').click(async (submit) => {
         submit.preventDefault();
         try {
@@ -481,12 +503,16 @@ async function accountManage() {
           });
           const studentAccountResult = studentAccountRes.data;
           if (studentAccountResult) {
-            studentCreateModal.children('.close-modal').click();
+            studentCreateModal.hide();
             studentManage();
           }
         } catch (err) {
           console.log(err);
-          alert('帳號創建失敗');
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '帳號創建失敗',
+          });
         }
       });
       $('#students_list').on('change', (upload) => {
@@ -515,7 +541,7 @@ async function accountManage() {
                 });
                 const studentAccountResult = studentAccountRes.data;
                 if (studentAccountResult) {
-                  studentCreateModal.children('.close-modal').click();
+                  studentCreateModal.hide();
                   studentManage();
                 }
               } catch (err) {
@@ -526,10 +552,6 @@ async function accountManage() {
                   text: '帳號創建失敗',
                 });
               }
-              // workbook.SheetNames.forEach((sheet) => {
-              //   const rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
-              //   console.log(rowObject);
-              // });
             };
           }
         });
@@ -697,20 +719,19 @@ async function accountManage() {
           const originName = callEditBtn.parent().siblings('.name').text();
           const originEmail = callEditBtn.parent().siblings('.email').text();
           const originClass = callEditBtn.parent().siblings('.class').data('class_id');
-          studentEditModal.children().children('.edit_name').val(originName);
-          studentEditModal.children().children('.edit_email').val(originEmail);
-          studentEditModal.children().children('.edit_class').val(originClass);
-          studentEditModal.modal('show');
-          studentEditModal.children().children('.submit').click(async (submit) => {
+          $('#edit_name').val(originName);
+          $('#edit_email').val(originEmail);
+          $('#edit_class').val(originClass);
+          studentEditModal.show();
+          $('#edit_student_btn').click(async (submit) => {
             submit.preventDefault();
-            const editSunmit = $(submit.target);
             try {
               const editStudentRes = await axios(`${studentUrl}/${studentId}`, {
                 method: 'PUT',
                 data: {
-                  name: editSunmit.siblings('.edit_name').val(),
-                  email: editSunmit.siblings('.edit_email').val(),
-                  class_id: editSunmit.siblings('.edit_class').val(),
+                  name: $('#edit_name').val(),
+                  email: $('#edit_email').val(),
+                  class_id: $('#edit_class').val(),
                 },
                 headers: {
                   'content-type': 'application/json',
@@ -718,12 +739,17 @@ async function accountManage() {
               });
               const editStudentResult = editStudentRes.data;
               if (editStudentResult) {
-                studentEditModal.children('.close-modal').click();
+                studentEditModal.hide();
                 studentManage();
               }
             } catch (err) {
               console.log(err);
-              alert('update fail');
+              console.log(err);
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '帳號編輯失敗',
+              });
             }
           });
         });
@@ -740,6 +766,11 @@ async function accountManage() {
             }
           } catch (err) {
             console.log(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '帳號刪除失敗',
+            });
           }
         });
       },
