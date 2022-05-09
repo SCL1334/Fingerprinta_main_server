@@ -979,46 +979,69 @@ async function classManage() {
       const classGroupsOptions = classGroups.reduce((acc, cur) => {
         acc += `<option value=${cur.id}>${cur.name}</option>`;
         return acc;
-      }, '');
+      }, '<option value=""}>無</option>');
 
       const classForm = `
-        <div class="modal fade show" id="class_form" role="dialog">
-          <form action="" method="">
-            <select id='class_type'>
-              <option value='disabled selected hidden'>請選擇班級培訓形式</option>
-              ${classTypesOptions}
-            </select>
-            <input id='class_batch' name='batch' type="number">
-            <select id='class_group'>
-              <option value='disabled selected hidden'>請選擇班級培訓班別</option>
-              ${classGroupsOptions}
-            </select>
-            <input id='class_start_date' name='start_date' type="date">
-            <input id='class_end_date' name='end_date' type="date">
-            <button class="submit" type="submit">送出</button>
-          </form>
-        </div>
+        <div class="modal fade" role="dialog" id="class_form">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">新增班級</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div class="mb-3">
+                    <label for="class_type" class="form-label">培訓形式</label>
+                    <select name="class_type" id='class_type' class="form-select">
+                      ${classTypesOptions}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="batch" class="form-label">梯次</label>
+                    <input id="class_batch" class="form-control" name='batch' type='number'>
+                  </div>
+                  <div class="mb-3">
+                    <label for="class_type" class="form-label">培訓班別</label>
+                    <select name="class_type" id='class_group' class="form-select">
+                      ${classGroupsOptions}
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="start_date" class="form-label">開學日</label>
+                    <input id="class_start_date" class="form-control" name='start_date' type='date'>
+                  </div>
+                  <div class="mb-3">
+                    <label for="end_date" class="form-label">結訓日</label>
+                    <input id="class_end_date" class="form-control" name='end_date' type='date'>
+                  </div>
+                  <button type="submit" id="class_btn" class="submit btn btn-dark">送出</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>  
         `;
       classManageBoard.append(classForm);
-      const classModal = $('#class_form');
-      classModal.on('hidden.bs.modal', () => {
-        classModal.children().find('input,select').val('').end();
-        classModal.children().children('.submit').off();
+      const classModal = new bootstrap.Modal($('#class_form'));
+      $('#class_form').on('hidden.bs.modal', () => {
+        $('#class_form').find('input,select').val('').end();
+        $('#class_btn').off();
       });
 
       const addClassBtn = $('.call_create');
       addClassBtn.click(async (callAdd) => {
         callAdd.preventDefault();
-        classModal.modal('show');
+        classModal.show();
 
-        classModal.children().children('.submit').click(async (submit) => {
+        $('#class_btn').click(async (submit) => {
           submit.preventDefault();
           try {
-            const addClassType = $(submit.target).siblings('#class_type').val();
-            const addClassBatch = $(submit.target).siblings('#class_batch').val();
-            const addClassGroup = $(submit.target).siblings('#class_group').val();
-            const addClassStart = $(submit.target).siblings('#class_start_date').val();
-            const addClassEnd = $(submit.target).siblings('#class_end_date').val();
+            const addClassType = $('#class_type').val();
+            const addClassBatch = $('#class_batch').val();
+            const addClassGroup = $('#class_group').val();
+            const addClassStart = $('#class_start_date').val();
+            const addClassEnd = $('#class_end_date').val();
             const addClassRes = await axios(classesUrl, {
               method: 'POST',
               data: {
@@ -1034,12 +1057,16 @@ async function classManage() {
             });
             const addClassResult = addClassRes.data;
             if (addClassResult) {
-              classModal.children('.close-modal').click();
+              classModal.hide();
               classBasicSetting();
             }
           } catch (err) {
             console.log(err);
-            alert('create fail');
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '班級創建失敗',
+            });
           }
         });
       });
@@ -1127,23 +1154,23 @@ async function classManage() {
               const originClassGroupId = $(callEdit.target).parent().siblings('.class_group').data('class_group_id');
               const originClassStart = $(callEdit.target).parent().siblings('.start_date').text();
               const originClassEnd = $(callEdit.target).parent().siblings('.end_date').text();
-              classModal.children().children('#class_type').val(originClassTypeId);
-              classModal.children().children('#class_batch').val(originClassBatch);
-              classModal.children().children('#class_group').val(originClassGroupId);
-              classModal.children().children('#class_start_date').val(originClassStart);
-              classModal.children().children('#class_end_date').val(originClassEnd);
-              classModal.modal('show');
-              classModal.children().children('.submit').click(async (submit) => {
+              $('#class_type').val(originClassTypeId);
+              $('#class_batch').val(originClassBatch);
+              $('#class_group').val(originClassGroupId);
+              $('#class_start_date').val(originClassStart);
+              $('#class_end_date').val(originClassEnd);
+              classModal.show();
+              $('#class_btn').click(async (submit) => {
                 submit.preventDefault();
                 try {
                   const editClassRes = await axios(`${classesUrl}/${classId}`, {
                     method: 'PUT',
                     data: {
-                      class_type_id: $(submit.target).siblings('#class_type').val(),
-                      batch: $(submit.target).siblings('#class_batch').val(),
-                      class_group_id: $(submit.target).siblings('#class_group').val(),
-                      start_date: $(submit.target).siblings('#class_start_date').val(),
-                      end_date: $(submit.target).siblings('#class_end_date').val(),
+                      class_type_id: $('#class_type').val(),
+                      batch: $('#class_batch').val(),
+                      class_group_id: $('#class_group').val(),
+                      start_date: $('#class_start_date').val(),
+                      end_date: $('#class_end_date').val(),
                     },
                     headers: {
                       'content-type': 'application/json',
@@ -1151,12 +1178,16 @@ async function classManage() {
                   });
                   const editClassResult = editClassRes.data;
                   if (editClassResult) {
-                    classModal.children('.close-modal').click();
+                    classModal.hide();
                     classBasicSetting();
                   }
                 } catch (err) {
                   console.log(err);
-                  alert('update fail');
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: '班級更新失敗',
+                  });
                 }
               });
             });
@@ -1171,6 +1202,11 @@ async function classManage() {
                 }
               } catch (err) {
                 console.log(err);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  text: '班級刪除失敗',
+                });
               }
             });
             $('.class_leaves_backup').click(async (backupEvent) => {
