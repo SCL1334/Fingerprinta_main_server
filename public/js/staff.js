@@ -869,7 +869,7 @@ async function classManage() {
     // init table
     const classTable = $('<table></table>').attr('id', 'classes_result');
     const thead = $('<thead></thead>');
-    const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', '', ''];
+    const heads = ['ID', '培訓類型', 'Batch', '培訓班別', '開學', '結業', '', '', ''];
     const tr = $('<tr></tr>');
     heads.forEach((head) => {
       const th = $('<th></th>').text(head);
@@ -980,6 +980,12 @@ async function classManage() {
               },
             },
             {
+              data: 'backup_leaves',
+              render() {
+                return createBtn('class_leaves_backup', '備份');
+              },
+            },
+            {
               data: 'delete_class',
               render() {
                 return createBtn('class_delete', '刪除');
@@ -1079,6 +1085,36 @@ async function classManage() {
                 }
               } catch (err) {
                 console.log(err);
+              }
+            });
+            $('.class_leaves_backup').click(async (backupEvent) => {
+              backupEvent.preventDefault();
+              try {
+                const classId = $(backupEvent.target).parent().siblings('.class_id').text();
+                const backupRes = await axios.post(`${classesUrl}/${classId}/backup/leaves`);
+                const backupResult = backupRes.data;
+                if (backupResult) {
+                  Swal.fire({
+                    title: '備份成功',
+                    icon: 'success',
+                    html:
+                      '請點擊連結下載備份, '
+                      + `<a href="${backupResult.data.location}">檔案連結</a> `,
+                    showCloseButton: true,
+                    showCancelButton: true,
+                    focusConfirm: false,
+                    confirmButtonText:
+                      '<i class="fa fa-thumbs-up"></i> 完成',
+                  });
+                  classBasicSetting();
+                }
+              } catch (err) {
+                console.log(err);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Oops...',
+                  text: '備份失敗',
+                });
               }
             });
           },
