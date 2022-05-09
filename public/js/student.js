@@ -349,37 +349,44 @@ $(document).ready(async () => {
                 acc += leaveTypeOption;
                 return acc;
               }, '');
-
+              // class="col-3 modal fade leave_form" id="edit_leave_form"
               const editLeaveForm = `
-              <div class="col-3 modal fade" role="dialog">
-                <div class="leave_form" id="edit_leave_form">
-                  <p class="font-monospace text-center fs-2">編輯假單</p>
-                  <form action="" method="PUT">
-                    <div class="form-text" id="edit_date"></div>
-                    <div class="mb-3">
-                      <label for="leave_type" class="form-label">請假類型</label>
-                      <select class="form-select" id='edit_type'>
-                        ${leaveTypeOptions}
-                      </select>
+              <div class="col-3 modal fade leave_form" id="edit_leave_form">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">編輯假單</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="mb-3">
-                      <label for="leave_start" class="form-label">請假開始時間</label>
-                      <input id='edit_start' name='leave_start' class="form-control" type="time">
+                    <div class="modal-body">
+                      <form action="" method="PUT">
+                        <div class="form-text" id="edit_date"></div>
+                        <div class="mb-3">
+                          <label for="leave_type" class="form-label">請假類型</label>
+                          <select class="form-select" id='edit_type'>
+                            ${leaveTypeOptions}
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="leave_start" class="form-label">請假開始時間</label>
+                          <input id='edit_start' name='leave_start' class="form-control" type="time">
+                        </div>
+                        <div class="mb-3">
+                          <label for="leave_end" class="form-label">請假結束時間</label>
+                          <input id='edit_end' name='leave_end' class="form-control" type="time">
+                        </div>
+                        <div class="mb-3">
+                          <span class="input-group-text">學生請假緣由</span>
+                          <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
+                          <div class="form-text">上限50字</div>
+                        </div>
+                        <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
+                        <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
+                      </form>
                     </div>
-                    <div class="mb-3">
-                      <label for="leave_end" class="form-label">請假結束時間</label>
-                      <input id='edit_end' name='leave_end' class="form-control" type="time">
-                    </div>
-                    <div class="mb-3">
-                      <span class="input-group-text">學生請假緣由</span>
-                      <textarea id="edit_reason" name="leave_reason" class="form-control" aria-label="請假緣由"></textarea>
-                      <div class="form-text">上限50字</div>
-                    </div>
-                    <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
-                    <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
-                  </form>
+                  </div>
                 </div>
-              </div>
+              </div>                
               `;
 
               $('.content').append(editLeaveForm);
@@ -387,15 +394,15 @@ $(document).ready(async () => {
               console.log(err);
             }
 
-            const editLeaveModal = $('#edit_leave_form');
+            // const editLeaveModal = $('#edit_leave_form');
             // const editLeaveModal = $('#test');
             // editLeaveModal.on($.modal.BEFORE_CLOSE, () => {
-            editLeaveModal.on('hidden.bs.modal', () => {
-              // clear last time data
-              editLeaveModal.find('input,select').val('').end();
-              // remove listener
-              editLeaveModal.find('#edit_leave_btn').off('click');
-            });
+            // editLeaveModal.on('hidden.bs.modal', () => {
+            //   // clear last time data
+            //   editLeaveModal.find('input,select').val('').end();
+            //   // remove listener
+            //   editLeaveModal.find('#edit_leave_btn').off('click');
+            // });
 
             $('.leave').append(table);
             leaveSearchResult.forEach((leaveSearch) => {
@@ -421,58 +428,68 @@ $(document).ready(async () => {
                 tdCertificate.append(checkCertificate);
               }
 
+              // const myModal = document.getElementById('edit_leave_form');
+              // myModal.addEventListener('shown.bs.modal', () => {
+              //   console.log('test');
+              // });
+
+              const myModal = new bootstrap.Modal(document.getElementById('edit_leave_form'));
+
               const tdEdit = $('<td></td>');
-              const editBtn = $('<button></button>').text('修改').click(async (callEdit) => {
-                callEdit.preventDefault();
-                // const callEditBtn = $(callEdit.target);
-                const date = $(callEdit.target).parent().siblings('.leave_date').text();
-                const leaveId = $(callEdit.target).parent().parent().data('leave_id');
-                const leaveTypeId = $(callEdit.target).parent().siblings('.leave_type').data('leave_type_id');
-                const reason = $(callEdit.target).parent().siblings('.leave_reason').text();
-                const start = $(callEdit.target).parent().siblings('.leave_start').text();
-                const end = $(callEdit.target).parent().siblings('.leave_end').text();
-                const hours = $(callEdit.target).parent().siblings('.leave_hours').text();
-                $('#edit_date').text(date);
-                $('#edit_type').val(leaveTypeId);
-                $('#edit_start').val(start);
-                $('#edit_end').val(end);
-                $('#edit_hours').val(hours);
-                $('#edit_reason').val(reason);
+              const editBtn = $('<button></button>').attr('class', 'btn btn-outline-secondary')
+                .text('修改')
+                .click(async (callEdit) => {
+                  myModal.show();
+                  callEdit.preventDefault();
+                  // const callEditBtn = $(callEdit.target);
+                  const date = $(callEdit.target).parent().siblings('.leave_date').text();
+                  const leaveId = $(callEdit.target).parent().parent().data('leave_id');
+                  const leaveTypeId = $(callEdit.target).parent().siblings('.leave_type').data('leave_type_id');
+                  const reason = $(callEdit.target).parent().siblings('.leave_reason').text();
+                  const start = $(callEdit.target).parent().siblings('.leave_start').text();
+                  const end = $(callEdit.target).parent().siblings('.leave_end').text();
+                  const hours = $(callEdit.target).parent().siblings('.leave_hours').text();
+                  $('#edit_date').text(date);
+                  $('#edit_type').val(leaveTypeId);
+                  $('#edit_start').val(start);
+                  $('#edit_end').val(end);
+                  $('#edit_hours').val(hours);
+                  $('#edit_reason').val(reason);
 
-                editLeaveModal.modal('show');
-                $('#edit_leave_btn').click(async (submit) => {
-                  submit.preventDefault();
-                  try {
-                    const editLeaveRes = await axios(`${leavesUrl}/${leaveId}`, {
-                      method: 'PUT',
-                      data: {
-                        date,
-                        leave_type_id: $('#edit_type').val(),
-                        start: $('#edit_start').val(),
-                        end: $('#edit_end').val(),
-                        reason: $('#edit_reason').val(),
+                  // editLeaveModal.modal('show');
+                  $('#edit_leave_btn').click(async (submit) => {
+                    submit.preventDefault();
+                    try {
+                      const editLeaveRes = await axios(`${leavesUrl}/${leaveId}`, {
+                        method: 'PUT',
+                        data: {
+                          date,
+                          leave_type_id: $('#edit_type').val(),
+                          start: $('#edit_start').val(),
+                          end: $('#edit_end').val(),
+                          reason: $('#edit_reason').val(),
 
-                      },
-                      headers: {
-                        'content-type': 'application/json',
-                      },
-                    });
-                    const editLeaveResult = editLeaveRes.data;
-                    if (editLeaveResult) {
-                      editLeaveModal.children('.close-modal').click();
-                      editLeaveModal.remove();
-                      $('.search_btn').trigger('click');
+                        },
+                        headers: {
+                          'content-type': 'application/json',
+                        },
+                      });
+                      const editLeaveResult = editLeaveRes.data;
+                      if (editLeaveResult) {
+                        // editLeaveModal.children('.btn-close').click();
+                        // editLeaveModal.remove();
+                        $('.search_btn').trigger('click');
+                      }
+                    } catch (err) {
+                      console.log(err);
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: '更改失敗，請重新操作',
+                      });
                     }
-                  } catch (err) {
-                    console.log(err);
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Oops...',
-                      text: '更改失敗，請重新操作',
-                    });
-                  }
+                  });
                 });
-              });
               const deleteBtn = $('<button></button>').text('刪除').click(async (deleteEvent) => {
                 deleteEvent.preventDefault();
                 try {
