@@ -7,6 +7,8 @@ const {
   timeStringToMinutes, minutesToTimeString, getCeilHourTime, minToFloorHourTime,
 } = require('../util/util');
 
+const { LATE_BUFFER } = process.env;
+
 const lunchBreakStart = '12:00'; // 午休
 const lunchBreakEnd = '13:00';
 
@@ -212,7 +214,8 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
   };
 
   const getStudentStart = (time) => {
-    let minutes = timeStringToMinutes(time);
+    let minutes = timeStringToMinutes(time) - LATE_BUFFER;
+    console.log(minutes);
     if (minutes < timeStringToMinutes(start)) { minutes = timeStringToMinutes(start); }
     const hour = Math.ceil(minutes / 30);
     return hour;
