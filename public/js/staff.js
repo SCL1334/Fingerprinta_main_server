@@ -2239,7 +2239,9 @@ $(document).ready(async () => {
       `;
       const attendanceHead = $('<div></div>');
       attendanceHead.append(classOptions, studentOptions, searchFrom, searchTo, searchBtn, checkBtn);
-      attendance.append(attendanceHead);
+
+      const attendanceContent = $('<div class="attendance_content"></div>');
+      attendance.append(attendanceHead, attendanceContent);
 
       $('.content').append(explainColor, attendance);
 
@@ -2251,6 +2253,7 @@ $(document).ready(async () => {
 
       $('.search_btn').click(async () => {
         try {
+          $('.attendance_content').empty();
           let table = $('.attendance_result').css('width', '100%');
           if (table) { table.text(''); }
           const classOption = $('.class_options').val();
@@ -2270,8 +2273,7 @@ $(document).ready(async () => {
             tr.append(th);
           });
           table.append(tr);
-
-          $('.attendance').append(table);
+          $('.attendance_content').append(table);
           attendanceSearchResult.forEach((attendanceSearch) => {
             const tr = $('<tr></tr>').css('height', '60px');
             const td_date = $('<td></td>').attr('class', 'attendance_date').text(attendanceSearch.date);
