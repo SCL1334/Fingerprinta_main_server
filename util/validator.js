@@ -59,8 +59,8 @@ const createPunchExceptionSchema = Joi.object({
   class_type_id: Joi.number().integer().min(1).required(),
   batch: Joi.number().integer().min(1).required(),
   date: Joi.date().required(),
-  start_time: Joi.string().regex(timeFormat),
-  end_time: Joi.string().regex(timeFormat),
+  start: Joi.string().regex(timeFormat),
+  end: Joi.string().regex(timeFormat),
 });
 
 const createStudentSchema = Joi.object({
@@ -267,6 +267,18 @@ const createLeaveType = async (req, res, next) => {
   }
 };
 
+const createPunchException = async (req, res, next) => {
+  const exception = req.body;
+  try {
+    const validException = await createPunchExceptionSchema.validateAsync(exception);
+    res.locals.punchException = validException;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
 module.exports = {
   createClassType,
   createClassGroup,
@@ -275,4 +287,5 @@ module.exports = {
   createClass,
   editClass,
   createLeaveType,
+  createPunchException,
 };

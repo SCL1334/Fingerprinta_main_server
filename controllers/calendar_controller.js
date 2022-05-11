@@ -66,16 +66,8 @@ const getPunchException = async (req, res) => {
 };
 
 const createPunchException = async (req, res) => {
-  const {
-    class_type_id, batch, date, start_time, end_time,
-  } = req.body;
-  const punchException = {
-    class_type_id,
-    batch,
-    date: dayjs(date).format('YYYY-MM-DD'),
-    start: start_time,
-    end: end_time,
-  };
+  const { punchException } = res.locals;
+  punchException.date = dayjs(punchException.date).format('YYYY-MM-DD');
 
   const result = await Calendar.createPunchException(punchException);
   if (result.code < 2000) {
