@@ -29,12 +29,12 @@ router.route('/students/:id/s3url').get(wrapAsync(getS3UrlForCertificate));
 router.route('/students/attendances').get(wrapAsync(getAllAttendances));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
-router.route('/students/:id/leaves').post(wrapAsync(applyLeave));
+router.route('/students/:id/leaves').post(Validator.createStudentLeave, wrapAsync(applyLeave));
 router.route('/students/:id/leaves/hours').get(wrapAsync(countLeavesHours));
 router.route('/students/leaves/hours').get(wrapAsync(countAllLeavesHours));
 router.route('/students/:id/punches').get(wrapAsync(getPersonPunch));
 router.route('/students/:id/attendances').get(wrapAsync(getPersonAttendances));
-router.route('/students/:id/attendances/leaves').post(wrapAsync(transferLackAttendance));
+router.route('/students/:id/attendances/leaves').post(Validator.createStudentLeave, wrapAsync(transferLackAttendance));
 
 router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch));

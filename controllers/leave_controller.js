@@ -132,11 +132,12 @@ const countAllLeavesHours = async (req, res) => {
 };
 
 const transferLackAttendance = async (req, res) => {
-  const studentId = req.params.id;
+  const { leave } = res.locals;
+  const studentId = leave.student_id;
   const {
     leave_type_id: leaveTypeId, date, start, end, hours,
     reason, note, certificate_url: certificateUrl,
-  } = req.body;
+  } = leave;
 
   const leaveTypes = await Leave.getTypes();
   const leaveTypesTable = leaveTypes.reduce((acc, cur) => {
@@ -165,7 +166,7 @@ const transferLackAttendance = async (req, res) => {
     }
   }
 
-  const leave = {
+  const leaveTransform = {
     student_id: studentId,
     leave_type_id: leaveTypeId,
     date: dayjs(date).format('YYYY-MM-DD'),
@@ -177,7 +178,7 @@ const transferLackAttendance = async (req, res) => {
     certificate_url: certificateUrl,
     approval: true,
   };
-  const result = await Leave.applyLeave(leave);
+  const result = await Leave.applyLeave(leaveTransform);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   } else if (result.code < 3000) {
@@ -188,13 +189,15 @@ const transferLackAttendance = async (req, res) => {
 };
 
 const applyLeave = async (req, res) => {
-  const studentId = req.params.id;
+  const { leave } = res.locals;
+
+  const studentId = leave.student_id;
   const {
     leave_type_id: leaveTypeId, date, start, end, reason, note, certificate_url: certificateUrl,
-  } = req.body;
-  const accLeaveHours = await Leave.countLeavesHours(studentId).leaves_hours;
+  } = leave;
+  const accLeaveHours = await Leave.countLeavesHours(leave.student_id).leaves_hours;
 
-  let { hours } = req.body;
+  let { hours } = leave;
 
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
@@ -231,7 +234,7 @@ const applyLeave = async (req, res) => {
     }
   }
 
-  const leave = {
+  const leaveTransform = {
     student_id: studentId,
     leave_type_id: leaveTypeId,
     date: dayjs(date).format('YYYY-MM-DD'),
@@ -243,7 +246,7 @@ const applyLeave = async (req, res) => {
     certificate_url: certificateUrl,
   };
 
-  const result = await Leave.applyLeave(leave);
+  const result = await Leave.applyLeave(leaveTransform);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   } else if (result.code < 3000) {
@@ -267,11 +270,12 @@ const auditLeave = async (req, res) => {
 };
 
 const updateLeave = async (req, res) => {
-  const leaveId = req.params.id;
+  const { id, leave } = res.locals;
+
   const {
-    leave_type_id, reason, note, date, start, end,
-  } = req.body;
-  let { hours, approval } = req.body;
+    leave_type_id: leaveTypeId, reason, note, date, start, end,
+  } = leave;
+  let { hours, approval } = leave;
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
 
@@ -300,8 +304,8 @@ const updateLeave = async (req, res) => {
     leaveHours = minToHours(endMin - restEnd);
   }
 
-  const leave = {
-    leave_type_id,
+  const leaveTransform = {
+    leave_type_id: leaveTypeId,
     reason,
     note,
     date: dayjs(date).format('YYYY-MM-DD'),
@@ -310,7 +314,7 @@ const updateLeave = async (req, res) => {
     approval,
     hours: hours || leaveHours,
   };
-  const status = await Leave.updateLeave(leaveId, leave);
+  const status = await Leave.updateLeave(id, leaveTransform);
   if (status < 2000) {
     res.status(200).json({ code: status, data: 'Update successfully' });
   } else if (status < 3000) {

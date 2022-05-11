@@ -1,8 +1,8 @@
-const Joi = require('joi');
-const dayjs = require('dayjs');
-const customParseFormat = require('dayjs/plugin/customParseFormat');
+const Joi = require('joi').extend(require('@joi/date'));
 
-dayjs.extend(customParseFormat);
+// if no date format, e.g. 20220501 will still pass the validator
+// but the date will parse to 1970-01-01 and save todb without error!!
+const dateFormat = ['YYYY-MM-DD', 'YYYYMMDD'];
 
 const prohibit = /[$(){}<>]/;
 
@@ -29,16 +29,16 @@ const createClassSchema = Joi.object({
   class_type_id: Joi.number().integer().min(1).required(),
   batch: Joi.number().integer().min(1).required(),
   class_group_id: Joi.number().integer().min(1),
-  start_date: Joi.date().required(),
-  end_date: Joi.date().min(Joi.ref('start_date')).required(),
+  start_date: Joi.date().format(dateFormat).required(),
+  end_date: Joi.date().format(dateFormat).min(Joi.ref('start_date')).required(),
 });
 
 const editClassSchema = Joi.object({
   class_type_id: Joi.number().integer().min(1),
   batch: Joi.number().integer().min(1),
   class_group_id: Joi.number().integer().min(1),
-  start_date: Joi.date(),
-  end_date: Joi.date().min(Joi.ref('start_date')),
+  start_date: Joi.date().format(dateFormat),
+  end_date: Joi.date().format(dateFormat).min(Joi.ref('start_date')),
 });
 
 const createClassRoutineSchema = Joi.object({
@@ -58,7 +58,7 @@ const editClassRoutineSchema = Joi.object({
 const createPunchExceptionSchema = Joi.object({
   class_type_id: Joi.number().integer().min(1).required(),
   batch: Joi.number().integer().min(1).required(),
-  date: Joi.date().required(),
+  date: Joi.date().format(dateFormat).required(),
   start: Joi.string().regex(timeFormat),
   end: Joi.string().regex(timeFormat),
 });
@@ -113,25 +113,27 @@ const signInSchema = Joi.object({
 const createStudentLeaveSchema = Joi.object({
   student_id: Joi.number().integer().min(1).required(),
   leave_type_id: Joi.number().integer().min(1).required(),
-  date: Joi.date().required(),
+  date: Joi.date().format(dateFormat).required(),
   start: Joi.string().regex(timeFormat).required(),
   end: Joi.string().regex(timeFormat).required(),
   hours: Joi.number().integer().min(0).max(24),
   approval: Joi.number().integer().min(0).max(2),
   reason: Joi.string().max(50).regex(prohibit, { invert: true }),
   note: Joi.string().max(50).regex(prohibit, { invert: true }),
+  certificate_url: Joi.string(),
 });
 
 const editStudentLeaveSchema = Joi.object({
   student_id: Joi.number().integer().min(1),
   leave_type_id: Joi.number().integer().min(1),
-  date: Joi.date(),
+  date: Joi.date().format(dateFormat),
   start: Joi.string().regex(timeFormat),
   end: Joi.string().regex(timeFormat),
   hours: Joi.number().integer().min(0).max(24),
   approval: Joi.number().integer().min(0).max(2),
   reason: Joi.string().max(50).regex(prohibit, { invert: true }),
   note: Joi.string().max(50).regex(prohibit, { invert: true }),
+  certificate_url: Joi.string(),
 });
 
 const idSchema = Joi.object({
@@ -142,6 +144,8 @@ const idSchema = Joi.object({
 // const punchSchema = Joi.object({
 //   student_id: Joi.number().integer().min(1).required(),
 // });
+
+// audit leave may need
 
 // middleware
 const createClassType = async (req, res, next) => {
@@ -376,6 +380,45 @@ const signInInput = async (req, res, next) => {
   }
 };
 
+const createStudentLeave = async (req, res, next) => {
+  const studentId = req.params.id;
+  const leave = req.body;
+  leave.student_id = studentId;
+  try {
+    const validLeave = await createStudentLeaveSchema.validateAsync(leave);
+    console.log(validLeave);
+    res.locals.leave = validLeave;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const editStudentLeave = async (req, res, next) => {
+  const leave = req.body;
+  const { id } = req.params;
+
+  // remove empty key
+  Object.keys(leave).forEach((key) => {
+    if (leave[key] === undefined) {
+      delete leave[key];
+    }
+  });
+
+  try {
+    const validLeave = await editStudentLeaveSchema.validateAsync(leave);
+    const validId = await idSchema.validateAsync({ id });
+
+    res.locals.leave = validLeave;
+    res.locals.id = validId.id;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
 module.exports = {
   createClassType,
   createClassGroup,
@@ -392,4 +435,6 @@ module.exports = {
   applyResetPassword,
   resetPassword,
   signInInput,
+  createStudentLeave,
+  editStudentLeave,
 };
