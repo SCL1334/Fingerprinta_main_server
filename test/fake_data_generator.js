@@ -88,12 +88,12 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-// createFakePunch(80);
+createFakePunch(30);
 
 const createLeaveTypes = async () => {
   try {
     await truncateTable('leave_type');
-    const leaveTypes = [['personal'], ['sick']];
+    const leaveTypes = [['事假'], ['病假']];
     await promisePool.query('INSERT INTO leave_type (name) VALUES ?', [leaveTypes]);
     console.log('completed');
   } catch (err) {
@@ -150,4 +150,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-createFakeLeaveApplications(15, 15);
+// createFakeLeaveApplications(15, 15);
