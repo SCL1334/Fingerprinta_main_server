@@ -15,9 +15,9 @@ const getTypes = async () => {
   }
 };
 
-const createType = async (typeName) => {
+const createType = async (leaveType) => {
   try {
-    await promisePool.query('INSERT INTO leave_type SET ?', { name: typeName });
+    await promisePool.query('INSERT INTO leave_type SET ?', leaveType);
     return 1010;
   } catch (err) {
     console.log(err);

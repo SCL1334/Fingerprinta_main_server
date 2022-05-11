@@ -15,10 +15,10 @@ const getTypes = async (req, res) => {
 };
 
 const createType = async (req, res) => {
-  const typeName = req.body.type_name;
-  const status = await Leave.createType(typeName);
+  const { leaveType } = res.locals;
+  const status = await Leave.createType(leaveType);
   if (status < 2000) {
-    res.status(200).json({ code: status, data: 'Create successfully' });
+    res.status(200).json({ code: status, data: { message: 'Create successfully' } });
   } else if (status < 3000) {
     res.status(500).json({ code: status, error: { message: 'Create failed' } });
   } else {

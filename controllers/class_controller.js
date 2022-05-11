@@ -40,9 +40,9 @@ const deleteType = async (req, res) => {
 
 // Group Manage
 const getGroups = async (req, res) => {
-  const types = await Class.getGroups();
-  if (types) {
-    res.status(200).json({ data: types });
+  const groups = await Class.getGroups();
+  if (groups) {
+    res.status(200).json({ data: groups });
   } else {
     res.status(500).json({ error: 'Read failed' });
   }
@@ -86,14 +86,8 @@ const getRoutines = async (req, res) => {
 };
 
 const createRoutine = async (req, res) => {
-  const {
-    class_type_id, weekday, start_time, end_time,
-  } = req.body;
-  const routine = {
-    class_type_id, weekday, start_time, end_time,
-  };
-
-  const result = await Class.createRoutine(routine);
+  const { classRoutine } = res.locals;
+  const result = await Class.createRoutine(classRoutine);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   } else if (result.code < 3000) {
@@ -104,27 +98,14 @@ const createRoutine = async (req, res) => {
 };
 
 const editRoutine = async (req, res) => {
-  const {
-    class_type_id, weekday, start_time, end_time,
-  } = req.body;
-  const routineId = req.params.id;
-  const routine = {
-    class_type_id, weekday, start_time, end_time,
-  };
-  // remove blank value
-  Object.keys(routine).forEach((key) => {
-    if (routine[key] === undefined) {
-      delete routine[key];
-    }
-  });
-
-  const result = await Class.editRoutine(routineId, routine);
+  const { id, classRoutine } = res.locals;
+  const result = await Class.editRoutine(id, classRoutine);
   if (result === 0) {
-    res.status(500).json({ error: 'Update failed' });
+    res.status(500).json({ error: { message: 'Update failed' } });
   } else if (result === -1) {
-    res.status(400).json({ error: 'Update failed due to invalid input' });
+    res.status(400).json({ error: { message: 'Update failed due to invalid input' } });
   } else {
-    res.status(200).json({ data: 'Update OK' });
+    res.status(200).json({ data: { message: 'Update OK' } });
   }
 };
 
@@ -178,16 +159,9 @@ const getClasses = async (req, res) => {
 };
 
 const createClass = async (req, res) => {
-  const {
-    class_type_id, batch, class_group_id, start_date, end_date,
-  } = req.body;
-  const clas = {
-    class_type_id,
-    batch,
-    class_group_id,
-    start_date: dayjs(start_date).format('YYYY-MM-DD'),
-    end_date: dayjs(end_date).format('YYYY-MM-DD'),
-  };
+  const { clas } = res.locals;
+  clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
+  clas.end_date = dayjs(clas.end).format('YYYY-MM-DD');
 
   const result = await Class.createClass(clas);
   if (result.code < 2000) {
@@ -200,32 +174,17 @@ const createClass = async (req, res) => {
 };
 
 const editClass = async (req, res) => {
-  const {
-    class_type_id, batch, class_group_id, start_date, end_date,
-  } = req.body;
-  const classId = req.params.id;
-  const clas = {
-    class_type_id,
-    batch,
-    class_group_id,
-    start_date,
-    end_date,
-  };
+  const { id, clas } = res.locals;
+  clas.start_date = dayjs(clas.start_date).format('YYYY-MM-DD');
+  clas.end_date = dayjs(clas.end).format('YYYY-MM-DD');
 
-  // remove blank value
-  Object.keys(clas).forEach((key) => {
-    if (clas[key] === undefined) {
-      delete clas[key];
-    }
-  });
-
-  const result = await Class.editClass(classId, clas);
+  const result = await Class.editClass(id, clas);
   if (result === 0) {
-    res.status(500).json({ error: 'Update failed' });
+    res.status(500).json({ error: { message: 'Update failed' } });
   } else if (result === -1) {
-    res.status(400).json({ error: 'Update failed due to invalid input' });
+    res.status(400).json({ error: { message: 'Update failed due to invalid input' } });
   } else {
-    res.status(200).json({ data: 'Update OK' });
+    res.status(200).json({ data: { message: 'Update OK' } });
   }
 };
 
