@@ -138,9 +138,10 @@ const idSchema = Joi.object({
   id: Joi.number().integer().min(1).required(),
 });
 
-const punchSchema = Joi.object({
-  student_id: Joi.number().integer().min(1).required(),
-});
+// only sensor server can punch, no need
+// const punchSchema = Joi.object({
+//   student_id: Joi.number().integer().min(1).required(),
+// });
 
 // middleware
 const createClassType = async (req, res, next) => {
@@ -279,6 +280,102 @@ const createPunchException = async (req, res, next) => {
   }
 };
 
+const createStudent = async (req, res, next) => {
+  const student = req.body;
+  try {
+    const validStudent = await createStudentSchema.validateAsync(student);
+    res.locals.student = validStudent;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const editStudent = async (req, res, next) => {
+  const student = req.body;
+  const { id } = req.params;
+
+  // remove empty key
+  Object.keys(student).forEach((key) => {
+    if (student[key] === undefined) {
+      delete student[key];
+    }
+  });
+
+  try {
+    const validStudent = await editStudentSchema.validateAsync(student);
+    const validId = await idSchema.validateAsync({ id });
+
+    res.locals.student = validStudent;
+    res.locals.id = validId.id;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const createStaff = async (req, res, next) => {
+  const staff = req.body;
+  try {
+    const validStaff = await createStaffSchema.validateAsync(staff);
+    res.locals.staff = validStaff;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  const passwords = req.body;
+  try {
+    const validPasswords = await changePasswordSchema.validateAsync(passwords);
+    res.locals.passwords = validPasswords;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const applyResetPassword = async (req, res, next) => {
+  const email = req.body;
+  try {
+    const validEmail = await applyResetPasswordSchema.validateAsync(email);
+    res.locals.email = validEmail.email;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  const password = req.body;
+  try {
+    const validPassword = await resetPasswordSchema.validateAsync(password);
+    res.locals.password = validPassword.password;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const signInInput = async (req, res, next) => {
+  const signIn = req.body;
+  try {
+    const validSignIn = await signInSchema.validateAsync(signIn);
+    res.locals.signIn = validSignIn;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
 module.exports = {
   createClassType,
   createClassGroup,
@@ -288,4 +385,11 @@ module.exports = {
   editClass,
   createLeaveType,
   createPunchException,
+  createStudent,
+  editStudent,
+  createStaff,
+  changePassword,
+  applyResetPassword,
+  resetPassword,
+  signInInput,
 };

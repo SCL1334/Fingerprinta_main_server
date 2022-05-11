@@ -1,6 +1,7 @@
 const router = require('express').Router();
 
 const { wrapAsync } = require('../util/util');
+const Validator = require('../util/validator');
 const {
   createStudent, editStudent, getStudents, getOneStudent, deleteStudent, studentSignIn,
   studentChangePassword, studentGetResetUrl, studentResetPassword,
@@ -20,7 +21,8 @@ const { getClasses } = require('../controllers/class_controller');
 const { getS3UrlForCertificate } = require('../controllers/leave_controller');
 
 const {
-  applyLeave, getAllLeaves, getPersonLeaves, countLeavesHours, countAllLeavesHours, transferLackAttendance,
+  applyLeave, getAllLeaves, getPersonLeaves,
+  countLeavesHours, countAllLeavesHours, transferLackAttendance,
 } = require('../controllers/leave_controller');
 
 router.route('/students/:id/s3url').get(wrapAsync(getS3UrlForCertificate));
@@ -39,27 +41,27 @@ router.route('/students/fingerprint/:fingerId/punches').post(wrapAsync(setPunch)
 
 router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
 
-router.route('/students/signin').post(wrapAsync(studentSignIn));
+router.route('/students/signin').post(Validator.signInInput, wrapAsync(studentSignIn));
 router.route('/students/profile').get(wrapAsync(getStudentProfile));
-router.route('/students/password').put(wrapAsync(studentChangePassword));
-router.route('/students/forget').post(wrapAsync(studentGetResetUrl));
-router.route('/students/reset').post(wrapAsync(studentResetPassword));
+router.route('/students/password').put(Validator.changePassword, wrapAsync(studentChangePassword));
+router.route('/students/forget').post(Validator.applyResetPassword, wrapAsync(studentGetResetUrl));
+router.route('/students/reset').post(Validator.resetPassword, wrapAsync(studentResetPassword));
 
-router.route('/students').post(wrapAsync(createStudent));
+router.route('/students').post(Validator.createStudent, wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));
 router.route('/students/:id').get(wrapAsync(getOneStudent));
-router.route('/students/:id').put(wrapAsync(editStudent));
+router.route('/students/:id').put(Validator.editStudent, wrapAsync(editStudent));
 router.route('/students/:id').delete(wrapAsync(deleteStudent));
 
 router.route('/teachers/:id/classes').get(wrapAsync(getClasses));
 
 router.route('/staffs/profile').get(wrapAsync(getStaffProfile));
-router.route('/staffs/signin').post(wrapAsync(staffSignIn));
-router.route('/staffs/password').put(wrapAsync(staffChangePassword));
-router.route('/staffs/forget').post(wrapAsync(staffGetResetUrl));
-router.route('/staffs/reset').post(wrapAsync(staffResetPassword));
+router.route('/staffs/signin').post(Validator.signInInput, wrapAsync(staffSignIn));
+router.route('/staffs/password').put(Validator.changePassword, wrapAsync(staffChangePassword));
+router.route('/staffs/forget').post(Validator.applyResetPassword, wrapAsync(staffGetResetUrl));
+router.route('/staffs/reset').post(Validator.resetPassword, wrapAsync(staffResetPassword));
 
-router.route('/staffs').post(wrapAsync(createStaff));
+router.route('/staffs').post(Validator.createStaff, wrapAsync(createStaff));
 router.route('/staffs').get(wrapAsync(getStaffs));
 router.route('/staffs/:id').delete(wrapAsync(deleteStaff));
 

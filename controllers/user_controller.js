@@ -4,10 +4,10 @@ const { sendResetEmail } = require('../util/mailer');
 
 const createStudent = async (req, res) => {
   const {
-    name, email, password, class_id,
-  } = req.body;
+    name, email, password, class_id: classId,
+  } = res.locals.student;
 
-  const result = await User.createStudent(name, email, password, class_id);
+  const result = await User.createStudent(name, email, password, classId);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   } else if (result.code < 3000) {
@@ -31,18 +31,9 @@ const createClassStudents = async (req, res) => {
 };
 
 const editStudent = async (req, res) => {
-  const studentId = req.params.id;
-  const { name, email, class_id: classId } = req.body;
-  const student = { name, email, class_id: classId };
+  const { id, student } = res.locals;
 
-  // remove blank value
-  Object.keys(student).forEach((key) => {
-    if (student[key] === undefined) {
-      delete student[key];
-    }
-  });
-
-  const status = await User.editStudent(studentId, student);
+  const status = await User.editStudent(id, student);
   if (status.code < 2000) {
     res.status(200).json({ code: status.code, data: { message: 'Update successfully' } });
   } else if (status.code < 3000) {
@@ -77,7 +68,7 @@ const deleteStudent = async (req, res) => {
 const createStaff = async (req, res) => {
   const {
     name, email, password,
-  } = req.body;
+  } = res.locals.staff;
 
   const result = await User.createStaff(name, email, password);
   if (result.code < 2000) {
@@ -121,16 +112,16 @@ const deleteStaff = async (req, res) => {
 };
 
 const studentSignIn = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = res.locals.signIn;
   const result = await User.studentSignIn(email, password);
   if (result === 0) {
-    return res.status(500).json({ error: 'Signin failed' });
+    return res.status(500).json({ error: { message: 'Signin failed' } });
   }
   if (result === -1) {
-    return res.status(400).json({ error: 'Signin failed due to invalid input' });
+    return res.status(400).json({ error: { message: 'Signin failed due to invalid input' } });
   }
   req.session.user = { role: 'student', email };
-  return res.status(200).json({ data: 'Signin successfully' });
+  return res.status(200).json({ data: { message: 'Signin successfully' } });
 };
 
 const studentChangePassword = async (req, res) => {
@@ -138,7 +129,7 @@ const studentChangePassword = async (req, res) => {
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
   const { email } = user;
-  const { password, new_password: newPassword } = req.body;
+  const { password, new_password: newPassword } = res.locals.passwords;
   const result = await User.changePassword(role, email, password, newPassword);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
@@ -151,7 +142,7 @@ const studentChangePassword = async (req, res) => {
 
 const studentGetResetUrl = async (req, res) => {
   const role = 'student';
-  const { email } = req.body;
+  const { email } = res.locals;
   const student = await User.getStudentProfile(email);
   if (!student) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
   const setHash = await User.setHashedMail(email);
@@ -166,7 +157,7 @@ const studentGetResetUrl = async (req, res) => {
 const studentResetPassword = async (req, res) => {
   const role = 'student';
   const hash = req.query.apply;
-  const newPassword = req.body.password;
+  const newPassword = res.locals.password;
   const getEmail = await User.getMailByHash(hash);
   if (getEmail.code >= 2000) { return res.status(500).json({ code: getEmail.code, error: { message: 'Fail to get data' } }); }
   const { email } = getEmail.data;
@@ -182,16 +173,16 @@ const studentResetPassword = async (req, res) => {
 };
 
 const staffSignIn = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = res.locals.signIn;
   const result = await User.staffSignIn(email, password);
   if (result === 0) {
-    return res.status(500).json({ error: 'Signin failed' });
+    return res.status(500).json({ error: { message: 'Signin failed' } });
   }
   if (result === -1) {
-    return res.status(400).json({ error: 'Signin failed due to invalid input' });
+    return res.status(400).json({ error: { message: 'Signin failed due to invalid input' } });
   }
   req.session.user = { role: 'staff', email };
-  return res.status(200).json({ data: 'Signin successfully' });
+  return res.status(200).json({ data: { message: 'Signin successfully' } });
 };
 
 const staffChangePassword = async (req, res) => {
@@ -199,7 +190,7 @@ const staffChangePassword = async (req, res) => {
   const { user } = req.session;
   if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
   const { email } = user;
-  const { password, new_password: newPassword } = req.body;
+  const { password, new_password: newPassword } = res.locals.passwords;
   const result = await User.changePassword(role, email, password, newPassword);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
@@ -212,7 +203,7 @@ const staffChangePassword = async (req, res) => {
 
 const staffGetResetUrl = async (req, res) => {
   const role = 'staff';
-  const { email } = req.body;
+  const { email } = res.locals;
   const staff = await User.getStaffProfile(email);
   if (!staff) { return res.status(400).json({ code: 4000, error: { message: 'User does not exist' } }); }
   const setHash = await User.setHashedMail(email);
@@ -227,7 +218,7 @@ const staffGetResetUrl = async (req, res) => {
 const staffResetPassword = async (req, res) => {
   const role = 'staff';
   const hash = req.query.apply;
-  const newPassword = req.body.password;
+  const newPassword = res.locals.password;
   const getEmail = await User.getMailByHash(hash);
   if (getEmail.code >= 2000) { return res.status(500).json({ code: getEmail.code, error: { message: 'Fail to get data' } }); }
   const { email } = getEmail.data;
