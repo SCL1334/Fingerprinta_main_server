@@ -58,7 +58,6 @@ const getS3Url = async (targetPathName) => {
 
 const authentication = (needStaff = 0) => function (req, res, next) {
   const { user } = req.session;
-  console.log(user);
   if (!user) {
     return res.status(401).send({ error: { message: 'Unauthorized' } });
   }
@@ -71,11 +70,6 @@ const authentication = (needStaff = 0) => function (req, res, next) {
   // all can use
   return next();
 };
-
-// const authentication = (req, res, next) => {
-//   console.log('ok');
-//   next();
-// };
 
 module.exports = {
   wrapAsync,
