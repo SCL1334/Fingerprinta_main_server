@@ -18,9 +18,9 @@ const setPunch = async (req, res) => {
   } else if (punchResult === 2) {
     res.status(200).json({ data: 'Punch out successfully' });
   } else if (punchResult === -1) {
-    res.status(400).json({ error: 'Punch failed due to invalid input' });
+    res.status(400).json({ error: { message: 'Punch failed due to invalid input' } });
   } else if (punchResult === 0) {
-    res.status(500).json({ error: 'Punch failed due to internal server error' });
+    res.status(500).json({ error: { message: 'Punch failed due to internal server error' } });
   }
 };
 
@@ -34,7 +34,7 @@ const getAllPunch = async (req, res) => {
   }
   const punches = await Attendance.getAllPunch(from, to);
   if (!punches) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: punches });
   }
@@ -51,7 +51,7 @@ const getClassPunch = async (req, res) => {
   }
   const punches = await Attendance.getClassPunch(classId, from, to);
   if (!punches) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: punches });
   }
@@ -68,7 +68,24 @@ const getPersonPunch = async (req, res) => {
   }
   const punches = await Attendance.getPersonPunch(studentId, from, to);
   if (!punches) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
+  } else {
+    res.status(200).json({ data: punches });
+  }
+};
+
+const getSelfPunch = async (req, res) => {
+  const studentId = req.session.user.student_id;
+  let { from, to } = req.query;
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: 'Input lack of parameter' });
+  }
+  const punches = await Attendance.getPersonPunch(studentId, from, to);
+  if (!punches) {
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: punches });
   }
@@ -82,7 +99,7 @@ const getPersonAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: 'Input lack of parameter' });
+    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
     from = null;
     to = null;
@@ -90,7 +107,29 @@ const getPersonAttendances = async (req, res) => {
 
   const attendances = await Attendance.getPersonAttendance(studentId, from, to);
   if (!attendances) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
+  } else {
+    res.status(200).json({ data: attendances });
+  }
+};
+
+const getSelfAttendances = async (req, res) => {
+  const studentId = req.session.user.student_id;
+  let { from, to } = req.query;
+
+  if (from && to) {
+    from = dayjs(from).format('YYYY-MM-DD');
+    to = dayjs(to).format('YYYY-MM-DD');
+  } else if ((from && !to) || (!from && to)) {
+    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
+  } else {
+    from = null;
+    to = null;
+  }
+
+  const attendances = await Attendance.getPersonAttendance(studentId, from, to);
+  if (!attendances) {
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: attendances });
   }
@@ -104,7 +143,7 @@ const getClassAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: 'Input lack of parameter' });
+    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
     from = null;
     to = null;
@@ -112,7 +151,7 @@ const getClassAttendances = async (req, res) => {
 
   const attendances = await Attendance.getClassAttendance(classId, from, to);
   if (!attendances) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: attendances });
   }
@@ -125,7 +164,7 @@ const getAllAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: 'Input lack of parameter' });
+    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
     from = null;
     to = null;
@@ -133,7 +172,7 @@ const getAllAttendances = async (req, res) => {
 
   const attendances = await Attendance.getAllAttendances(from, to);
   if (!attendances) {
-    res.status(500).json({ error: 'Read failed' });
+    res.status(500).json({ error: { message: 'Read failed' } });
   } else {
     res.status(200).json({ data: attendances });
   }
@@ -147,4 +186,6 @@ module.exports = {
   getPersonAttendances,
   getClassAttendances,
   getAllAttendances,
+  getSelfPunch,
+  getSelfAttendances,
 };

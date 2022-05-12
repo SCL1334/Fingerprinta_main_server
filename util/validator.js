@@ -395,8 +395,48 @@ const createStudentLeave = async (req, res, next) => {
   }
 };
 
+const createSelfLeave = async (req, res, next) => {
+  const studentId = req.session.user.student_id;
+  const leave = req.body;
+  leave.student_id = studentId;
+  try {
+    const validLeave = await createStudentLeaveSchema.validateAsync(leave);
+    res.locals.leave = validLeave;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
 const editStudentLeave = async (req, res, next) => {
   const leave = req.body;
+  const { id } = req.params;
+
+  // remove empty key
+  Object.keys(leave).forEach((key) => {
+    if (leave[key] === undefined) {
+      delete leave[key];
+    }
+  });
+
+  try {
+    const validLeave = await editStudentLeaveSchema.validateAsync(leave);
+    const validId = await idSchema.validateAsync({ id });
+
+    res.locals.leave = validLeave;
+    res.locals.id = validId.id;
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ error: { message: error.details[0].message } });
+  }
+};
+
+const editSelfLeave = async (req, res, next) => {
+  const studentId = req.session.user.student_id;
+  const leave = req.body;
+  leave.student_id = studentId;
   const { id } = req.params;
 
   // remove empty key
@@ -437,4 +477,6 @@ module.exports = {
   signInInput,
   createStudentLeave,
   editStudentLeave,
+  createSelfLeave,
+  editSelfLeave,
 };

@@ -5,18 +5,21 @@ const RedisStore = require('connect-redis')(session);
 const express = require('express');
 
 // routes
+const publicRoute = require('./routes/public_route');
 const userRoute = require('./routes/user_route');
 const classRoute = require('./routes/class_route');
 const calendarRoute = require('./routes/calendar_route');
 const leaveRoute = require('./routes/leave_route');
 const sensorRoute = require('./routes/sensor_route');
 const fingerprintRoute = require('./routes/fingerprint_route');
+const myRoute = require('./routes/my_route');
 
 const {
   PORT, API_VERSION,
 } = process.env;
 
 const Cache = require('./util/cache');
+const { authentication } = require('./util/util');
 
 const app = express();
 
@@ -35,7 +38,12 @@ app.use(session({
 }));
 
 // API routes
-app.use(`/api/${API_VERSION}`, [
+// general use
+app.use(`/api/${API_VERSION}`, publicRoute);
+// student use 0: all user can access
+app.use(`/api/${API_VERSION}`, authentication(0), myRoute);
+// staff use 1: only staff can access
+app.use(`/api/${API_VERSION}`, authentication(1), [
   userRoute, classRoute, calendarRoute, leaveRoute, sensorRoute, fingerprintRoute,
 ]);
 

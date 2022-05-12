@@ -292,9 +292,37 @@ const updateLeave = async (leaveId, leave) => {
   }
 };
 
+const updateSelfLeave = async (studentId, leaveId, leave) => {
+  try {
+    const [check] = await promisePool.query('SELECT id FROM student_leave WHERE id = ? AND student_id = ? AND approval = 0', [leaveId, studentId]);
+    if (check.length === 0) {
+      return 3050;
+    }
+    await promisePool.query('UPDATE student_leave SET ? WHERE id = ?', [leave, leaveId]);
+    return 1020;
+  } catch (err) {
+    console.log(err);
+    return 2020;
+  }
+};
+
 const deleteLeave = async (leaveId) => {
   try {
     const [check] = await promisePool.query('SELECT id FROM student_leave WHERE id = ?', [leaveId]);
+    if (check.length === 0) {
+      return 3050;
+    }
+    await promisePool.query('DELETE FROM student_leave WHERE id = ?', [leaveId]);
+    return 1030;
+  } catch (err) {
+    console.log(err);
+    return 2030;
+  }
+};
+
+const deleteSelfLeave = async (studentId, leaveId) => {
+  try {
+    const [check] = await promisePool.query('SELECT id FROM student_leave WHERE id = ? AND student_id = ? AND approval = 0', [leaveId, studentId]);
     if (check.length === 0) {
       return 3050;
     }
@@ -320,5 +348,7 @@ module.exports = {
   countAllLeavesHours,
   applyLeave,
   updateLeave,
+  updateSelfLeave,
   deleteLeave,
+  deleteSelfLeave,
 };
