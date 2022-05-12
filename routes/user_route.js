@@ -4,11 +4,9 @@ const { wrapAsync } = require('../util/util');
 const Validator = require('../util/validator');
 const {
   createStudent, editStudent, getStudents, getOneStudent, deleteStudent,
-  studentChangePassword,
   createStaff, getStaffs, deleteStaff,
   staffChangePassword,
-  signOut,
-  getStudentProfile, getStaffProfile,
+  getStaffProfile,
   matchFingerprint, initFingerData,
 } = require('../controllers/user_controller');
 
@@ -41,9 +39,6 @@ router.route('/students/:id/fingerprint').post(wrapAsync(matchFingerprint));
 
 router.route('/students/fingerprint/:id').delete(wrapAsync(initFingerData));
 
-router.route('/students/profile').get(wrapAsync(getStudentProfile));
-router.route('/students/password').put(Validator.changePassword, wrapAsync(studentChangePassword));
-
 router.route('/students').post(Validator.createStudent, wrapAsync(createStudent));
 router.route('/students').get(wrapAsync(getStudents));
 router.route('/students/:id').get(wrapAsync(getOneStudent));
@@ -59,8 +54,5 @@ router.route('/staffs/password').put(Validator.changePassword, wrapAsync(staffCh
 router.route('/staffs').post(Validator.createStaff, wrapAsync(createStaff));
 router.route('/staffs').get(wrapAsync(getStaffs));
 router.route('/staffs/:id').delete(wrapAsync(deleteStaff));
-
-// clear session
-router.route('/signout').post(wrapAsync(signOut));
 
 module.exports = router;
