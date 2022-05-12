@@ -114,14 +114,14 @@ const deleteStaff = async (req, res) => {
 const studentSignIn = async (req, res) => {
   const { email, password } = res.locals.signIn;
   const result = await User.studentSignIn(email, password);
-  if (result === 0) {
-    return res.status(500).json({ error: { message: 'Signin failed' } });
+  if (result.code === 1010) {
+    req.session.user = { student_id: result.student_id };
+    return res.status(200).json({ data: { message: 'Signin successfully' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: { message: 'Signin failed due to invalid input' } });
+  if (result.code === 2010) {
+    return res.status(500).json({ error: { message: result.message } });
   }
-  req.session.user = { role: 'student', email };
-  return res.status(200).json({ data: { message: 'Signin successfully' } });
+  return res.status(400).json({ error: { message: result.message } });
 };
 
 const studentChangePassword = async (req, res) => {
@@ -175,14 +175,14 @@ const studentResetPassword = async (req, res) => {
 const staffSignIn = async (req, res) => {
   const { email, password } = res.locals.signIn;
   const result = await User.staffSignIn(email, password);
-  if (result === 0) {
-    return res.status(500).json({ error: { message: 'Signin failed' } });
+  if (result.code === 1010) {
+    req.session.user = { staff_id: result.staff_id };
+    return res.status(200).json({ data: { message: 'Signin successfully' } });
   }
-  if (result === -1) {
-    return res.status(400).json({ error: { message: 'Signin failed due to invalid input' } });
+  if (result.code === 2010) {
+    return res.status(500).json({ error: { message: result.message } });
   }
-  req.session.user = { role: 'staff', email };
-  return res.status(200).json({ data: { message: 'Signin successfully' } });
+  return res.status(400).json({ error: { message: result.message } });
 };
 
 const staffChangePassword = async (req, res) => {
@@ -246,9 +246,9 @@ const signOut = async (req, res) => {
 
 const getStudentProfile = async (req, res) => {
   const { user } = req.session;
-  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const profile = await User.getStudentProfile(user.email);
-  res.status(200).json({ data: profile });
+  if (!user || !user.student_id) { return res.status(401).json({ error: 'Unauthorized' }); }
+  const profile = await User.getStudentProfile(user.student_id);
+  return res.status(200).json({ data: profile });
 };
 
 const getOneStudent = async (req, res) => {
@@ -261,11 +261,11 @@ const getOneStudent = async (req, res) => {
 
 const getStaffProfile = async (req, res) => {
   const { user } = req.session;
-  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  if (user.role !== 'staff') { return res.status(403).json({ error: { message: 'Forbidden' } }); }
+  if (!user) { return res.status(401).json({ error: 'Unauthorized' }); }
+  if (!user.staff_id) { return res.status(403).json({ error: { message: 'Forbidden' } }); }
 
-  const profile = await User.getStaffProfile(user.email);
-  res.status(200).json({ data: profile });
+  const profile = await User.getStaffProfile(user.staff_id);
+  return res.status(200).json({ data: profile });
 };
 
 const matchFingerprint = async (req, res) => {

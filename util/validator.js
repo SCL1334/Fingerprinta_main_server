@@ -118,9 +118,9 @@ const createStudentLeaveSchema = Joi.object({
   end: Joi.string().regex(timeFormat).required(),
   hours: Joi.number().integer().min(0).max(24),
   approval: Joi.number().integer().min(0).max(2),
-  reason: Joi.string().max(50).regex(prohibit, { invert: true }),
-  note: Joi.string().max(50).regex(prohibit, { invert: true }),
-  certificate_url: Joi.string(),
+  reason: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
+  note: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
+  certificate_url: Joi.string().allow('', null),
 });
 
 const editStudentLeaveSchema = Joi.object({
