@@ -214,14 +214,15 @@ const studentSignIn = async (email, password) => {
   }
 };
 
-const changePassword = async (role, email, password, newPassword) => {
+const changePassword = async (role, id, password, newPassword) => {
   try {
-    const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE email = ?`, [email]);
+    const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE id = ?`, [id]);
+    console.log(users);
     if (users.length === 1) {
       const match = await bcrypt.compare(password, users[0].password);
       if (match) {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
-        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE email = ?`, [hashedPassword, email]);
+        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE id = ?`, [hashedPassword, id]);
         return { code: 1020 };
       }
     }

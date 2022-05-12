@@ -126,11 +126,10 @@ const studentSignIn = async (req, res) => {
 
 const studentChangePassword = async (req, res) => {
   const role = 'student';
-  const { user } = req.session;
-  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const { email } = user;
+  const id = req.session.user.student_id;
+
   const { password, new_password: newPassword } = res.locals.passwords;
-  const result = await User.changePassword(role, email, password, newPassword);
+  const result = await User.changePassword(role, id, password, newPassword);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
   } else if (result.code < 3000) {
@@ -187,11 +186,10 @@ const staffSignIn = async (req, res) => {
 
 const staffChangePassword = async (req, res) => {
   const role = 'staff';
-  const { user } = req.session;
-  if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const { email } = user;
+  const id = req.session.user.staff_id;
+
   const { password, new_password: newPassword } = res.locals.passwords;
-  const result = await User.changePassword(role, email, password, newPassword);
+  const result = await User.changePassword(role, id, password, newPassword);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Update password successfully' } });
   } else if (result.code < 3000) {
