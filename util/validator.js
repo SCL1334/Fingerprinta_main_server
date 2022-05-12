@@ -7,7 +7,7 @@ const dateFormat = ['YYYY-MM-DD', 'YYYYMMDD'];
 const prohibit = /[$(){}<>]/;
 
 // 00:00 to 23:59
-const timeFormat = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+const timeFormat = /^([01][0-9]|2[0-3]):([0-5][0-9])(:[0-5][0-9]?)?$/;
 
 // min length of password
 const pwdMin = 4;
@@ -131,9 +131,9 @@ const editStudentLeaveSchema = Joi.object({
   end: Joi.string().regex(timeFormat),
   hours: Joi.number().integer().min(0).max(24),
   approval: Joi.number().integer().min(0).max(2),
-  reason: Joi.string().max(50).regex(prohibit, { invert: true }),
-  note: Joi.string().max(50).regex(prohibit, { invert: true }),
-  certificate_url: Joi.string(),
+  reason: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
+  note: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
+  certificate_url: Joi.string().allow('', null),
 });
 
 const idSchema = Joi.object({
@@ -386,7 +386,6 @@ const createStudentLeave = async (req, res, next) => {
   leave.student_id = studentId;
   try {
     const validLeave = await createStudentLeaveSchema.validateAsync(leave);
-    console.log(validLeave);
     res.locals.leave = validLeave;
     return next();
   } catch (error) {

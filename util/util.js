@@ -58,9 +58,11 @@ const getS3Url = async (targetPathName) => {
 
 const authentication = (needStaff = 0) => function (req, res, next) {
   const { user } = req.session;
+  console.log(user);
   if (!user) {
     return res.status(401).send({ error: { message: 'Unauthorized' } });
   }
+
   // staff use
   if (needStaff === 1) {
     if (!user.staff_id) { return res.status(403).send({ error: { message: 'Forbidden' } }); }
