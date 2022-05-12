@@ -113,7 +113,7 @@ $(document).ready(async () => {
 
     // punch today
     try {
-      const punchTodayRaw = await axios.get(`api/1.0/students/${id}/punches?from=${today}&to=${today}`);
+      const punchTodayRaw = await axios.get(`api/1.0/my/punches?from=${today}&to=${today}`);
       const punchToday = punchTodayRaw.data.data;
       const punchHead = ['上課打卡', '下課打卡'].reduce((acc, cur) => {
         acc.append($('<td></td>').text(cur));
@@ -135,7 +135,7 @@ $(document).ready(async () => {
 
     // leave total
     try {
-      const leavesTotalRes = await axios.get(`api/1.0/students/${id}/leaves/hours`);
+      const leavesTotalRes = await axios.get('api/1.0/my/leaves/hours');
       const leavesTotalResult = leavesTotalRes.data.data;
       $('.leave_total').append($('<h5></h5>').text(`目前已核准請假時數 累計:${leavesTotalResult.leaves_hours}小時`));
     } catch (err) {
@@ -158,7 +158,7 @@ $(document).ready(async () => {
           if (table) { table.text(''); }
           const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
           const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-          const attendanceSearchRes = await axios.get(`/api/1.0/students/${id}/attendances${from}${to}`);
+          const attendanceSearchRes = await axios.get(`/api/1.0/my/attendances${from}${to}`);
           const attendanceSearchResult = attendanceSearchRes.data.data;
           table = $('<table></table>').attr('class', 'attendance_result table').css('width', '100%');
           const tr = $('<tr></tr>');
@@ -211,7 +211,7 @@ $(document).ready(async () => {
         leaveForm = `
         <p class="font-monospace text-center fs-2">請假申請表單</p>
         <div class="leave_form">
-        <form action="/api/1.0/students/${id}/leaves" method="POST">
+        <form action="/api/1.0/my/leaves" method="POST">
           <div class="mb-3">
             <label for="leave_type" class="form-label">請假類型</label>
             <select class="form-select" id='leave_type'>
@@ -268,7 +268,7 @@ $(document).ready(async () => {
               allowEscapeKey: false,
             });
             const certificateImg = $('#leave_certificate').prop('files')[0];
-            const s3UrlRes = await axios.get(`/api/1.0/students/${id}/s3url`);
+            const s3UrlRes = await axios.get('/api/1.0/my/s3url');
             const s3UrlResult = s3UrlRes.data;
             if (!s3UrlResult) {
               alert('檔案上傳失敗');
@@ -328,7 +328,7 @@ $(document).ready(async () => {
             $('.leave_result').remove();
             const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
             const to = $('.search_to').val() ? `&to=${$('.search_to').val()}`.replaceAll('-', '') : '';
-            const leaveSearchRes = await axios.get(`/api/1.0/students/${id}/leaves${from}${to}`);
+            const leaveSearchRes = await axios.get(`/api/1.0/my/leaves${from}${to}`);
             const leaveSearchResult = leaveSearchRes.data.data;
             const table = $('<table></table>').attr('class', 'leave_result table');
             const tr = $('<tr></tr>');
@@ -365,6 +365,10 @@ $(document).ready(async () => {
                           <select class="form-select" id='edit_type'>
                             ${leaveTypeOptions}
                           </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="date" class="form-label">請假日期</label>
+                          <input id="edit_date" class="form-control" name='date' type='date'>
                         </div>
                         <div class="mb-3">
                           <label for="leave_start" class="form-label">請假開始時間</label>
@@ -443,7 +447,7 @@ $(document).ready(async () => {
                   const start = $(callEdit.target).parent().siblings('.leave_start').text();
                   const end = $(callEdit.target).parent().siblings('.leave_end').text();
                   const hours = $(callEdit.target).parent().siblings('.leave_hours').text();
-                  $('#edit_date').text(date);
+                  $('#edit_date').val(date);
                   $('#edit_type').val(leaveTypeId);
                   $('#edit_start').val(start);
                   $('#edit_end').val(end);
@@ -454,10 +458,10 @@ $(document).ready(async () => {
                   $('#edit_leave_btn').click(async (submit) => {
                     submit.preventDefault();
                     try {
-                      const editLeaveRes = await axios(`${leavesUrl}/${leaveId}`, {
+                      const editLeaveRes = await axios(`/api/1.0/my/leaves/${leaveId}`, {
                         method: 'PUT',
                         data: {
-                          date,
+                          date: $('#edit_date').val(),
                           leave_type_id: $('#edit_type').val(),
                           start: $('#edit_start').val(),
                           end: $('#edit_end').val(),
@@ -487,7 +491,7 @@ $(document).ready(async () => {
               const deleteBtn = $('<button></button>').attr('class', 'btn btn-outline-dark').text('刪除').click(async (deleteEvent) => {
                 deleteEvent.preventDefault();
                 try {
-                  const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
+                  const deleteRes = await axios.delete(`/api/1.0/my/leaves/${leaveSearch.id}`);
                   const deleteResult = deleteRes.data;
                   if (deleteResult) { $('.search_btn').trigger('click'); }
                 } catch (err) {

@@ -17,13 +17,11 @@ $(document).ready(() => {
       const { data } = await responseData;
       if (data) {
         // redirect to profile page
-        console.log(location.href);
         location.href = location.href.replace('_signin.html', '.html');
       }
     } catch (err) {
       alert('登入失敗');
       console.log(err);
-      console.log(err.response.data);
     }
   });
 });
