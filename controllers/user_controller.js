@@ -115,7 +115,7 @@ const studentSignIn = async (req, res) => {
   const { email, password } = res.locals.signIn;
   const result = await User.studentSignIn(email, password);
   if (result.code === 1010) {
-    req.session.user = { student_id: result.student_id };
+    req.session.user = { student_id: result.student_id, email };
     return res.status(200).json({ data: { message: 'Signin successfully' } });
   }
   if (result.code === 2010) {
@@ -175,7 +175,7 @@ const staffSignIn = async (req, res) => {
   const { email, password } = res.locals.signIn;
   const result = await User.staffSignIn(email, password);
   if (result.code === 1010) {
-    req.session.user = { staff_id: result.staff_id };
+    req.session.user = { staff_id: result.staff_id, email };
     return res.status(200).json({ data: { message: 'Signin successfully' } });
   }
   if (result.code === 2010) {
@@ -245,7 +245,7 @@ const signOut = async (req, res) => {
 const getStudentProfile = async (req, res) => {
   const { user } = req.session;
   if (!user || !user.student_id) { return res.status(401).json({ error: 'Unauthorized' }); }
-  const profile = await User.getStudentProfile(user.student_id);
+  const profile = await User.getStudentProfile(user.email);
   return res.status(200).json({ data: profile });
 };
 
@@ -262,7 +262,7 @@ const getStaffProfile = async (req, res) => {
   if (!user) { return res.status(401).json({ error: 'Unauthorized' }); }
   if (!user.staff_id) { return res.status(403).json({ error: { message: 'Forbidden' } }); }
 
-  const profile = await User.getStaffProfile(user.staff_id);
+  const profile = await User.getStaffProfile(user.email);
   return res.status(200).json({ data: profile });
 };
 

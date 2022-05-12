@@ -217,7 +217,6 @@ const studentSignIn = async (email, password) => {
 const changePassword = async (role, id, password, newPassword) => {
   try {
     const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE id = ?`, [id]);
-    console.log(users);
     if (users.length === 1) {
       const match = await bcrypt.compare(password, users[0].password);
       if (match) {
@@ -240,7 +239,7 @@ const setHashedMail = async (email) => {
   }
   try {
     const hash = await bcrypt.hash(email, salt);
-    await Cache.set(hash, email, { EX: resetExpire, NX: true });
+    await Cache.v4.set(hash, email, { EX: resetExpire, NX: true });
     return { code: 1010, data: { hash } };
   } catch (err) {
     console.log(err);
@@ -254,8 +253,8 @@ const getMailByHash = async (hash) => {
     return { code: 2050 };
   }
   try {
-    const email = await Cache.get(hash);
-    await Cache.del(hash);
+    const email = await Cache.v4.get(hash);
+    await Cache.v4.del(hash);
     return { code: 1000, data: { email } };
   } catch (err) {
     console.log(err);
@@ -292,7 +291,7 @@ const staffSignIn = async (email, password) => {
   }
 };
 
-const getStudentProfile = async (studentId) => {
+const getStudentProfile = async (email) => {
   try {
     const [profiles] = await promisePool.query(`
       SELECT u.id, u.name, u.email, c.batch, cg.name as class_group_name, ct.name as class_type_name 
@@ -300,8 +299,8 @@ const getStudentProfile = async (studentId) => {
       LEFT OUTER JOIN class as c ON u.class_id = c.id 
       LEFT OUTER JOIN class_group as cg ON cg.id = c.class_group_id 
       LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id 
-      WHERE u.id = ?;
-      `, [studentId]);
+      WHERE u.email = ?;
+      `, [email]);
     const profile = profiles[0];
     return profile;
   } catch (err) {
@@ -310,9 +309,9 @@ const getStudentProfile = async (studentId) => {
   }
 };
 
-const getStaffProfile = async (staffId) => {
+const getStaffProfile = async (email) => {
   try {
-    const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE id = ?;', [staffId]);
+    const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE email = ?;', [email]);
     const profile = profiles[0];
     // no need to check staff classes currently
     // const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);

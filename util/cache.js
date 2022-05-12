@@ -20,9 +20,10 @@ redisClient.on('ready', () => {
   console.log('Redis is ready');
 });
 
-redisClient.on('error', () => {
+redisClient.on('error', (err) => {
   redisClient.ready = false;
   console.log('Error in Redis');
+  console.log(err);
 });
 
 redisClient.on('end', () => {
