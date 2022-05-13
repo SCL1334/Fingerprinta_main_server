@@ -226,7 +226,7 @@ const createClass = async (req, res, next) => {
   };
   try {
     const validClass = await createClassSchema.validateAsync(clas);
-    res.locals.class = validClass;
+    res.locals.clas = validClass;
     return next();
   } catch (error) {
     console.log(error);

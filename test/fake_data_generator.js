@@ -1,8 +1,7 @@
 require('dotenv').config();
-const bcrypt = require('bcrypt');
+const argon2 = require('argon2');
 const dayjs = require('dayjs');
 
-const salt = parseInt(process.env.BCRYPT_SALT, 10);
 const { promisePool } = require('../models/mysqlcon');
 
 const truncateTable = async (tableName) => {
@@ -20,7 +19,8 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
     for (let i = startId; i < startId + num; i += 1) {
       const name = `${role[roleId]}_${i}`;
       const email = `${name}@test.com`;
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await argon2.hash(password);
+      console.log(hashedPassword.length);
       if (classId) {
         users.push([name, email, hashedPassword, classId]);
       } else if (classId === null) {
@@ -43,7 +43,7 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
 // gen 15 students first, same class
 // roleId startId num classId
 // truncateTable('student');
-// createFakeUser(1, 1, 7, 1);
+createFakeUser(1, 1, 7, 1);
 // createFakeUser(1, 8, 7, 2);
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
@@ -88,7 +88,7 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-createFakePunch(30);
+// createFakePunch(30);
 
 const createLeaveTypes = async () => {
   try {

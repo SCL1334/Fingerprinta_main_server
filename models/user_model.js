@@ -1,6 +1,5 @@
-const bcrypt = require('bcrypt');
+const argon2 = require('argon2');
 
-const salt = parseInt(process.env.BCRYPT_SALT, 10);
 const resetExpire = parseInt(process.env.RESET_EXPIRE, 10);
 const { promisePool } = require('./mysqlcon');
 const Cache = require('../util/cache');
@@ -8,7 +7,7 @@ const Cache = require('../util/cache');
 // account manage
 const createStudent = async (name, email, password, classId) => {
   try {
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await argon2.hash(password);
     const student = {
       name,
       email,
@@ -38,7 +37,7 @@ const createClassStudents = async (students, classId) => {
     };
 
     await forEachAsync(students, async (student) => {
-      student.password = await bcrypt.hash(student.birth, salt);
+      student.password = await argon2.hash(student.birth);
       delete student.birth;
     });
 
@@ -136,7 +135,7 @@ const deleteStudent = async (studentId) => {
 
 const createStaff = async (name, email, password) => {
   try {
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await argon2.hash(password);
     const staff = {
       name,
       email,
@@ -204,7 +203,7 @@ const studentSignIn = async (email, password) => {
   try {
     const [students] = await promisePool.query('SELECT id, email, password FROM student WHERE email = ?', [email]);
     if (students.length === 1) {
-      const match = await bcrypt.compare(password, students[0].password);
+      const match = await argon2.verify(students[0].password, password);
       if (match) return { code: 1010, student_id: students[0].id };
     }
     return { code: 4010, message: 'email or password not match' };
@@ -218,10 +217,10 @@ const changePassword = async (role, id, password, newPassword) => {
   try {
     const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE id = ?`, [id]);
     if (users.length === 1) {
-      const match = await bcrypt.compare(password, users[0].password);
+      const match = await argon2.compare(password, users[0].password);
       if (match) {
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE id = ?`, [hashedPassword, id]);
+        const hashedPassword = await argon2.hash(newPassword, salt);
+        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE email = ?`, [hashedPassword, email]);
         return { code: 1020 };
       }
     }
@@ -238,8 +237,8 @@ const setHashedMail = async (email) => {
     return { code: 2050 };
   }
   try {
-    const hash = await bcrypt.hash(email, salt);
-    await Cache.v4.set(hash, email, { EX: resetExpire, NX: true });
+    const hash = await argon2.hash(email);
+    await Cache.set(hash, email, { EX: resetExpire, NX: true });
     return { code: 1010, data: { hash } };
   } catch (err) {
     console.log(err);
@@ -266,7 +265,7 @@ const resetPassword = async (role, email, newPassword) => {
   try {
     const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE email = ?`, [email]);
     if (users.length === 1) {
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      const hashedPassword = await argon2.hash(newPassword);
       await promisePool.query(`UPDATE ${role} SET password = ? , password_default = 0 WHERE email = ?`, [hashedPassword, email]);
       return { code: 1020 };
     }
@@ -281,7 +280,7 @@ const staffSignIn = async (email, password) => {
   try {
     const [staffs] = await promisePool.query('SELECT id, email, password FROM staff WHERE email = ?', [email]);
     if (staffs.length === 1) {
-      const match = await bcrypt.compare(password, staffs[0].password);
+      const match = await argon2.verify(staffs[0].password, password);
       if (match) return { code: 1010, staff_id: staffs[0].id };
     }
     return { code: 4010, message: 'email or password not match' };
