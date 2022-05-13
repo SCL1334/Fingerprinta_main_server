@@ -1,4 +1,5 @@
 const argon2 = require('argon2');
+const objectHash = require('object-hash');
 
 const resetExpire = parseInt(process.env.RESET_EXPIRE, 10);
 const { promisePool } = require('./mysqlcon');
@@ -217,10 +218,10 @@ const changePassword = async (role, id, password, newPassword) => {
   try {
     const [users] = await promisePool.query(`SELECT email, password FROM ${role} WHERE id = ?`, [id]);
     if (users.length === 1) {
-      const match = await argon2.compare(password, users[0].password);
+      const match = await argon2.verify(users[0].password, password);
       if (match) {
         const hashedPassword = await argon2.hash(newPassword);
-        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE email = ?`, [hashedPassword, email]);
+        await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE id = ?`, [hashedPassword, id]);
         return { code: 1020 };
       }
     }
@@ -237,7 +238,7 @@ const setHashedMail = async (email) => {
     return { code: 2050 };
   }
   try {
-    const hash = await argon2.hash(email);
+    const hash = await objectHash(email);
     await Cache.v4.set(hash, email, { EX: resetExpire, NX: true });
     return { code: 1010, data: { hash } };
   } catch (err) {
