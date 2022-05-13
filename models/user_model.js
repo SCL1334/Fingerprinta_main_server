@@ -219,7 +219,7 @@ const changePassword = async (role, id, password, newPassword) => {
     if (users.length === 1) {
       const match = await argon2.compare(password, users[0].password);
       if (match) {
-        const hashedPassword = await argon2.hash(newPassword, salt);
+        const hashedPassword = await argon2.hash(newPassword);
         await promisePool.query(`UPDATE ${role} SET password = ?, password_default = 0 WHERE email = ?`, [hashedPassword, email]);
         return { code: 1020 };
       }
