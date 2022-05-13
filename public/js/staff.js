@@ -10,6 +10,9 @@ const attendanceColor = {
 };
 const sensorApiUrl = '/api/1.0/sensor';
 
+const midSpace = '<div style="height:50px"></div>';
+const smallSpace = '<div style="height:20px"></div>';
+
 function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
@@ -90,7 +93,7 @@ async function setPunchTime() {
   // $('body').children('.modal').remove();
 
   const classRoutineTable = $('<table></table>').attr('id', 'class_routine_table');
-  $('.content').append($('<div></div>').append(createBtn('call_create', '新增')));
+  $('.content').append($('<div></div>').append(createBtn('call_create btn btn-outline-success btn-sm', '新增')));
   $('.content').append(classRoutineTable);
   const thead = $('<thead></thead>');
   const heads = ['培訓班級類型', '星期', '上課時間', '下課時間', '', ''];
@@ -218,13 +221,13 @@ async function setPunchTime() {
         {
           data: 'edit_class_routine',
           render() {
-            return createBtn('routine_edit', '編輯');
+            return createBtn('routine_edit btn btn-outline-primary btn-sm', '編輯');
           },
         },
         {
           data: 'delete_class_routine',
           render() {
-            return createBtn('routine_delete', '刪除');
+            return createBtn('routine_delete btn btn-outline-danger btn-sm', '刪除');
           },
         },
       ],
@@ -294,7 +297,11 @@ async function setPunchTime() {
               }
             } catch (err) {
               console.log(err);
-              alert('update fail');
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '編輯失敗，請重新操作',
+              });
             }
           });
         });
@@ -309,12 +316,22 @@ async function setPunchTime() {
             }
           } catch (err) {
             console.log(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '刪除失敗，請重新操作',
+            });
           }
         });
       },
     });
   } catch (err) {
     console.log(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: '讀取資料失敗，請稍後再試',
+    });
   }
 }
 
@@ -327,18 +344,21 @@ async function accountManage() {
   const staffAccounts = $('<div></div>').attr('class', 'staff_account btn btn-outline-dark').text('校務人員帳號管理');
   const accountManageBoard = $('<div></div>').attr('class', 'account_manage_board');
   accountCompenents.append(studentAccounts, staffAccounts, accountManageBoard);
+  $('.content').append(smallSpace);
   $('.content').append(accountCompenents);
+
   // student account part
   async function studentManage() {
     // $('body').children('.modal').remove();
     const studentUrl = '/api/1.0/students';
     accountManageBoard.empty();
-    accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    accountManageBoard.append(smallSpace);
+    accountManageBoard.append($('<div></div>').append(createBtn('call_create btn btn-outline-success btn-sm', '新增帳號')));
 
     const studentTable = $('<table></table>').attr('class', 'students_account_table');
     accountManageBoard.append(studentTable);
     const thead = $('<thead></thead>');
-    const heads = ['ID', '名稱', 'email', '班級', '累計請假時數', '指紋ID', '設定指紋', '移除指紋', '更改資訊', '刪除帳號'];
+    const heads = ['ID', '名稱', 'email', '班級', '累計請假時數', '指紋ID', '', ''];
     const tr = $('<tr></tr>');
     heads.forEach((head) => {
       const th = $('<th></th>').html(head);
@@ -415,21 +435,6 @@ async function accountManage() {
       </div>
       `;
 
-      // studentAddForm = `
-      // <div class="modal fade show" id="student_create_form" role="dialog">
-      //   <form action="${studentUrl}" method="POST">
-      //     <select class='create_class'>
-      //       <option value=null>請選擇學生班級</option>
-      //       ${classesOptions}
-      //     </select>
-      //     <input class='create_name' name='name' type='text' placeholder='請輸入名稱'>
-      //     <input class='create_email' name='email' type='email' placeholder='請輸入Email'>
-      //     <input class='create_password' name='password' type='password' placeholder='請輸入密碼'>
-      //     <button class='submit' type="submit">送出</button>
-      //   </form>
-      // </div>
-      // `;
-
       studentEditForm = `
       <div class="col-3 modal fade" role="dialog" id="student_edit_form">
         <div class="modal-dialog">
@@ -463,6 +468,11 @@ async function accountManage() {
       `;
     } catch (err) {
       console.log(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '讀取資料失敗，請稍後再試',
+      });
     }
 
     accountManageBoard.append(studentAddForm);
@@ -599,39 +609,27 @@ async function accountManage() {
         },
         { data: 'finger_id' },
         {
-          data: 'finger_enroll',
           render() {
-            return createBtn('finger_enroll', '設定指紋');
+            return createBtn('finger_enroll btn btn-outline-success btn-sm', '設定指紋') + createBtn('finger_remove btn btn-outline-danger btn-sm', '移除指紋');
           },
         },
         {
-          data: 'finger_remove',
           render() {
-            return createBtn('finger_remove', '移除指紋');
-          },
-        },
-        {
-          data: 'student_edit',
-          render() {
-            return createBtn('student_edit', '更改資訊');
-          },
-        },
-        {
-          data: 'student_delete',
-          render() {
-            return createBtn('student_delete', '刪除帳號');
+            return createBtn('student_edit btn btn-outline-primary btn-sm', '更改資訊') + createBtn('student_delete btn btn-outline-danger btn-sm', '刪除帳號');
           },
         },
       ],
       columnDefs: [
         {
           targets: 0,
+          width: '40px',
           createdCell(td, cellData, rowData, row, col) {
             $(td).attr('class', 'student_id');
           },
         },
         {
           targets: 1,
+          width: '60px',
           createdCell(td, cellData, rowData, row, col) {
             $(td).attr('class', 'name');
           },
@@ -650,7 +648,12 @@ async function accountManage() {
           },
         },
         {
+          target: 4,
+          width: '134px',
+        },
+        {
           targets: 5,
+          width: '100px',
           createdCell(td, cellData, rowData, row, col) {
             $(td).attr('class', 'finger_id');
           },
@@ -746,7 +749,6 @@ async function accountManage() {
               }
             } catch (err) {
               console.log(err);
-              console.log(err);
               Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
@@ -782,7 +784,7 @@ async function accountManage() {
     // $('#filter_value').keyon((e) => { if (e.key === 'Enter') { studentShow.fnDraw(); } });
     const leavesHoursFilter = $('<input type="number" id="filter_value">');
     leavesHoursFilter.keypress((e) => { if (e.which === 13) { studentShow.draw(); } });
-    $('<label>搜尋請假時數大於</label>').append(leavesHoursFilter).insertAfter($('.dataTables_length'));
+    $('<label>搜尋請假時數大於等於</label>').append(leavesHoursFilter).insertAfter($('.dataTables_length'));
     $('.dataTables_length').remove();
   }
 
@@ -793,7 +795,8 @@ async function accountManage() {
     // $('body').children('.modal').remove();
     const staffUrl = '/api/1.0/staffs';
     accountManageBoard.empty();
-    accountManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    accountManageBoard.append(smallSpace);
+    accountManageBoard.append($('<div></div>').append(createBtn('call_create btn btn-outline-success btn-sm', '新增帳號')));
     const staffAccountTable = $('<table></table>').attr('id', 'staff_account_table');
     accountManageBoard.append(staffAccountTable);
     const thead = $('<thead></thead>');
@@ -828,7 +831,7 @@ async function accountManage() {
                   <label for="password" class="form-label">密碼</label>
                   <input id="create_password" class="form-control" name='password' type='password'>
                 </div>
-                <button type="submit" id="create_staff_btn" class="submit btn btn-dark">新增帳號</button>
+                <button type="submit" id="create_staff_btn" class="submit btn btn-dark">送出</button>
               </form>
             </div>
           </div>
@@ -893,7 +896,7 @@ async function accountManage() {
         {
           data: 'staff_delete',
           render() {
-            return createBtn('staff_delete', '刪除');
+            return createBtn('staff_delete btn btn-outline-danger btn-sm', '刪除帳號');
           },
         },
       ],
@@ -930,6 +933,12 @@ async function accountManage() {
             }
           } catch (err) {
             console.log(err);
+            console.log(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '帳號刪除失敗',
+            });
           }
         });
       },
@@ -941,6 +950,7 @@ async function accountManage() {
 // class setting
 async function classManage() {
   $('.content').empty();
+  $('.content').append(smallSpace);
   const classCompenents = $('<div></div>').attr('class', 'class_compenent');
   const classTypes = $('<div></div>').attr('class', 'class_type btn btn-outline-dark').text('培訓形式設定');
   const classGroups = $('<div></div>').attr('class', 'class_group btn btn-outline-dark').text('培訓班別設定');
@@ -952,6 +962,7 @@ async function classManage() {
   // classes basic manage
   async function classBasicSetting() {
     classManageBoard.empty();
+    classManageBoard.append(smallSpace);
     const classesUrl = '/api/1.0/classes';
 
     // init table
@@ -965,7 +976,7 @@ async function classManage() {
     });
     thead.append(tr);
     classTable.append(thead);
-    classManageBoard.append($('<div></div>').append(createBtn('call_create', '新增')));
+    classManageBoard.append($('<div></div>').append(createBtn('call_create btn btn-outline-success btn-sm', '新增')));
     classManageBoard.append(classTable);
 
     // class Add form building
@@ -1091,19 +1102,19 @@ async function classManage() {
             {
               data: 'edit_class',
               render() {
-                return createBtn('class_edit', '編輯');
+                return createBtn('class_edit btn btn-outline-primary btn-sm', '編輯');
               },
             },
             {
               data: 'backup_leaves',
               render() {
-                return createBtn('class_leaves_backup', '備份');
+                return createBtn('class_leaves_backup btn btn-outline-info btn-sm', '備份');
               },
             },
             {
               data: 'delete_class',
               render() {
-                return createBtn('class_delete', '刪除');
+                return createBtn('class_delete btn btn-outline-danger btn-sm', '刪除');
               },
             },
           ],
@@ -1245,10 +1256,19 @@ async function classManage() {
         });
       } catch (err) {
         console.log(err);
-        console.log(err.response.data);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '讀取資料失敗，請稍後再試',
+        });
       }
     } catch (err) {
       console.log(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '讀取資料失敗，請稍後再試',
+      });
     }
   }
   classes.click(classBasicSetting);
@@ -1257,9 +1277,11 @@ async function classManage() {
   classTypes.click(async () => {
     const classTypeUrl = '/api/1.0/classes/types';
     classManageBoard.empty();
+    classManageBoard.append(smallSpace);
 
-    const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').val('請輸入培訓形式名稱');
-    const addBtn = $('<button></button>').attr('class', 'add_class_type_btn').text('新增');
+    const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').attr('class', 'form-control')
+      .attr('placeholder', '新增培訓形式名稱');
+    const addBtn = $('<button></button>').attr('class', 'add_class_type_btn btn btn-outline-success btn-sm').text('新增');
     const table = $('<table></table>').attr('class', 'class_type_result table');
     const tr = $('<tr></tr>');
     const heads = ['ID', '培訓形式名稱', ''];
@@ -1268,7 +1290,7 @@ async function classManage() {
       tr.append(th);
     });
     table.append(tr);
-    classManageBoard.append(add, addBtn, table);
+    classManageBoard.append(add, addBtn, midSpace, table);
 
     addBtn.click(async () => {
       const newType = $('.add_class_type').val();
@@ -1288,7 +1310,7 @@ async function classManage() {
           const td_id = $('<td></td>').text(addTypeResult.data.insert_id);
           const td_name = $('<td></td>').text(newType);
           const td_delete = $('<td></td>');
-          const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+          const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
             const deleteTypeRes = await axios.delete(`${classTypeUrl}/${addTypeResult.data.insert_id}`);
             const deleteTypeResult = deleteTypeRes.data;
             if (deleteTypeResult) {
@@ -1300,6 +1322,11 @@ async function classManage() {
           table.append(tr);
         }
       } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '新增資料失敗，請稍後再試',
+        });
         console.log(err);
       }
     });
@@ -1311,7 +1338,7 @@ async function classManage() {
         const td_id = $('<td></td>').text(classType.id);
         const td_name = $('<td></td>').text(classType.name);
         const td_delete = $('<td></td>');
-        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+        const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
           const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
           const deleteTypeResult = deleteTypeRes.data;
           if (deleteTypeResult) {
@@ -1324,6 +1351,11 @@ async function classManage() {
       });
     } catch (err) {
       console.log(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '讀取資料失敗，請稍後再試',
+      });
     }
   });
 
@@ -1331,9 +1363,11 @@ async function classManage() {
   classGroups.click(async () => {
     const classGroupUrl = '/api/1.0/classes/groups';
     classManageBoard.empty();
+    classManageBoard.append(smallSpace);
 
-    const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').val('請輸入培訓班別名稱');
-    const addBtn = $('<button></button>').attr('class', 'add_class_group_btn').text('新增');
+    const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').attr('class', 'form-control')
+      .attr('placeholder', '新增培訓班別名稱');
+    const addBtn = $('<button></button>').attr('class', 'add_class_group_btn btn btn-outline-success btn-sm').text('新增');
     const table = $('<table></table>').attr('class', 'class_group_result table');
     const tr = $('<tr></tr>');
     const heads = ['ID', '培訓班別名稱', ''];
@@ -1342,7 +1376,7 @@ async function classManage() {
       tr.append(th);
     });
     table.append(tr);
-    classManageBoard.append(add, addBtn, table);
+    classManageBoard.append(add, addBtn, midSpace, table);
 
     addBtn.click(async () => {
       const newGroup = $('.add_class_group').val();
@@ -1362,7 +1396,7 @@ async function classManage() {
           const td_id = $('<td></td>').text(addGroupResult.data.insert_id);
           const td_name = $('<td></td>').text(newGroup);
           const td_delete = $('<td></td>');
-          const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+          const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
             const deleteGroupRes = await axios.delete(`${classGroupUrl}/${addGroupResult.data.insert_id}`);
             const deleteGroupResult = deleteGroupRes.data;
             if (deleteGroupResult) {
@@ -1374,6 +1408,11 @@ async function classManage() {
           table.append(tr);
         }
       } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: '新增資料失敗，請稍後再試',
+        });
         console.log(err);
       }
     });
@@ -1385,7 +1424,7 @@ async function classManage() {
         const td_id = $('<td></td>').text(classGroup.id);
         const td_name = $('<td></td>').text(classGroup.name);
         const td_delete = $('<td></td>');
-        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+        const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
           const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
           const deleteGroupResult = deleteGroupRes.data;
           if (deleteGroupResult) {
@@ -1398,6 +1437,11 @@ async function classManage() {
       });
     } catch (err) {
       console.log(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '讀取資料失敗，請稍後再試',
+      });
     }
   });
 }
@@ -1405,6 +1449,7 @@ async function classManage() {
 // holiday setting
 async function exceptionManage() {
   $('.content').empty();
+  $('.content').append(smallSpace);
   const exceptionUrl = '/api/1.0/calendar/punchExceptions';
   let exceptionForm = '';
   let classTypeTable = '';
@@ -1445,7 +1490,7 @@ async function exceptionManage() {
     console.log(err.response.data);
   }
   $('.content').append(exceptionForm);
-
+  $('.content').append(smallSpace);
   // init table
   const table = $('<table></table>').attr('class', 'exception_result table');
   const tr = $('<tr></tr>');
@@ -1472,8 +1517,8 @@ async function exceptionManage() {
           class_type_id: addExceptionType,
           batch: addExceptionBatch,
           date: addExceptionDate,
-          start_time: addExceptionStart,
-          end_time: addExceptionEnd,
+          start: addExceptionStart,
+          end: addExceptionEnd,
         },
         headers: {
           'content-type': 'application/json',
@@ -1489,7 +1534,7 @@ async function exceptionManage() {
         const td_start = $('<td></td>').text(`${addExceptionStart}:00`);
         const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
         const td_delete = $('<td></td>');
-        const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+        const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
           const deleteTypeRes = await axios.delete(`${exceptionUrl}/${addExceptionResult.insert_id}`);
           const deleteTypeResult = deleteTypeRes.data;
           if (deleteTypeResult) {
@@ -1505,7 +1550,7 @@ async function exceptionManage() {
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
-        text: '新增化失敗',
+        text: '例外新增失敗',
       });
     }
   });
@@ -1516,6 +1561,7 @@ async function exceptionManage() {
     const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
     const exceptionResult = exceptionRes.data.data;
     exceptionResult.forEach((edate) => {
+      console.log(edate);
       const tr = $('<tr></tr>');
       const td_class_type = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
       const td_batch = $('<td></td>').text(edate.batch);
@@ -1523,7 +1569,7 @@ async function exceptionManage() {
       const td_start = $('<td></td>').text(edate.start);
       const td_end = $('<td></td>').text(edate.end);
       const td_delete = $('<td></td>');
-      const delete_btn = $('<button></button>').text('刪除').click(async (event) => {
+      const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
         const deleteTypeRes = await axios.delete(`${exceptionUrl}/${edate.id}`);
         const deleteTypeResult = deleteTypeRes.data;
         if (deleteTypeResult) {
@@ -1578,7 +1624,7 @@ function genRuleManage(date) {
             <input id='delete_year' name='delete_year' class="form-control" type="number" required="required">
           </div>
           <div class="float-end">
-            <button type="submit" id="delete_calendar" class="btn btn-outline-danger">刪除</button>
+            <button type="submit" id="delete_calendar" class="btn btn-outline-danger btn-sm">刪除</button>
           </div>
         </form>
       </div>
@@ -1774,6 +1820,7 @@ function genRuleManage(date) {
 async function auditLeave() {
   try {
     $('.content').empty();
+    $('.content').append(smallSpace);
     const leavesUrl = 'api/1.0/leaves';
     const leave = $('<div></div>').attr('class', 'leave').text('請假申請');
     const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
@@ -1927,7 +1974,7 @@ async function auditLeave() {
         // error handle
         const table = $('<table></table>').attr('class', 'table');
         const tr = $('<tr></tr>');
-        const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '核准/拒絕', '修改', '請假證明'];
+        const heads = ['請假日期', '請假學員', '學員班級', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '', '', '請假證明'];
         heads.forEach((head) => {
           const th = $('<th></th>').text(head);
           tr.append(th);
@@ -1963,8 +2010,8 @@ async function auditLeave() {
               $('.search_btn').trigger('click');
             }
           });
-          const approveBtn = getAuditBtn(1, '核准');
-          const rejectBtn = getAuditBtn(2, '拒絕');
+          const approveBtn = getAuditBtn(1, '核准').attr('class', 'btn btn-outline-success btn-sm');
+          const rejectBtn = getAuditBtn(2, '拒絕').attr('class', 'btn btn-outline-secondary btn-sm');
           if (leaveSearch.certificate_url) {
             const checkCertificate = $('<button></button>').text('證明連結').click(async (checkEvent) => {
               checkEvent.preventDefault();
@@ -1977,7 +2024,7 @@ async function auditLeave() {
           }
 
           const tdEdit = $('<td></td>');
-          const editBtn = $('<button></button>').text('修改').click(async (callEdit) => {
+          const editBtn = $('<button></button>').text('修改').attr('class', 'btn btn-outline-primary btn-sm').click(async (callEdit) => {
             callEdit.preventDefault();
             const callEditBtn = $(callEdit.target);
             const date = callEditBtn.parent().siblings('.leave_date').text();
@@ -2037,7 +2084,7 @@ async function auditLeave() {
               }
             });
           });
-          const deleteBtn = $('<button></button>').text('刪除').click(async (deleteEvent) => {
+          const deleteBtn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (deleteEvent) => {
             deleteEvent.preventDefault();
             try {
               const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
@@ -2169,12 +2216,13 @@ $(document).ready(async () => {
     // get attendance
     $('.get_attendances').click(async () => {
       $('.content').empty();
+      $('.content').append(smallSpace);
 
-      const attendance = $('<div></div>').attr('class', 'attendance').text('出勤查詢');
+      const attendance = $('<div></div>').attr('class', 'attendance');
 
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-04-25');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-02');
-      const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢');
+      const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');

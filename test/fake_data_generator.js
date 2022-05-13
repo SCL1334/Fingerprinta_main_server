@@ -43,7 +43,7 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
 // gen 15 students first, same class
 // roleId startId num classId
 // truncateTable('student');
-createFakeUser(1, 1, 7, 1);
+// createFakeUser(1, 1, 7, 1);
 // createFakeUser(1, 8, 7, 2);
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
@@ -111,7 +111,7 @@ const createFakeLeaveApplications = async (days, rate) => {
     const [types] = await promisePool.query('SELECT id FROM leave_type');
     const random = (num) => Math.floor(Math.random() * num);
     const randomHour = () => Math.floor(Math.random() * 5);
-    const description = 'test';
+    const reason = 'test';
     const applications = [];
 
     for (let i = days - 1; i >= 0; i -= 1) {
@@ -138,11 +138,11 @@ const createFakeLeaveApplications = async (days, rate) => {
         }
         console.log(hours);
         const type = types[random(types.length)].id;
-        applications.push([student.id, type, description, date.format('YYYY-MM-DD'), start.format('HH:mm:ss'), end.format('HH:mm:ss'), hours / 60 / 60 / 1000]);
+        applications.push([student.id, type, reason, date.format('YYYY-MM-DD'), start.format('HH:mm:ss'), end.format('HH:mm:ss'), hours / 60 / 60 / 1000]);
       });
     }
     console.log(applications);
-    await promisePool.query('INSERT INTO student_leave (student_id, leave_type_id, description, date, start, end, hours) VALUES ?', [applications]);
+    await promisePool.query('INSERT INTO student_leave (student_id, leave_type_id, reason, date, start, end, hours) VALUES ?', [applications]);
     console.log('completed');
   } catch (err) {
     console.log(err);
@@ -150,4 +150,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-// createFakeLeaveApplications(15, 15);
+createFakeLeaveApplications(15, 15);
