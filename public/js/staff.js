@@ -18,31 +18,29 @@ function createBtn(clas, text) {
 }
 
 async function changePassword() {
-  console.log('text');
-  $('.content').text('');
+  $('.content').empty();
+  $('.content').append(midSpace);
   const changePasswordForm = `
-  <div class="change card">
-    <div class="card-header">
-      <div class="card-title">
-        <h3>更改密碼</h3>
+  <div class="row">
+    <form class="change_form col-6" style="margin:auto" method="put" action="/api/1.0/staffs/password">
+      <h1 class="h3 mb-3 fw-normal">更改密碼</h1>
+
+      <div class="form-floating">
+        <input type="password" class="form-control" id="password" placeholder="請輸入原始密碼" required>
+        <label for="password">原始密碼</label>
       </div>
-    </div>
-    <form class="change_form card-body" method="put" action="/api/1.0/staffs/password">
-      <div class="form-group form-floating">
-        <input id="password" name="password" type="password" placeholder="請輸入原始密碼" required>
+      <div class="form-floating">
+        <input type="password" class="form-control" id="new_password" placeholder="請輸入新密碼" required>
+        <label for="new_password">新密碼</label>
       </div>
-      <div class="form-group form-floating">
-        <input id="new_password" name="new_password" type="password" placeholder="請輸入新密碼" required>
+      <div class="form-floating">
+        <input id="confirm_password" class="form-control" type="password" placeholder="確認新密碼" required>
+        <label for="confirm_password">確認新密碼</label>
       </div>
-      <div class="form-group form-floating">
-        <input id="confirm_password" name="confirm_password" type="password" placeholder="請再次輸入新密碼" required>
-        <span id="match"></span>
-      </div>
-      <div class="card-footer">
-        <button type="submit">更改密碼</button>
-      </div>
+
+      <button class="w-100 btn btn-lg btn-btn btn-dark" type="submit">更改密碼</button>
+      <span id="match"></span>
     </form>
-    <div class="message"></div>
   </div>
   `;
   $('.content').append(changePasswordForm);
@@ -60,7 +58,6 @@ async function changePassword() {
   });
   changeForm.submit(async (event) => {
     event.preventDefault();
-    const message = $('.message');
     try {
       if (!match) { return; }
       const changeRes = await axios(changeForm.attr('action'), {
@@ -75,11 +72,16 @@ async function changePassword() {
       });
       const changeResult = await changeRes.data;
       if (changeResult) {
-        message.html('密碼更改成功').css('background-color', 'green');
+        Swal.fire('密碼更改成功');
+        location.reload();
       }
     } catch (err) {
       console.log(err);
-      message.html('密碼更改失敗').css('background-color', 'red');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '密碼更改失敗',
+      });
     }
   });
 }
