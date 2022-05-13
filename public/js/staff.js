@@ -1305,7 +1305,7 @@ async function classManage() {
     classManageBoard.empty();
     classManageBoard.append(smallSpace);
 
-    const add = $('<input>').attr('class', 'add_class_type').attr('type', 'text').attr('class', 'form-control')
+    const add = $('<input>').attr('id', 'add_class_type').attr('type', 'text').attr('class', 'form-control')
       .attr('placeholder', '新增培訓形式名稱');
     const addBtn = $('<button></button>').attr('class', 'add_class_type_btn btn btn-outline-success btn-sm').text('新增');
     const table = $('<table></table>').attr('class', 'class_type_result table');
@@ -1319,7 +1319,7 @@ async function classManage() {
     classManageBoard.append(add, addBtn, midSpace, table);
 
     addBtn.click(async () => {
-      const newType = $('.add_class_type').val();
+      const newType = $('#add_class_type').val();
       try {
         const addTypeRes = await axios(classTypeUrl, {
           method: 'POST',
@@ -1395,7 +1395,7 @@ async function classManage() {
     classManageBoard.empty();
     classManageBoard.append(smallSpace);
 
-    const add = $('<input>').attr('class', 'add_class_group').attr('type', 'text').attr('class', 'form-control')
+    const add = $('<input>').attr('id', 'add_class_group').attr('type', 'text').attr('class', 'form-control')
       .attr('placeholder', '新增培訓班別名稱');
     const addBtn = $('<button></button>').attr('class', 'add_class_group_btn btn btn-outline-success btn-sm').text('新增');
     const table = $('<table></table>').attr('class', 'class_group_result table');
@@ -1409,7 +1409,7 @@ async function classManage() {
     classManageBoard.append(add, addBtn, midSpace, table);
 
     addBtn.click(async () => {
-      const newGroup = $('.add_class_group').val();
+      const newGroup = $('#add_class_group').val();
       try {
         const addGroupRes = await axios(classGroupUrl, {
           method: 'POST',
