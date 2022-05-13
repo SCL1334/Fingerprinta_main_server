@@ -2,6 +2,21 @@ const attendanceColor = {
   0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
 };
 const leaveStatusTable = { 0: '待審核', 1: '已核准', 2: '已拒絕' };
+
+async function doubleCheckAlert(msg, confirm, deny) {
+  const decision = await Swal.fire({
+    title: msg,
+    icon: 'info',
+    showDenyButton: true,
+    confirmButtonText: confirm,
+    denyButtonText: deny,
+    confirmButtonColor: '#BD2A2E',
+    denyButtonColor: '#B2BEBF',
+  });
+  if (!decision.isConfirmed) { return false; }
+  return true;
+}
+
 const manageAttendance = async function () {
   const leavesUrl = 'api/1.0/leaves';
   try {
@@ -94,7 +109,7 @@ const manageAttendance = async function () {
                     ${leaveStatusOptions}
                   </select>
                   </div>
-                  <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
+                  <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">轉換</button>
                   <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
                 </form>
               </div>
@@ -126,7 +141,7 @@ const manageAttendance = async function () {
       // error handle
       table = $('<table></table>').attr('class', 'leave_result table');
       const trHead = $('<tr></tr>');
-      const heads = ['請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '核准/拒絕', '修改', '請假證明'];
+      const heads = ['請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '', '', '請假證明'];
       heads.forEach((head) => {
         const th = $('<th></th>').text(head);
         trHead.append(th);
@@ -161,8 +176,8 @@ const manageAttendance = async function () {
             location.reload();
           }
         });
-        const approveBtn = getAuditBtn(1, '核准');
-        const rejectBtn = getAuditBtn(2, '拒絕');
+        const approveBtn = getAuditBtn(1, '核准').attr('class', 'btn btn-outline-success btn-sm');
+        const rejectBtn = getAuditBtn(2, '拒絕').attr('class', 'btn btn-outline-secondary btn-sm');
         if (leaveSearch.certificate_url) {
           const checkCertificate = $('<button></button>').text('證明連結').click(async (checkEvent) => {
             checkEvent.preventDefault();
@@ -175,7 +190,7 @@ const manageAttendance = async function () {
         }
 
         const tdEdit = $('<td></td>');
-        const editBtn = $('<button></button>').text('修改').click(async (callEdit) => {
+        const editBtn = $('<button></button>').text('修改').attr('class', 'btn btn-outline-primary btn-sm').click(async (callEdit) => {
           callEdit.preventDefault();
           const callEditBtn = $(callEdit.target);
           const leaveId = callEditBtn.parent().parent().data('leave_id');
@@ -229,11 +244,13 @@ const manageAttendance = async function () {
             }
           });
         });
-        const deleteBtn = $('<button></button>').text('刪除').click(async (deleteEvent) => {
+        const deleteBtn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (deleteEvent) => {
           deleteEvent.preventDefault();
           try {
-            const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
-            const deleteResult = deleteRes.data;
+            const result = await doubleCheckAlert('刪除資料便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
+            // const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
+            // const deleteResult = deleteRes.data;
             if (deleteResult) { location.reload(); }
           } catch (err) {
             console.log(err);

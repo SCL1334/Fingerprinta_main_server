@@ -3,6 +3,20 @@ const attendanceColor = {
 };
 const content = $('.content');
 
+async function doubleCheckAlert(msg, confirm, deny) {
+  const decision = await Swal.fire({
+    title: msg,
+    icon: 'info',
+    showDenyButton: true,
+    confirmButtonText: confirm,
+    denyButtonText: deny,
+    confirmButtonColor: '#BD2A2E',
+    denyButtonColor: '#B2BEBF',
+  });
+  if (!decision.isConfirmed) { return false; }
+  return true;
+}
+
 async function changePassword() {
   content.text('');
   const changePasswordForm = `
@@ -332,7 +346,7 @@ $(document).ready(async () => {
             const leaveSearchResult = leaveSearchRes.data.data;
             const table = $('<table></table>').attr('class', 'leave_result table');
             const tr = $('<tr></tr>');
-            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '修改', '請假證明'];
+            const heads = ['請假日期', '請假類型', '請假時間(開始)', '請假時間(結束)', '請假時數', '請假緣由', '管理員備註', '狀態', '請假證明'];
             heads.forEach((head) => {
               const th = $('<th></th>').text(head);
               tr.append(th);
@@ -434,7 +448,7 @@ $(document).ready(async () => {
 
               // const
               const tdEdit = $('<td></td>');
-              const editBtn = $('<button></button>').attr('class', 'btn btn-outline-dark')
+              const editBtn = $('<button></button>').attr('class', 'btn btn-outline-primary')
                 .text('修改')
                 .click(async (callEdit) => {
                   editLeaveModal.show();
@@ -488,9 +502,11 @@ $(document).ready(async () => {
                     }
                   });
                 });
-              const deleteBtn = $('<button></button>').attr('class', 'btn btn-outline-dark').text('刪除').click(async (deleteEvent) => {
+              const deleteBtn = $('<button></button>').attr('class', 'btn btn-outline-danger').text('刪除').click(async (deleteEvent) => {
                 deleteEvent.preventDefault();
                 try {
+                  const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+                  if (!result) { return; }
                   const deleteRes = await axios.delete(`/api/1.0/my/leaves/${leaveSearch.id}`);
                   const deleteResult = deleteRes.data;
                   if (deleteResult) { $('.search_btn').trigger('click'); }

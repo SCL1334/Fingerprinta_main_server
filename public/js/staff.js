@@ -17,6 +17,20 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
+async function doubleCheckAlert(msg, confirm, deny) {
+  const decision = await Swal.fire({
+    title: msg,
+    icon: 'info',
+    showDenyButton: true,
+    confirmButtonText: confirm,
+    denyButtonText: deny,
+    confirmButtonColor: '#BD2A2E',
+    denyButtonColor: '#B2BEBF',
+  });
+  if (!decision.isConfirmed) { return false; }
+  return true;
+}
+
 async function changePassword() {
   $('.content').empty();
   $('.content').append(midSpace);
@@ -309,6 +323,8 @@ async function setPunchTime() {
         });
         $('.routine_delete').click(async (event) => {
           try {
+            const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
             const classRoutineRow = $(event.target).parent().parent();
             const classRoutineId = classRoutineRow.data('id');
             const deleteRoutineRes = await axios.delete(`${classRoutineUrl}/${classRoutineId}`);
@@ -703,6 +719,8 @@ async function accountManage() {
           const removeBtn = $(removeEvent.target);
           const fingerId = removeBtn.parent().siblings('.finger_id').text();
           try {
+            const result = await doubleCheckAlert('一但移除指紋資料便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
             const removeFingerRes = await axios.delete(`${studentUrl}/fingerprint/${fingerId}`);
             const removeFingerResult = removeFingerRes.data.data;
             console.log(removeFingerResult);
@@ -762,6 +780,8 @@ async function accountManage() {
         $('.student_delete').click(async (deleteEvent) => {
           try {
             deleteEvent.preventDefault();
+            const result = await doubleCheckAlert('刪除學生會連相關資料一併刪除', '確定刪除', '取消');
+            if (!result) { return; }
             // maybe need to init finger id as well
             const deleteBtn = $(deleteEvent.target);
             const studentId = deleteBtn.parent().siblings('.student_id').text();
@@ -926,6 +946,8 @@ async function accountManage() {
         $('.staff_delete').click(async (event) => {
           event.preventDefault();
           try {
+            const result = await doubleCheckAlert('帳號刪除便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
             const staffRow = $(event.target).parent().parent();
             const staffId = staffRow.children('.staff_id').text();
             const deleteStaffRes = await axios.delete(`${staffUrl}/${staffId}`);
@@ -1209,6 +1231,8 @@ async function classManage() {
             $('.class_delete').click(async (deleteEvent) => {
               deleteEvent.preventDefault();
               try {
+                const result = await doubleCheckAlert('刪除班級會連該班學生資料一併刪除', '確定刪除', '取消');
+                if (!result) { return; }
                 const classId = $(deleteEvent.target).parent().siblings('.class_id').text();
                 const deleteClassRes = await axios.delete(`${classesUrl}/${classId}`);
                 const deleteClassResult = deleteClassRes.data;
@@ -1313,6 +1337,8 @@ async function classManage() {
           const td_name = $('<td></td>').text(newType);
           const td_delete = $('<td></td>');
           const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+            const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
             const deleteTypeRes = await axios.delete(`${classTypeUrl}/${addTypeResult.data.insert_id}`);
             const deleteTypeResult = deleteTypeRes.data;
             if (deleteTypeResult) {
@@ -1341,6 +1367,8 @@ async function classManage() {
         const td_name = $('<td></td>').text(classType.name);
         const td_delete = $('<td></td>');
         const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+          const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+          if (!result) { return; }
           const deleteTypeRes = await axios.delete(`${classTypeUrl}/${classType.id}`);
           const deleteTypeResult = deleteTypeRes.data;
           if (deleteTypeResult) {
@@ -1399,6 +1427,8 @@ async function classManage() {
           const td_name = $('<td></td>').text(newGroup);
           const td_delete = $('<td></td>');
           const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+            const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+            if (!result) { return; }
             const deleteGroupRes = await axios.delete(`${classGroupUrl}/${addGroupResult.data.insert_id}`);
             const deleteGroupResult = deleteGroupRes.data;
             if (deleteGroupResult) {
@@ -1427,6 +1457,8 @@ async function classManage() {
         const td_name = $('<td></td>').text(classGroup.name);
         const td_delete = $('<td></td>');
         const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+          const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+          if (!result) { return; }
           const deleteGroupRes = await axios.delete(`${classGroupUrl}/${classGroup.id}`);
           const deleteGroupResult = deleteGroupRes.data;
           if (deleteGroupResult) {
@@ -1537,6 +1569,8 @@ async function exceptionManage() {
         const td_end = $('<td></td>').text(`${addExceptionEnd}:00`);
         const td_delete = $('<td></td>');
         const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+          const result = await doubleCheckAlert('刪除例外會影響出勤判斷', '確定刪除', '取消');
+          if (!result) { return; }
           const deleteTypeRes = await axios.delete(`${exceptionUrl}/${addExceptionResult.insert_id}`);
           const deleteTypeResult = deleteTypeRes.data;
           if (deleteTypeResult) {
@@ -1572,6 +1606,8 @@ async function exceptionManage() {
       const td_end = $('<td></td>').text(edate.end);
       const td_delete = $('<td></td>');
       const delete_btn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+        const result = await doubleCheckAlert('刪除例外會影響出勤判斷', '確定刪除', '取消');
+        if (!result) { return; }
         const deleteTypeRes = await axios.delete(`${exceptionUrl}/${edate.id}`);
         const deleteTypeResult = deleteTypeRes.data;
         if (deleteTypeResult) {
@@ -1725,6 +1761,8 @@ function genRuleManage(date) {
       deleteCalendar.preventDefault();
       const year = $('#delete_year').val();
       try {
+        const result = await doubleCheckAlert('刪除月曆會嚴重影響出勤判斷', '確定刪除', '取消');
+        if (!result) { return; }
         const deleteCalendarRes = await axios.delete(`${calendarUrl}/years/${year}`);
         const deleteCalendarResult = deleteCalendarRes.data;
         if (deleteCalendarResult) {
@@ -2089,6 +2127,8 @@ async function auditLeave() {
           const deleteBtn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (deleteEvent) => {
             deleteEvent.preventDefault();
             try {
+              const result = await doubleCheckAlert('刪除資料便無法復原', '確定刪除', '取消');
+              if (!result) { return; }
               const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
               const deleteResult = deleteRes.data;
               if (deleteResult) { $('.search_btn').trigger('click'); }
@@ -2224,8 +2264,8 @@ $(document).ready(async () => {
 
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-04-25');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-02');
-      const searchBtn = $('<button></button>').attr('class', 'search_btn').text('查詢出勤');
-      const checkBtn = $('<button></button>').attr('class', 'check_btn float-right').text('查看顏色提示');
+      const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
+      const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
       const classInitOption = $('<option value=0>全部班級</option>');
       classOptions.append(classInitOption);
