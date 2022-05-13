@@ -116,7 +116,8 @@ const createStudentLeaveSchema = Joi.object({
   date: Joi.date().format(dateFormat).required(),
   start: Joi.string().regex(timeFormat).required(),
   end: Joi.string().regex(timeFormat).required(),
-  hours: Joi.number().integer().min(0).max(24),
+  hours: Joi.number().integer().min(0).max(24)
+    .allow('', null),
   approval: Joi.number().integer().min(0).max(2),
   reason: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
   note: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
@@ -129,7 +130,8 @@ const editStudentLeaveSchema = Joi.object({
   date: Joi.date().format(dateFormat),
   start: Joi.string().regex(timeFormat),
   end: Joi.string().regex(timeFormat),
-  hours: Joi.number().integer().min(0).max(24),
+  hours: Joi.number().integer().min(0).max(24)
+    .allow('', null),
   approval: Joi.number().integer().min(0).max(2),
   reason: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
   note: Joi.string().max(50).allow('', null).regex(prohibit, { invert: true }),
@@ -153,7 +155,7 @@ const createClassType = async (req, res, next) => {
   try {
     const classType = await createClassGroupTypeSchema.validateAsync({ name: typeName });
     res.locals.classType = classType;
-    next();
+    return next();
   } catch (error) {
     console.log(error);
     return res.status(400).json({ error: { message: error.details[0].message } });
@@ -182,7 +184,7 @@ const createClassRoutine = async (req, res, next) => {
   try {
     const classRoutine = await createClassRoutineSchema.validateAsync(routine);
     res.locals.classRoutine = classRoutine;
-    next();
+    return next();
   } catch (error) {
     console.log(error);
     return res.status(400).json({ error: { message: error.details[0].message } });
