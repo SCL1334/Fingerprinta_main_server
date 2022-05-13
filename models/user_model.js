@@ -238,7 +238,7 @@ const setHashedMail = async (email) => {
   }
   try {
     const hash = await argon2.hash(email);
-    await Cache.set(hash, email, { EX: resetExpire, NX: true });
+    await Cache.v4.set(hash, email, { EX: resetExpire, NX: true });
     return { code: 1010, data: { hash } };
   } catch (err) {
     console.log(err);
