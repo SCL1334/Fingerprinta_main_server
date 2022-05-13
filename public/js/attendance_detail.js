@@ -109,7 +109,7 @@ const manageAttendance = async function () {
                     ${leaveStatusOptions}
                   </select>
                   </div>
-                  <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">轉換</button>
+                  <button type="submit" id="edit_leave_btn" class="submit btn btn-dark">送出</button>
                   <div class="form-text">*請假時間以一小時為單位，不足一小時以一小時計</div>
                 </form>
               </div>
