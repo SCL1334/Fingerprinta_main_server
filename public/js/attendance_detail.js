@@ -249,8 +249,8 @@ const manageAttendance = async function () {
           try {
             const result = await doubleCheckAlert('刪除資料便無法復原', '確定刪除', '取消');
             if (!result) { return; }
-            // const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
-            // const deleteResult = deleteRes.data;
+            const deleteRes = await axios.delete(`${leavesUrl}/${leaveSearch.id}`);
+            const deleteResult = deleteRes.data;
             if (deleteResult) { location.reload(); }
           } catch (err) {
             console.log(err);
