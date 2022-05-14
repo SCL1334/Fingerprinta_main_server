@@ -43,8 +43,12 @@ CREATE TABLE `class` (
   `class_group_id` tinyint unsigned DEFAULT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  KEY `class_type_id_idx` (`class_type_id`),
+  KEY `class_group_id_idx` (`class_group_id`),
+  CONSTRAINT `class_group_id` FOREIGN KEY (`class_group_id`) REFERENCES `class_group` (`id`),
+  CONSTRAINT `class_type_id` FOREIGN KEY (`class_type_id`) REFERENCES `class_type` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -59,7 +63,7 @@ CREATE TABLE `class_group` (
   `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -76,8 +80,9 @@ CREATE TABLE `class_routine` (
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique` (`class_type_id`,`weekday`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `unique` (`class_type_id`,`weekday`),
+  CONSTRAINT `class_routine_ibfk_1` FOREIGN KEY (`class_type_id`) REFERENCES `class_type` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -106,7 +111,7 @@ CREATE TABLE `class_type` (
   `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -118,10 +123,9 @@ DROP TABLE IF EXISTS `fingerprint`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `fingerprint` (
   `id` tinyint unsigned NOT NULL,
-  `student_id` smallint DEFAULT NULL,
+  `student_id` smallint NOT NULL,
   `status` tinyint NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQUE` (`student_id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -138,7 +142,7 @@ CREATE TABLE `leave_type` (
   `need_calculate` tinyint NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -156,8 +160,9 @@ CREATE TABLE `punch_exception` (
   `start` time NOT NULL,
   `end` time NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQUE` (`class_type_id`,`batch`,`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `UNIQUE` (`class_type_id`,`batch`,`date`),
+  CONSTRAINT `punch_exception_ibfk_1` FOREIGN KEY (`class_type_id`) REFERENCES `class_type` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -169,17 +174,16 @@ DROP TABLE IF EXISTS `staff`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `staff` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `role` tinyint unsigned NOT NULL DEFAULT '1',
   `name` varchar(30) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `password` char(60) NOT NULL,
+  `password` char(95) NOT NULL,
   `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_update` datetime DEFAULT NULL,
   `last_signin` datetime DEFAULT NULL,
   `password_default` tinyint NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_UNIQUE` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -193,7 +197,7 @@ CREATE TABLE `student` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(30) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `password` char(60) NOT NULL,
+  `password` char(95) NOT NULL,
   `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_update` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_signin` datetime DEFAULT NULL,
@@ -201,8 +205,9 @@ CREATE TABLE `student` (
   `class_id` smallint unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_UNIQUE` (`email`),
-  KEY `account_INDEX` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `class_id_idx` (`class_id`),
+  CONSTRAINT `class_id` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -227,8 +232,11 @@ CREATE TABLE `student_leave` (
   `note` varchar(50) DEFAULT NULL,
   `certificate_url` varchar(120) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `INDEX` (`student_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `leave_type_id_idx` (`leave_type_id`),
+  KEY `student_id_idx` (`student_id`),
+  CONSTRAINT `leave_type_id` FOREIGN KEY (`leave_type_id`) REFERENCES `leave_type` (`id`),
+  CONSTRAINT `student` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -244,8 +252,10 @@ CREATE TABLE `student_punch` (
   `punch_date` date DEFAULT NULL,
   `punch_in` time DEFAULT NULL,
   `punch_out` time DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=218 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  KEY `student_id_idx` (`student_id`),
+  CONSTRAINT `student_id` FOREIGN KEY (`student_id`) REFERENCES `student` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=215 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -257,4 +267,4 @@ CREATE TABLE `student_punch` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-05-10 13:17:55
+-- Dump completed on 2022-05-14 13:58:01
