@@ -676,14 +676,17 @@ async function accountManage() {
             $(td).attr('class', 'finger_id');
           },
         },
-        // {
-        //   targets: 6,
-        //   createdCell(td, cellData, rowData, row, col) {
-        //     // if (rowData.finger_id !== null) {
-        //     $(td).children().attr('disabled');
-        //     // }
-        //   },
-        // },
+        {
+          defaultContent: '-',
+          targets: '_all',
+          createdCell(td, cellData, rowData, row, col) {
+            if (rowData.finger_id === null) {
+              $(td).children('.finger_remove').attr('class', 'btn btn-outline-secondary btn-sm disabled');
+            } else {
+              $(td).children('.finger_enroll').attr('class', 'btn btn-outline-secondary btn-sm disabled');
+            }
+          },
+        },
         // {
         //   targets: 7,
         //   createdCell(td, cellData, rowData, row, col) {
