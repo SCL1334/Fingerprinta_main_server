@@ -129,20 +129,21 @@ $(document).ready(async () => {
     try {
       const punchTodayRaw = await axios.get(`api/1.0/my/punches?from=${today}&to=${today}`);
       const punchToday = punchTodayRaw.data.data;
+      const punchTable = $('.punch_today');
       const punchHead = ['上課打卡', '下課打卡'].reduce((acc, cur) => {
         acc.append($('<td></td>').text(cur));
         return acc;
       }, $('<thead><tr></tr></thead>'));
-      $('.punch_today').append(punchHead);
-      if (punchToday.length === 0) { $('.punch_today').append($('<td colspan="2"></td>').text('無紀錄')); }
+      punchTable.append(punchHead);
+      if (punchToday.length === 0) { $('.punch_today').append('<td>無紀錄</td><td>無紀錄</td>'); }
 
-      const punchDetail = punchToday.reduce((acc, cur) => {
-        const { punch_in: punchIn, punch_out: punchOut } = cur;
-        acc.append($('<td></td>').text(punchIn || '無紀錄'));
-        acc.append($('<td></td>').text(punchOut || '無紀錄'));
-        return acc;
+      punchToday.forEach((punch) => {
+        const { punch_in: punchIn, punch_out: punchOut } = punch;
+        const row = $('<tr></tr>');
+        row.append($('<td></td>').text(punchIn || '無紀錄'));
+        row.append($('<td></td>').text(punchOut || '無紀錄'));
+        punchTable.append(row);
       }, $('<tr></tr>'));
-      $('.punch_today').append(punchDetail);
     } catch (err) {
       console.log(err);
     }

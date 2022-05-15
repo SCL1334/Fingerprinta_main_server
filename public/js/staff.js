@@ -719,7 +719,7 @@ async function accountManage() {
           const removeBtn = $(removeEvent.target);
           const fingerId = removeBtn.parent().siblings('.finger_id').text();
           try {
-            const result = await doubleCheckAlert('一但移除指紋資料便無法復原', '確定刪除', '取消');
+            const result = await doubleCheckAlert('一旦移除指紋資料便無法復原', '確定刪除', '取消');
             if (!result) { return; }
             const removeFingerRes = await axios.delete(`${studentUrl}/fingerprint/${fingerId}`);
             const removeFingerResult = removeFingerRes.data.data;
@@ -2262,8 +2262,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-04-25');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-02');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-02');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-14');
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');

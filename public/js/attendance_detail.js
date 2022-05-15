@@ -43,7 +43,11 @@ const manageAttendance = async function () {
     const { attendance } = attendanceData;
     const attendanceTable = $('<tr></tr>');
     Object.keys(attendance).forEach((time) => {
-      const tdTimeGrid = $('<td></td>').attr('class', 'time').css('background-color', attendanceColor[attendance[time]]).text(time);
+      const tdTimeGrid = $('<td></td>').attr('class', 'time').css('height', '40px').css('width', '50px')
+        .css('color', 'white')
+        .css('border', '0.5px white solid')
+        .css('background-color', attendanceColor[attendance[time]])
+        .text(time);
       attendanceTable.append(tdTimeGrid);
     });
     $('.status').append(attendanceTable);
@@ -355,22 +359,22 @@ const manageAttendance = async function () {
     // get punch detail
     try {
       const punchesRaw = await axios.get(`api/1.0/students/${studentId}/punches?from=${date}&to=${date}`);
-
+      const punchTable = $('.punch');
       const punches = punchesRaw.data.data;
       const punchHead = ['上課打卡', '下課打卡'].reduce((acc, cur) => {
         acc.append($('<td></td>').text(cur));
         return acc;
       }, $('<tr></tr>'));
-      $('.punch').append(punchHead);
-      if (punches.length === 0) { $('.punch').append($('<td colspan="2"></td>').text('無紀錄')); }
+      punchTable.append(punchHead);
+      if (punches.length === 0) { $('.punch').append('<td>無紀錄</td><td>無紀錄</td>'); }
 
-      const punchDetail = punches.reduce((acc, cur) => {
-        const { punch_in: punchIn, punch_out: punchOut } = cur;
-        acc.append($('<td></td>').text(punchIn || '無紀錄'));
-        acc.append($('<td></td>').text(punchOut || '無紀錄'));
-        return acc;
-      }, $('<tr></tr>'));
-      $('.punch').append(punchDetail);
+      punches.forEach((punch) => {
+        const { punch_in: punchIn, punch_out: punchOut } = punch;
+        const row = $('<tr></tr>');
+        row.append($('<td></td>').text(punchIn || '無紀錄'));
+        row.append($('<td></td>').text(punchOut || '無紀錄'));
+        punchTable.append(row);
+      });
     } catch (err) {
       console.log(err);
     }
