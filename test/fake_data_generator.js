@@ -9,6 +9,16 @@ const truncateTable = async (tableName) => {
   console.log('truncated');
 };
 
+const clearStudent = async () => {
+  await promisePool.query(`
+  SET FOREIGN_KEY_CHECKS = 0; 
+  TRUNCATE student;
+  TRUNCATE student_leave;
+  TRUNCATE student_punch; 
+  SET FOREIGN_KEY_CHECKS = 1; 
+  `);
+};
+
 // name, email, password, class_id, finger_id
 const createFakeUser = async (roleId, startId, num, classId = null) => {
   try {
@@ -27,11 +37,77 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
         users.push([name, email, hashedPassword]);
       }
     }
+
+    // const users = [
+    //   { name: '葛國安', email: 'GeGuoAn@armyspy.com' },
+    //   { name: '鄭恆慈', email: 'ZhengHengCi@teleworm.tw' },
+    //   { name: '毛琬婷', email: 'MaoWanTing@teleworm.tw' },
+    //   { name: '江依珊', email: 'JiangYiShan@teleworm.us' },
+    //   { name: '陸于禎', email: 'LiuXuZheng@dayrep.com' },
+    //   { name: '邱彥燈', email: 'QiuYanDeng@rhyta.com ' },
+    // ];
+    // const account = users.reduce(async (acc, cur) => {
+    //   const hashedPassword = await argon2.hash(password);
+    //   acc.push([cur.name, cur.email, hashedPassword, classId]);
+    //   return acc;
+    // }, []);
+
     // save fake data
     if (roleId === 1) {
       await promisePool.query('INSERT INTO student (name, email, password, class_id) VALUES ?', [users]);
     } else if (roleId === 2) {
       await promisePool.query('INSERT INTO staff (name, email, password) VALUES ?', [users]);
+    }
+    console.log('completed');
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// name, email, password, class_id, finger_id
+const createFakeUser2 = async (roleId, classId = null) => {
+  try {
+    const role = { 1: 'student', 2: 'teacher' };
+    const password = 'test';
+    // // gen fake data
+    // const users = [];
+    // for (let i = startId; i < startId + num; i += 1) {
+    //   const name = `${role[roleId]}_${i}`;
+    //   const email = `${name}@test.com`;
+    //   const hashedPassword = await argon2.hash(password);
+    //   console.log(hashedPassword.length);
+    //   if (classId) {
+    //     users.push([name, email, hashedPassword, classId]);
+    //   } else if (classId === null) {
+    //     users.push([name, email, hashedPassword]);
+    //   }
+    // }
+    const users = [
+      { name: '葛國安', email: 'GeGuoAn@armyspy.com' },
+      { name: '鄭恆慈', email: 'ZhengHengCi@teleworm.tw' },
+      { name: '毛琬婷', email: 'MaoWanTing@teleworm.tw' },
+      { name: '江依珊', email: 'JiangYiShan@teleworm.us' },
+      { name: '陸于禎', email: 'LiuXuZheng@dayrep.com' },
+      { name: '邱彥燈', email: 'QiuYanDeng@rhyta.com ' },
+    ];
+
+    const forEachAsync = async (array, callback) => {
+      for (let i = 0; i < array.length; i += 1) {
+        await callback(array[i]);
+      }
+    };
+
+    const accounts = [];
+    await forEachAsync(users, async (user) => {
+      const hashedPassword = await argon2.hash(password);
+      accounts.push([user.name, user.email, hashedPassword, classId]);
+    });
+
+    // save fake data
+    if (roleId === 1) {
+      await promisePool.query('INSERT INTO student (name, email, password, class_id) VALUES ?', [accounts]);
+    } else if (roleId === 2) {
+      await promisePool.query('INSERT INTO staff (name, email, password) VALUES ?', [accounts]);
     }
     console.log('completed');
   } catch (err) {
@@ -47,6 +123,8 @@ const createFakeUser = async (roleId, startId, num, classId = null) => {
 // createFakeUser(1, 8, 7, 2);
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
+
+createFakeUser2(1, 1);
 
 // student_id, punch_in, punch_out
 const createFakePunch = async (days) => {
@@ -150,4 +228,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-createFakeLeaveApplications(15, 15);
+// createFakeLeaveApplications(15, 15);
