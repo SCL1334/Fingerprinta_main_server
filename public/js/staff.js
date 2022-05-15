@@ -1515,9 +1515,9 @@ async function exceptionManage() {
               ${classTypeOptions}
             </select>
             <input id='exception_batch' name='batch' type='number' value='15'>
-            <input id='exception_date' name='date' type='date' value='2022-04-28'>
+            <input id='exception_date' name='date' type='date' value='2022-05-10'>
             <input id='exception_start' name='start_time' type='time' value='09:00'>
-            <input id='exception_end' name='end_time' type='time' value='10:00'>
+            <input id='exception_end' name='end_time' type='time' value='12:00'>
             <button type="submit">送出</button>
           </form>
         </div>
@@ -2265,8 +2265,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-02');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-14');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-09');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-15');
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
