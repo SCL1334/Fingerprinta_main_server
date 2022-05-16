@@ -17,16 +17,16 @@ const getTypes = async () => {
 
 const createType = async (leaveType) => {
   try {
-    await promisePool.query('INSERT INTO leave_type SET ?', leaveType);
-    return 1010;
+    const [result] = await promisePool.query('INSERT INTO leave_type SET ?', leaveType);
+    return { code: 1010, insert_id: result.insertId };
   } catch (err) {
     console.log(err);
     const { errno } = err;
     // 1062 Duplicate entry
     if (errno === 1062 || errno === 1048) {
-      return 3010;
+      return { code: 3010 };
     }
-    return 2010;
+    return { code: 2010 };
   }
 };
 

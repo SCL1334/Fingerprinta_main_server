@@ -16,13 +16,13 @@ const getTypes = async (req, res) => {
 
 const createType = async (req, res) => {
   const { leaveType } = res.locals;
-  const status = await Leave.createType(leaveType);
-  if (status < 2000) {
-    res.status(200).json({ code: status, data: { message: 'Create successfully' } });
-  } else if (status < 3000) {
-    res.status(500).json({ code: status, error: { message: 'Create failed' } });
+  const result = await Leave.createType(leaveType);
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
   } else {
-    res.status(400).json({ code: status, error: { message: 'Create failed due to invalid input' } });
+    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
   }
 };
 
