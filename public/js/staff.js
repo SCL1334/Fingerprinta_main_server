@@ -100,6 +100,126 @@ async function changePassword() {
   });
 }
 
+async function setLeaveType() {
+  const leaveTypeUrl = '/api/1.0/leaves/types';
+  // init
+  $('.content').empty();
+  const leaveTypeTable = $('<table></table>').attr('id', 'leave_type_table').attr('class', 'table');
+  const createleaveTypeForm = $(`
+  <div class="form-inline">
+    <div class="form-group mb-2">
+      <input type="text" id="leave_type_name"  class="form-control" placeholder="請假類型名稱">
+    </div>
+    
+    <div class="form-group mt-2">
+      <div class="form-check">
+        <label class="form-check-label" for="need_calculate">是否記入請假時數</label>
+        <input type="checkbox" id="need_calculate" class="form-check-input">
+      </div>
+    </div>
+    
+
+    
+    <div class="col-auto my-1">
+      <button id="create_leave_type_btn" type="submit" class="btn-outline-success btn-sm">新增</button>
+    
+    </div>
+  </div>
+  `);
+  $('.content').append(createleaveTypeForm, leaveTypeTable);
+
+  const heads = ['ID', '請假類型名稱', '需要計入請假時數', ''];
+  const trHead = $('<tr></tr>');
+  heads.forEach((head) => {
+    const th = $('<th></th>').text(head);
+    trHead.append(th);
+  });
+
+  leaveTypeTable.append(trHead);
+
+  const addBtn = $('#create_leave_type_btn');
+  addBtn.click(async () => {
+    try {
+      const newTypeName = $('#leave_type_name').val();
+
+      const newTypeStatus = $('#need_calculate').prop('checked');
+      console.log(newTypeStatus);
+      const addTypeRes = await axios(leaveTypeUrl, {
+        method: 'POST',
+        data: {
+          name: newTypeName,
+          need_calculate: newTypeStatus,
+        },
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+      const addTypeResult = addTypeRes.data;
+      if (addTypeResult) {
+        const tr = $('<tr></tr>');
+        const tdId = $('<td></td>').text(addTypeResult.insert_id);
+        const tdName = $('<td></td>').text(newTypeName);
+        const needCalculateSymbol = (newTypeStatus === true) ? 'Y' : 'N';
+        const tdNeedCalculate = $('<td></td>').text(needCalculateSymbol);
+        const tdDelete = $('<td></td>');
+        const deleteBtn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+          event.preventDefault();
+          const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+          if (!result) { return; }
+          const deleteGroupRes = await axios.delete(`${leaveTypeUrl}/${addTypeResult.insert_id}`);
+          const deleteGroupResult = deleteGroupRes.data;
+          if (deleteGroupResult) {
+            $(event.target).parent().parent().remove();
+          }
+        });
+        tdDelete.append(deleteBtn);
+        tr.append(tdId, tdName, tdNeedCalculate, tdDelete);
+        leaveTypeTable.append(tr);
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '新增資料失敗，請稍後再試',
+      });
+      console.log(err);
+    }
+  });
+
+  try {
+    const leaveTypeDetail = await axios.get(leaveTypeUrl);
+    const leaveTypeData = leaveTypeDetail.data;
+    leaveTypeData.data.forEach((leaveType) => {
+      const tr = $('<tr></tr>');
+      const tdId = $('<td></td>').text(leaveType.id);
+      const tdName = $('<td></td>').text(leaveType.name);
+      const needCalculateSymbol = (leaveType.need_calculate === 1) ? 'Y' : 'N';
+      const tdNeedCalculate = $('<td></td>').text(needCalculateSymbol);
+      const tdDelete = $('<td></td>');
+      const deleteBtn = $('<button></button>').text('刪除').attr('class', 'btn btn-outline-danger btn-sm').click(async (event) => {
+        event.preventDefault();
+        const result = await doubleCheckAlert('資料刪除便無法復原', '確定刪除', '取消');
+        if (!result) { return; }
+        const deleteGroupRes = await axios.delete(`${leaveTypeUrl}/${leaveType.id}`);
+        const deleteGroupResult = deleteGroupRes.data;
+        if (deleteGroupResult) {
+          $(event.target).parent().parent().remove();
+        }
+      });
+      tdDelete.append(deleteBtn);
+      tr.append(tdId, tdName, tdNeedCalculate, tdDelete);
+      leaveTypeTable.append(tr);
+    });
+  } catch (err) {
+    console.log(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: '讀取資料失敗，請稍後再試',
+    });
+  }
+}
+
 async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
@@ -2317,6 +2437,9 @@ $(document).ready(async () => {
 
     // approve leave application
     $('.approve_leave_application').click(auditLeave);
+
+    // leave type manage
+    $('.leave_type_setting').click(setLeaveType);
 
     // get attendance
     $('.get_attendances').click(async () => {
