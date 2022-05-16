@@ -14,13 +14,13 @@ const setPunch = async (req, res) => {
 
   const punchResult = await Attendance.setPunch(studentId);
   if (punchResult === 1) {
-    res.status(200).json({ data: 'Punch in successfully' });
+    res.status(200).json({ data: { code: 1010, message: 'Punch in successfully' } });
   } else if (punchResult === 2) {
-    res.status(200).json({ data: 'Punch out successfully' });
+    res.status(200).json({ data: { code: 1010, message: 'Punch out successfully' } });
   } else if (punchResult === -1) {
-    res.status(400).json({ error: { message: 'Punch failed due to invalid input' } });
+    res.status(400).json({ error: { code: 3010, message: 'Punch failed due to invalid input' } });
   } else if (punchResult === 0) {
-    res.status(500).json({ error: { message: 'Punch failed due to internal server error' } });
+    res.status(500).json({ error: { code: 2010, message: 'Punch failed due to internal server error' } });
   }
 };
 
