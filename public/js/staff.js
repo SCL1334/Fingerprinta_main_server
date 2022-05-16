@@ -701,13 +701,57 @@ async function accountManage() {
           enrrollEvent.preventDefault();
           const enrollBtn = $(enrrollEvent.target);
           const studentId = enrollBtn.parent().siblings('.student_id').text();
+
+          // const loading = async () => {
+          //   await swal.showLoading();
+          //   try {
+          //     const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
+          //     const enrollFingerResult = enrollFingerRes.data.data;
+          //     if (enrollFingerResult) {
+          //       Swal.fire('配對成功');
+          //       studentManage();
+          //     }
+          //   } catch (err) {
+          //     Swal.fire({
+          //       icon: 'error',
+          //       title: 'Oops...',
+          //       text: '配對失敗',
+          //     });
+          //     console.log(err);
+          //   }
+          // };
+
           try {
+            const understand = await Swal.fire({
+              title: '請依照指示完成後續操作',
+              text: '指紋機燈亮後：放上手指 / 燈熄滅後：收回手指',
+              confirmButtonText: '繼續操作',
+            });
+            if (!understand.isConfirmed) { return false; }
+            await Swal.close();
+            Swal.fire({
+              title: '指紋配對中',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              didOpen: () => {
+                Swal.showLoading();
+              },
+            });
             const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
             const enrollFingerResult = enrollFingerRes.data.data;
             if (enrollFingerResult) {
-              Swal.fire('配對成功');
+              await Swal.close();
+              await Swal.fire('配對成功');
               studentManage();
             }
+            // await Swal.fire({
+            //   title: '指紋',
+            //   text: '指紋機燈亮後：放上手指 / 燈熄滅後：收回手指',
+            //   showConfirmButton: false,
+            //   allowOutsideClick: false,
+            //   allowEscapeKey: false,
+            // });
           } catch (err) {
             Swal.fire({
               icon: 'error',
@@ -716,6 +760,22 @@ async function accountManage() {
             });
             console.log(err);
           }
+
+          // try {
+          //   const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
+          //   const enrollFingerResult = enrollFingerRes.data.data;
+          //   if (enrollFingerResult) {
+          //     Swal.fire('配對成功');
+          //     studentManage();
+          //   }
+          // } catch (err) {
+          //   Swal.fire({
+          //     icon: 'error',
+          //     title: 'Oops...',
+          //     text: '配對失敗',
+          //   });
+          //   console.log(err);
+          // }
         });
         $('.finger_remove').click(async (removeEvent) => {
           removeEvent.preventDefault();
