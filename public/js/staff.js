@@ -154,7 +154,7 @@ async function setLeaveType() {
           'content-type': 'application/json',
         },
       });
-      const addTypeResult = addTypeRes.data;
+      const addTypeResult = addTypeRes.data.data;
       if (addTypeResult) {
         const tr = $('<tr></tr>');
         const tdId = $('<td></td>').text(addTypeResult.insert_id);
