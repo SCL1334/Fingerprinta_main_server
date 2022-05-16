@@ -1,6 +1,9 @@
 const attendanceColor = {
   0: '#BD2A2E', 1: '#B2BEBF', 2: '#363432', 3: '#F0941F', 4: '#28a7bd',
 };
+const attendanceStatus = {
+  0: '缺紀錄(缺席)', 1: '正常打卡', 2: '請假未審核', 3: '請假已審核&算時數(e.g.事假)', 4: '請假已審核&不算時數(e.g.喪假)',
+};
 const content = $('.content');
 
 async function doubleCheckAlert(msg, confirm, deny) {
@@ -161,12 +164,42 @@ $(document).ready(async () => {
       $('.content').text('');
 
       const attendance = $('<div></div>').attr('class', 'attendance').html('<h4>出席記錄查詢</h4>');
+      const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
 
       const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
       const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn-secondary').text('查詢');
       attendance.append('<br>', searchFrom, '<br>', searchTo, '<br>', searchBtn);
-      $('.content').append(attendance);
+
+      const attendanceSquares = Object.keys(attendanceColor).reduce((acc, cur) => {
+        acc += `<div style="height:30px; width:30px; background-color:${attendanceColor[cur]}"></div><span>${attendanceStatus[cur]}</span>`;
+        return acc;
+      }, '');
+
+      const explainColor = `
+      <div class="col-3 modal fade" role="dialog" id="remind_modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">出勤狀況對應顏色</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              ${attendanceSquares}
+            </div>
+          </div>
+        </div>
+      </div>    
+      `;
+
+      $('.content').append(checkBtn, attendance, explainColor);
+
+      const remindModal = new bootstrap.Modal($('#remind_modal'));
+      $('.check_btn').click((remindEvent) => {
+        remindEvent.preventDefault();
+        remindModal.show();
+      });
+
       $('.search_btn').click(async () => {
         try {
           let table = $('.attendance_result').css('width', '100%');
