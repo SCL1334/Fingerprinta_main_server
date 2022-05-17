@@ -2448,8 +2448,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-09');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-15');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-11');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-17');
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
