@@ -167,10 +167,11 @@ $(document).ready(async () => {
       const attendance = $('<div></div>').attr('class', 'attendance').html('<h4>出席記錄查詢</h4>');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-17')
+        .attr('val', '2022-05-17');
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-17');
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn-secondary').text('查詢');
-      attendance.append('<br>', searchFrom, '<br>', searchTo, '<br>', searchBtn);
+      attendance.append(checkBtn, '<br>', searchFrom, '<br>', searchTo, '<br>', searchBtn);
 
       const attendanceSquares = Object.keys(attendanceColor).reduce((acc, cur) => {
         acc += `<div style="height:30px; width:30px; background-color:${attendanceColor[cur]}"></div><span>${attendanceStatus[cur]}</span>`;
@@ -193,7 +194,7 @@ $(document).ready(async () => {
       </div>    
       `;
 
-      $('.content').append(checkBtn, attendance, explainColor);
+      $('.content').append(attendance, explainColor);
 
       const remindModal = new bootstrap.Modal($('#remind_modal'));
       $('.check_btn').click((remindEvent) => {
@@ -203,6 +204,7 @@ $(document).ready(async () => {
 
       $('.search_btn').click(async () => {
         try {
+          $('.attendance_result').remove();
           let table = $('.attendance_result').css('width', '100%');
           if (table) { table.text(''); }
           const from = ($('.search_from').val()) ? `?from=${$('.search_from').val()}`.replaceAll('-', '') : '';
