@@ -1,3 +1,4 @@
+const { NODE_ENV } = process.env;
 const User = require('../models/user_model');
 const Fingerprint = require('../models/fingerprint_model');
 const { sendResetEmail } = require('../util/mailer');
@@ -303,9 +304,10 @@ const matchFingerprint = async (req, res) => {
   const fingerId = fingerIds[0].id;
 
   const retryEnrollStatus = async (cur, limit) => {
-    const enrollStatus = await Fingerprint.matchStudent(studentId, fingerId);
+    const enrollStatus = await Fingerprint.enrollFingerprint(fingerId);
     if (enrollStatus.code < 2000) {
-      return enrollStatus;
+      const record = await Fingerprint.recordMatch(studentId, fingerId);
+      return record;
     }
     if (cur >= limit) { return enrollStatus; }
     // before retry init fist
@@ -314,13 +316,22 @@ const matchFingerprint = async (req, res) => {
     return retryEnrollStatus(cur + 1, limit);
   };
 
+  if (NODE_ENV === 'demo') {
+    const result = await Fingerprint.recordMatch(studentId, fingerId);
+    await new Promise((resolve) => { setTimeout(resolve, 2000); });
+    if (result.code < 2000) {
+      return res.status(200).json({ code: result.code, data: { finger_id: fingerId, message: 'Match successfully' } });
+    }
+    return res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
+  }
+
   // send to sensor
   const tryLimit = 3;
   const tryTime = 1;
   const result = await retryEnrollStatus(tryTime, tryLimit);
 
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { finger_id: result.finger_id, message: 'Match successfully' } });
+    res.status(200).json({ code: result.code, data: { finger_id: fingerId, message: 'Match successfully' } });
   } else if (result.code < 3000) {
     res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
   } else {
@@ -332,10 +343,13 @@ const initFingerData = async (req, res) => {
   const fingerId = req.params.id;
   // sensor record 0-199
   if (fingerId >= 200) { return res.status(400).json({ code: 3040, error: { message: 'finger Id out of range' } }); }
+
   const initRowStatus = await Fingerprint.initOneRow(fingerId);
   if (initRowStatus.code > 2000) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Internal server Errors' } }); }
-  const deleteSensorFingerStatus = await Fingerprint.deleteOneSensorFinger(fingerId);
-  if (deleteSensorFingerStatus.code > 2000 || (!deleteSensorFingerStatus.code)) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Sensor Errors' } }); }
+  if (NODE_ENV !== 'demo') {
+    const deleteSensorFingerStatus = await Fingerprint.deleteOneSensorFinger(fingerId);
+    if (deleteSensorFingerStatus.code > 2000 || (!deleteSensorFingerStatus.code)) { return res.status(500).json({ code: initRowStatus.code, error: { message: 'Sensor Errors' } }); }
+  }
   return res.status(200).json({ data: { message: 'Delete successfully' } });
 };
 

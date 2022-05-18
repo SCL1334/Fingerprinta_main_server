@@ -4,7 +4,7 @@ const { promisePool } = require('./mysqlcon');
 const { FINGERPRINT_HOST, FINGERPRINT_PORT, SENSOR_API_VERISON } = process.env;
 const sensorFingerUrl = `http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/api/${SENSOR_API_VERISON}/fingerprints`;
 
-const matchStudent = async (studentId, fingerId) => {
+const enrollFingerprint = async (fingerId) => {
   // fingerprint ID from 0 to 199
   try {
     const sensorRes = await axios
@@ -15,12 +15,7 @@ const matchStudent = async (studentId, fingerId) => {
     const statusCode = sensorResult.code;
     if (statusCode) {
       // success
-      if (statusCode === 1001) {
-        // in this case, Sensor has recorded the finger ID
-        // It's better to record the data in db as well to track the sensor status
-        await promisePool.query('UPDATE fingerprint SET status = 1, student_id = ? WHERE id = ?', [studentId, fingerId]);
-        return { code: 1010 };
-      }
+      if (statusCode === 1001) { return { code: 1010 }; }
       // operation error
       if (statusCode > 3000) { return { code: statusCode, message: sensorResult.error.message }; }
       // sensor server error
@@ -29,6 +24,16 @@ const matchStudent = async (studentId, fingerId) => {
       return { code: 2011, message: 'Sensor internal error' };
     }
     throw new Error('unexpeted server Error: no sensor status');
+  } catch (err) {
+    console.log(err);
+    return { code: 2010 };
+  }
+};
+
+const recordMatch = async (studentId, fingerId) => {
+  try {
+    await promisePool.query('UPDATE fingerprint SET status = 1, student_id = ? WHERE id = ?', [studentId, fingerId]);
+    return { code: 1010 };
   } catch (err) {
     console.log(err);
     return { code: 2010 };
@@ -220,7 +225,8 @@ module.exports = {
   deleteOneSensorFinger,
   deleteSensorFingerList,
   getFingerListOfClass,
-  matchStudent,
+  enrollFingerprint,
+  recordMatch,
   initOneRow,
   initByClass,
   findStudent,
