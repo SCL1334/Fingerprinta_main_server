@@ -131,13 +131,18 @@ const editRoutine = async (routineId, routine) => {
     const [result] = await promisePool.query('SELECT id FROM class_routine WHERE id = ?', [routineId]);
     if (result.length === 0) {
       console.log('target not exist');
-      return -1;
+      return { code: 3020 };
     }
     await promisePool.query('UPDATE class_routine SET ? WHERE id = ?', [routine, routineId]);
-    return 1;
-  } catch (error) {
-    console.log(error);
-    return 0;
+    return { code: 1020 };
+  } catch (err) {
+    console.log(err);
+    const { errno } = err;
+    // 1062 Duplicate entry
+    if (errno === 1062 || errno === 1048) {
+      return { code: 3020 };
+    }
+    return { code: 2020 };
   }
 };
 

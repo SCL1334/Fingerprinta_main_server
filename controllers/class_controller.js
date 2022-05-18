@@ -100,12 +100,12 @@ const createRoutine = async (req, res) => {
 const editRoutine = async (req, res) => {
   const { id, classRoutine } = res.locals;
   const result = await Class.editRoutine(id, classRoutine);
-  if (result === 0) {
-    res.status(500).json({ error: { message: 'Update failed' } });
-  } else if (result === -1) {
-    res.status(400).json({ error: { message: 'Update failed due to invalid input' } });
+  if (result.code < 2000) {
+    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Update successfully' } });
+  } else if (result.code < 3000) {
+    res.status(500).json({ code: result.code, error: { message: 'Update failed' } });
   } else {
-    res.status(200).json({ data: { message: 'Update OK' } });
+    res.status(400).json({ code: result.code, error: { message: 'Update failed due to invalid input' } });
   }
 };
 
