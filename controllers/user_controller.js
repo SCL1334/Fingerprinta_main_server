@@ -101,6 +101,9 @@ const getClassTeachers = async (req, res) => {
 
 const deleteStaff = async (req, res) => {
   const staffId = req.params.id;
+  // not allow to delete self account
+  const self = (req.session.user.staff_id).toString();
+  if (staffId === self) { return res.status(400).json({ error: { message: 'Could not delete self account' } }); }
   const result = await User.deleteStaff(staffId);
   if (result === 0) {
     res.status(500).json({ error: 'Delete failed' });
