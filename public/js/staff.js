@@ -532,7 +532,7 @@ async function accountManage() {
             </div>
             <div class="modal-body">
               <p class="font-monospace text-center fs-2">新增多位學生</p>
-              <form  method="POST">
+              <form  action=/api/1.0/classes/#/students method="POST">
                 <div class="mb-3">
                   <label for="student_class" class="form-label">學生班級</label>
                     <select name="student_class" id="multi_create_class" class="form-select">
@@ -665,50 +665,54 @@ async function accountManage() {
           });
         }
       });
-      $('#students_list').on('change', (upload) => {
-        const selectedFile = upload.target.files[0];
-        $('#create_students_btn').click(async (submit) => {
-          submit.preventDefault();
-          if (selectedFile) {
-            const fileReader = new FileReader();
-            fileReader.readAsBinaryString(selectedFile);
-            fileReader.onload = async (event) => {
-              const data = event.target.result;
-              const workbook = XLSX.read(data, { type: 'binary' });
-              // consume only one sheet
-              const studentsList = XLSX.utils.sheet_to_row_object_array(
-                workbook.Sheets[workbook.SheetNames[0]],
-              );
-              studentsList.forEach((student) => {
-                student.password = student.birth;
-                delete student.birth;
-              });
-              try {
-                const studentAccountRes = await axios(`/api/1.0/classes/${$('#multi_create_class').val()}/students`, {
-                  method: 'POST',
-                  data: {
-                    students: studentsList,
-                  },
-                  headers: {
-                    'content-type': 'application/json',
-                  },
-                });
-                const studentAccountResult = studentAccountRes.data;
-                if (studentAccountResult) {
-                  studentCreateModal.hide();
-                  studentManage();
-                }
-              } catch (err) {
-                console.log(err);
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Oops...',
-                  text: '帳號創建失敗',
-                });
-              }
-            };
+
+      $('#create_students_btn').click(async (submit) => {
+        submit.preventDefault();
+        // $('#students_list').on('change', (upload) => {
+        // const selectedFile = upload.target.files[0];
+
+        const selectedFile = $('#students_list').prop('files')[0];
+        if (!selectedFile) { return; }
+
+        const fileReader = new FileReader();
+        fileReader.readAsBinaryString(selectedFile);
+        fileReader.onload = async (event) => {
+          const data = event.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          // consume only one sheet
+          const studentsList = XLSX.utils.sheet_to_row_object_array(
+            workbook.Sheets[workbook.SheetNames[0]],
+          );
+          studentsList.forEach((student) => {
+            student.password = student.birth;
+            delete student.birth;
+          });
+          try {
+            const studentAccountRes = await axios(`/api/1.0/classes/${$('#multi_create_class').val()}/students`, {
+              method: 'POST',
+              data: {
+                students: studentsList,
+              },
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+            const studentAccountResult = studentAccountRes.data;
+            if (studentAccountResult) {
+              studentCreateModal.hide();
+              studentManage();
+            }
+          } catch (err) {
+            console.log(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '帳號創建失敗',
+            });
           }
-        });
+        };
+        // }
+        // });
       });
     });
 
