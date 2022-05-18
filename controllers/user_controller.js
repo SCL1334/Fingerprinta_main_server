@@ -19,8 +19,8 @@ const createStudent = async (req, res) => {
 };
 
 const createClassStudents = async (req, res) => {
-  const classId = req.params.id;
-  const { students } = req.body;
+  const { classId, students } = res.locals;
+
   const result = await User.createClassStudents(students, classId);
   if (result.code < 2000) {
     res.status(200).json({ code: result.code, data: { message: 'Create successfully' } });

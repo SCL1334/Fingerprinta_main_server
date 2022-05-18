@@ -38,8 +38,7 @@ const createClassStudents = async (students, classId) => {
     };
 
     await forEachAsync(students, async (student) => {
-      student.password = await argon2.hash(student.birth);
-      delete student.birth;
+      student.password = await argon2.hash(student.password);
     });
 
     const studentAccounts = Object.keys(students).reduce((acc, cur) => {

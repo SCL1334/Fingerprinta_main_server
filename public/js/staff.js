@@ -679,6 +679,10 @@ async function accountManage() {
               const studentsList = XLSX.utils.sheet_to_row_object_array(
                 workbook.Sheets[workbook.SheetNames[0]],
               );
+              studentsList.forEach((student) => {
+                student.password = student.birth;
+                delete student.birth;
+              });
               try {
                 const studentAccountRes = await axios(`/api/1.0/classes/${$('#multi_create_class').val()}/students`, {
                   method: 'POST',

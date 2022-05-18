@@ -72,6 +72,14 @@ const createStudentSchema = Joi.object({
   class_id: Joi.number().integer().min(1).required(),
 });
 
+const createMultiStudentsSchema = Joi.object({
+  name: Joi.string().trim().required().regex(prohibit, { invert: true }),
+  email: Joi.string().email().trim().lowercase()
+    .required(),
+  password: Joi.string().min(pwdMin).trim().strict()
+    .required(),
+});
+
 const editStudentSchema = Joi.object({
   name: Joi.string().trim().regex(prohibit, { invert: true }),
   email: Joi.string().email().trim().lowercase(),
@@ -298,6 +306,36 @@ const createStudent = async (req, res, next) => {
   }
 };
 
+const createStudents = async (req, res, next) => {
+  const classId = req.params.id;
+  const { students } = req.body;
+
+  try {
+    const validId = await idSchema.validateAsync({ id: classId });
+    res.locals.classId = validId.id;
+  } catch (err) {
+    console.log(err);
+    return res.status(400).json({ error: { message: err.details[0].message } });
+  }
+
+  const verifiedStudents = { valid: [], invalid: [] };
+  for (let i = 0; i < students.length; i += 1) {
+    try {
+      const validStudent = await createMultiStudentsSchema.validateAsync(students[i]);
+      verifiedStudents.valid.push(validStudent);
+    } catch (err) {
+      console.log(err);
+      verifiedStudents.invalid.push([students[i], { error: err.details[0].message }]);
+    }
+  }
+
+  if (verifiedStudents.invalid.length > 0) {
+    return res.status(400).json({ error: verifiedStudents.invalid });
+  }
+  res.locals.students = verifiedStudents.valid;
+  return next();
+};
+
 const editStudent = async (req, res, next) => {
   const student = req.body;
   const { id } = req.params;
@@ -470,6 +508,7 @@ module.exports = {
   createLeaveType,
   createPunchException,
   createStudent,
+  createStudents,
   editStudent,
   createStaff,
   changePassword,

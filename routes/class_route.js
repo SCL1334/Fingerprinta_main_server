@@ -34,7 +34,7 @@ router.route('/classes/:id/backup/leaves').post(wrapAsync(backupClassLeaves));
 
 router.route('/classes/:id/attendances').get(wrapAsync(getClassAttendances));
 router.route('/classes/:id/students').get(wrapAsync(getStudents));
-router.route('/classes/:id/students').post(wrapAsync(createClassStudents));
+router.route('/classes/:id/students').post(Validator.createStudents, wrapAsync(createClassStudents));
 router.route('/classes/:id/teachers').get(wrapAsync(getClassTeachers));
 router.route('/classes/:classId/teachers/:teacherId').post(wrapAsync(addTeacher));
 router.route('/classes/:classId/teachers/:teacherId').delete(wrapAsync(removeTeacher));
