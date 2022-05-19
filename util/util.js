@@ -1,6 +1,6 @@
 require('dotenv').config();
 const aws = require('aws-sdk');
-const dayjs = require('dayjs');
+const ResTransformer = require('./response');
 
 const {
   AWS_RESION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET,
@@ -59,12 +59,20 @@ const getS3Url = async (targetPathName) => {
 const authentication = (needStaff = 0) => function (req, res, next) {
   const { user } = req.session;
   if (!user) {
-    return res.status(401).send({ error: { message: 'Unauthorized' } });
+    const { response, httpCode } = new ResTransformer({ errCode: 3441 });
+    return res.status(httpCode).json(
+      { code: response.code, error: response.error, data: response.data },
+    );
   }
 
   // staff use
   if (needStaff === 1) {
-    if (!user.staff_id) { return res.status(403).send({ error: { message: 'Forbidden' } }); }
+    if (!user.staff_id) {
+      const { response, httpCode } = new ResTransformer({ errCode: 3442 });
+      return res.status(httpCode).json(
+        { code: response.code, error: response.error, data: response.data },
+      );
+    }
     return next();
   }
   // all can use
