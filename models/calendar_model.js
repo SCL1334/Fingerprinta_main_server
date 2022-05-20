@@ -1,4 +1,5 @@
 const { promisePool } = require('./mysqlcon');
+const { MysqlError } = require('../util/custom_error');
 
 const getMonthHolidays = async (year, month) => {
   try {
@@ -6,9 +7,10 @@ const getMonthHolidays = async (year, month) => {
       'SELECT * FROM calendar WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
       [year, month],
     );
+    if (calendar.length === 0) { return new MysqlError(3000, 'no calendar data'); }
     return { data: calendar };
   } catch (error) {
-    return { error };
+    return new MysqlError(2000, error.message);
   }
 };
 
@@ -17,7 +19,13 @@ const initYearHolidays = async (calendar) => {
     await promisePool.query('INSERT INTO calendar (date, need_punch) VALUES ?', [calendar]);
     return null;
   } catch (error) {
-    return { error };
+    if (error.errno === 1062) {
+      return new MysqlError(3100, error.message);
+    }
+    if (error.errno === 1048) {
+      return new MysqlError(3101, error.message);
+    }
+    return new MysqlError(2100, error.message);
   }
 };
 
@@ -29,7 +37,7 @@ const checkDateExist = async (date) => {
     }
     return { exist: true };
   } catch (error) {
-    return { error };
+    return new MysqlError(2200, error.message);
   }
 };
 
@@ -38,7 +46,7 @@ const editHoliday = async (date) => {
     await promisePool.query('UPDATE calendar SET need_punch = !need_punch WHERE date = ?', [date]);
     return null;
   } catch (error) {
-    return { error };
+    return new MysqlError(2200, error.message);
   }
 };
 
@@ -47,7 +55,7 @@ const deleteYearHolidays = async (year) => {
     await promisePool.query('DELETE FROM calendar WHERE YEAR(date(date)) = ?', [year]);
     return null;
   } catch (error) {
-    return { error };
+    return new MysqlError(2300, error.message);
   }
 };
 
@@ -59,7 +67,7 @@ const checkYearExist = async (year) => {
     }
     return { exist: true };
   } catch (error) {
-    return { error };
+    return new MysqlError(2300, error.message);
   }
 };
 
@@ -75,7 +83,7 @@ const getPunchException = async (year, month) => {
     );
     return { data: punchExceptions };
   } catch (error) {
-    return { error };
+    return new MysqlError(2000, error.message);
   }
 };
 
@@ -84,7 +92,16 @@ const createPunchException = async (punchException) => {
     const [result] = await promisePool.query('INSERT INTO punch_exception SET ?', punchException);
     return { data: { insert_id: result.insertId } };
   } catch (error) {
-    return { error };
+    if (error.errno === 1062) {
+      return new MysqlError(3100, error.message);
+    }
+    if (error.errno === 1048) {
+      return new MysqlError(3101, error.message);
+    }
+    if (error.errno === 1452) {
+      return new MysqlError(3102, error.message);
+    }
+    return new MysqlError(2100, error.message);
   }
 };
 
@@ -94,7 +111,7 @@ const deletePunchException = async (punchExceptionId) => {
     await promisePool.query('DELETE FROM punch_exception WHERE id = ?', [punchExceptionId]);
     return null;
   } catch (error) {
-    return { error };
+    return new MysqlError(2300, error.message);
   }
 };
 
@@ -106,7 +123,7 @@ const checkExceptionExist = async (punchExceptionId) => {
     }
     return { exist: true };
   } catch (error) {
-    return { error };
+    return new MysqlError(2300, error.message);
   }
 };
 

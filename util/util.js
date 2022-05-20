@@ -1,6 +1,6 @@
 require('dotenv').config();
 const aws = require('aws-sdk');
-const ResTransformer = require('./response');
+const ResponseTransformer = require('./response');
 
 const {
   AWS_RESION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET,
@@ -59,7 +59,7 @@ const getS3Url = async (targetPathName) => {
 const authentication = (needStaff = 0) => function (req, res, next) {
   const { user } = req.session;
   if (!user) {
-    const { response, httpCode } = new ResTransformer({ errCode: 3441 });
+    const { response, httpCode } = new ResponseTransformer({ errCode: 3441 });
     return res.status(httpCode).json(
       { code: response.code, error: response.error, data: response.data },
     );
@@ -68,7 +68,7 @@ const authentication = (needStaff = 0) => function (req, res, next) {
   // staff use
   if (needStaff === 1) {
     if (!user.staff_id) {
-      const { response, httpCode } = new ResTransformer({ errCode: 3442 });
+      const { response, httpCode } = new ResponseTransformer({ errCode: 3442 });
       return res.status(httpCode).json(
         { code: response.code, error: response.error, data: response.data },
       );
