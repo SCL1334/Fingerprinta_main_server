@@ -39,6 +39,29 @@ const getCeilHourTime = (timeString) => minutesToTimeString(timeStringToMinutes(
 
 const minToFloorHourTime = (timeString) => `${Math.floor(timeString / 60)}:00:00`;
 
+const getDefaultLeaveHours = (start, end, restStart, restEnd) => {
+  let leaveHours = 0;
+  const startMin = timeStringToMinutes(start);
+  const endMin = timeStringToMinutes(end);
+  const restStartMin = timeStringToMinutes(restStart);
+  const restEndMin = timeStringToMinutes(restEnd);
+
+  const minToHours = (min) => Math.ceil(min / 60);
+
+  if (startMin < restStartMin && endMin > restEndMin) { // 正常情況 start && end 都不在Rest範圍
+    leaveHours = minToHours(restStartMin - startMin + endMin - restEndMin);
+  } else if (startMin >= restEndMin || endMin <= restStartMin) { // 沒有重疊到Rest
+    leaveHours = minToHours(endMin - startMin);
+  } else if (startMin <= restStartMin && endMin < restEndMin) { // end 在 Rest中
+    leaveHours = minToHours(restStartMin - startMin);
+  } else if (startMin >= restStartMin && endMin <= restEndMin) { // start end 皆落在Rest範圍
+    leaveHours = 0;
+  } else if (startMin >= restStartMin && endMin > restEndMin) { // start 在Rest中
+    leaveHours = minToHours(endMin - restEndMin);
+  }
+  return leaveHours;
+};
+
 const getS3Url = async (targetPathName) => {
   const params = {
     Bucket: AWS_S3_BUCKET,
@@ -84,6 +107,7 @@ module.exports = {
   timeStringToMinutes,
   minutesToTimeString,
   getCeilHourTime,
+  getDefaultLeaveHours,
   minToFloorHourTime,
   authentication,
   getS3Url,
