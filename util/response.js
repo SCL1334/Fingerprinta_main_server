@@ -281,48 +281,34 @@ const ERROR_RESPONSE = {
 };
 
 class ResponseTransformer {
-  response;
-
-  httpCode;
-
   constructor({ errCode, code, data = null }) {
-    this.response = (errCode) ? this.transErrorRes(errCode) : this.transSuccessRes(code, data);
-
     this.errCode = errCode;
     this.code = code;
     this.data = data;
-
     this.detail = errCode ? ERROR_RESPONSE[errCode] : SUCCESS_RESPONSE[code];
-    // this.httpCode = this.detail.httpCode;
   }
 
-  // get response() {
-  //   return this.transform();
-  // }
+  get response() {
+    return this.#transform();
+  }
 
-  // #transform = () => {
-  //   const response = { code: this.code };
-  //   if (this.errCode) {
-  //     response.error = { message: this.detail.eMessage };
-  //   } else if (this.data) {
-  //     response.data = this.data;
-  //   } else {
-  //     response.data = { message: this.detail.eMessage };
-  //   }
-  // };
+  get httpCode() {
+    return this.detail.httpCode;
+  }
 
-  transSuccessRes = (code, data) => {
-    const detail = SUCCESS_RESPONSE[code];
-    const { httpCode, eMessage } = detail;
-    this.httpCode = httpCode;
-    return data ? { code, data } : { code, data: { message: eMessage } };
-  };
-
-  transErrorRes = (code) => {
-    const detail = ERROR_RESPONSE[code];
-    const { httpCode, eMessage } = detail;
-    this.httpCode = httpCode;
-    return { code, error: { message: eMessage } };
+  #transform = () => {
+    const response = { code: this.code || this.errCode };
+    if (this.errCode) {
+      response.error = { message: ERROR_RESPONSE[this.errCode].eMessage };
+      response.data = null;
+    } else if (this.data) {
+      response.data = this.data;
+      response.error = null;
+    } else {
+      response.data = { message: SUCCESS_RESPONSE[this.code].eMessage };
+      response.error = null;
+    }
+    return response;
   };
 }
 
