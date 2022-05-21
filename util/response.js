@@ -110,6 +110,12 @@ const ERROR_RESPONSE = {
     httpCode: 500,
     eMessage: 'Read failed, internal server error',
   },
+  2001: {
+    status: 'error',
+    httpCode: 500,
+    eMessage: 'Operation failed, internal server error',
+  },
+
   2100: {
     status: 'error',
     httpCode: 500,
@@ -179,13 +185,19 @@ const ERROR_RESPONSE = {
   3000: {
     status: 'error',
     httpCode: 400,
-    eMessage: 'No target data found',
+    eMessage: 'Read failed, no target data found',
+  },
+  3001: {
+    status: 'error',
+    httpCode: 400,
+    eMessage: 'Operation Failed, target does not exist',
   },
   3003: {
     status: 'error',
     httpCode: 400,
     eMessage: 'invalid parameter',
   },
+
   3100: { // mysql errno 1062
     status: 'error',
     httpCode: 400,
@@ -198,7 +210,7 @@ const ERROR_RESPONSE = {
   },
   3102: {
     status: 'error',
-    httpCode: 400, // mysql errno 1452
+    httpCode: 422, // mysql errno 1452
     eMessage: 'Create failed, foreign key constraint fails',
   },
 

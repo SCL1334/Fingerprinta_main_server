@@ -2,52 +2,60 @@ const dayjs = require('dayjs');
 const xlsx = require('xlsx');
 const { s3 } = require('../util/util');
 const { promisePool } = require('./mysqlcon');
+const { MysqlError } = require('../util/custom_error');
 
 const getTypes = async () => {
   try {
     const [leaveTypes] = await promisePool.query(
       'SELECT * FROM leave_type',
     );
-    return leaveTypes;
-  } catch (err) {
-    console.log(err);
-    return null;
+    return { data: leaveTypes };
+  } catch (error) {
+    return new MysqlError(2000, error.message);
   }
 };
 
 const createType = async (leaveType) => {
   try {
     const [result] = await promisePool.query('INSERT INTO leave_type SET ?', leaveType);
-    return { code: 1010, insert_id: result.insertId };
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
-    // 1062 Duplicate entry
-    if (errno === 1062 || errno === 1048) {
-      return { code: 3010 };
+    return { data: { insert_id: result.insertId } };
+  } catch (error) {
+    if (error.errno === 1062) {
+      return new MysqlError(3100, error.message);
     }
-    return { code: 2010 };
+    if (error.errno === 1048) {
+      return new MysqlError(3101, error.message);
+    }
+    if (error.errno === 1452) {
+      return new MysqlError(3102, error.message);
+    }
+    return new MysqlError(2100, error.message);
+  }
+};
+
+const checkTypeExist = async (typeId) => {
+  try {
+    const [types] = await promisePool.query('SELECT id FROM leave_type WHERE id = ?', [typeId]);
+    if (types.length === 0) {
+      return { exist: false };
+    }
+    return { exist: true };
+  } catch (error) {
+    return new MysqlError(2001, error.message);
   }
 };
 
 const deleteType = async (typeId) => {
   // delete success:1  fail case: server 0 / target not exist -1 /foreign key constraint -2
   try {
-    const [result] = await promisePool.query('SELECT id FROM leave_type WHERE id = ?', [typeId]);
-    if (result.length === 0) {
-      console.log('target not exist');
-      return 3050;
-    }
     await promisePool.query('DELETE FROM leave_type WHERE id = ?', [typeId]);
-    return 1030;
+    return null;
   } catch (error) {
-    console.log(error);
-    const { errno } = error;
-    if (errno === 1451) {
+    if (error.errno === 1451) {
       // conflict err
-      return 3030;
+      return new MysqlError(3302, error.message);
     }
-    return 2030;
+    return new MysqlError(2001, error.message);
   }
 };
 
@@ -337,6 +345,7 @@ const deleteSelfLeave = async (studentId, leaveId) => {
 module.exports = {
   getTypes,
   createType,
+  checkTypeExist,
   deleteType,
   getAllLeaves,
   getClassLeaves,

@@ -35,7 +35,7 @@ const editHoliday = async (date) => {
   if (preCheck instanceof Error) {
     return preCheck;
   }
-  if (!preCheck.exist) { return new GeneralError(3200, 'no target date data'); }
+  if (!preCheck.exist) { return new GeneralError(3001, 'no target date data'); }
   const result = await Calendar.editHoliday(editDate.format('YYYY-MM-DD'));
   if (result === null) { return { code: 1200 }; }
   return result;
@@ -44,7 +44,7 @@ const editHoliday = async (date) => {
 const deleteYearHolidays = async (year) => {
   const preCheck = await Calendar.checkYearExist(year);
   if (preCheck instanceof Error) { return preCheck; }
-  if (!preCheck.exist) { return new GeneralError(3300, 'no target year data'); }
+  if (!preCheck.exist) { return new GeneralError(3001, 'no target year data'); }
   const result = await Calendar.deleteYearHolidays(year);
   if (result === null) { return { code: 1300 }; }
   return result;
@@ -75,7 +75,7 @@ const createPunchException = async (punchException) => {
 const deletePunchException = async (punchExceptionId) => {
   const preCheck = await Calendar.checkExceptionExist(punchExceptionId);
   if (preCheck instanceof Error) { return preCheck; }
-  if (!preCheck.exist) { return new GeneralError(3300, 'no target year data'); }
+  if (!preCheck.exist) { return new GeneralError(3001, 'no target year data'); }
   const result = await Calendar.deletePunchException(punchExceptionId);
   if (result === null) { return { code: 1300 }; }
   return result;

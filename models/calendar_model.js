@@ -67,7 +67,7 @@ const checkYearExist = async (year) => {
     }
     return { exist: true };
   } catch (error) {
-    return new MysqlError(2300, error.message);
+    return new MysqlError(2001, error.message);
   }
 };
 
@@ -123,7 +123,7 @@ const checkExceptionExist = async (punchExceptionId) => {
     }
     return { exist: true };
   } catch (error) {
-    return new MysqlError(2300, error.message);
+    return new MysqlError(2001, error.message);
   }
 };
 

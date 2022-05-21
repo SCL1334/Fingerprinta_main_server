@@ -3,41 +3,28 @@ const dayjs = require('dayjs');
 const Leave = require('../models/leave_model');
 const Class = require('../models/class_model');
 const { timeStringToMinutes, getS3Url } = require('../util/util');
+const LeaveService = require('../service/leave_service');
+const ResponseTransformer = require('../util/response');
 
 // Type Manage
 const getTypes = async (req, res) => {
-  const types = await Leave.getTypes();
-  if (types) {
-    res.status(200).json({ code: 1000, data: types });
-  } else {
-    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
-  }
+  const result = await LeaveService.getTypes();
+  const transformer = new ResponseTransformer(result);
+  res.status(transformer.httpCode).json(transformer.response);
 };
 
 const createType = async (req, res) => {
   const { leaveType } = res.locals;
-  const result = await Leave.createType(leaveType);
-  if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
-  } else if (result.code < 3000) {
-    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
-  } else {
-    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
-  }
+  const result = await LeaveService.createType(leaveType);
+  const transformer = new ResponseTransformer(result);
+  res.status(transformer.httpCode).json(transformer.response);
 };
 
 const deleteType = async (req, res) => {
   const typeId = req.params.id;
-  const status = await Leave.deleteType(typeId);
-  if (status < 2000) {
-    res.status(200).json({ code: status, data: 'Delete successfully' });
-  } else if (status < 3000) {
-    res.status(500).json({ code: status, error: { message: 'Delete failed' } });
-  } else if (status === 3030) {
-    res.status(409).json({ code: status, error: { message: 'Delete failed, Conflict' } });
-  } else {
-    res.status(400).json({ code: status, error: { message: 'Delete failed due to invalid input' } });
-  }
+  const result = await LeaveService.deleteType(typeId);
+  const transformer = new ResponseTransformer(result);
+  res.status(transformer.httpCode).json(transformer.response);
 };
 
 // Manage leaves
