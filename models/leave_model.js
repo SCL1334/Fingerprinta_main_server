@@ -1,8 +1,9 @@
 const dayjs = require('dayjs');
 const xlsx = require('xlsx');
-const { s3 } = require('../util/util');
+const { s3 } = require('../util/aws_s3');
 const { promisePool } = require('./mysqlcon');
 const { MysqlError } = require('../util/custom_error');
+const Logger = require('../util/logger');
 
 const getTypes = async () => {
   try {
@@ -52,7 +53,7 @@ const deleteType = async (typeId) => {
     return null;
   } catch (error) {
     if (error.errno === 1451) {
-      // conflict err
+      // conflict error
       return new MysqlError(3302, error.message);
     }
     return new MysqlError(2001, error.message);
@@ -78,12 +79,14 @@ const getAllLeaves = async (from = null, to = null) => {
       `,
       [from, to],
     );
-    leaves.forEach((leave) => {
-      leave.date = dayjs(leave.date).format('YYYY-MM-DD');
+    const formattedLeaves = leaves.map((leave) => {
+      const formattedLeave = JSON.parse(JSON.stringify(leave));
+      formattedLeave.date = dayjs(leave.date).format('YYYY-MM-DD');
+      return formattedLeave;
     });
-    return leaves;
-  } catch (err) {
-    console.log(err);
+    return formattedLeaves;
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -108,12 +111,14 @@ const getPersonLeaves = async (studentId, from = null, to = null) => {
       `,
       [studentId, from, to],
     );
-    leaves.forEach((leave) => {
-      leave.date = dayjs(leave.date).format('YYYY-MM-DD');
+    const formattedLeaves = leaves.map((leave) => {
+      const formattedLeave = JSON.parse(JSON.stringify(leave));
+      formattedLeave.date = dayjs(leave.date).format('YYYY-MM-DD');
+      return formattedLeave;
     });
-    return leaves;
-  } catch (err) {
-    console.log(err);
+    return formattedLeaves;
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -139,12 +144,14 @@ const checkStudentValidLeaves = async (studentId, from = null, to = null) => {
       `,
       [studentId, from, to],
     );
-    leaves.forEach((leave) => {
-      leave.date = dayjs(leave.date).format('YYYY-MM-DD');
+    const formattedLeaves = leaves.map((leave) => {
+      const formattedLeave = JSON.parse(JSON.stringify(leave));
+      formattedLeave.date = dayjs(leave.date).format('YYYY-MM-DD');
+      return formattedLeave;
     });
-    return leaves;
-  } catch (err) {
-    console.log(err);
+    return formattedLeaves;
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -170,12 +177,14 @@ const getClassLeaves = async (classId, from = null, to = null) => {
       [classId, from, to],
     );
 
-    leaves.forEach((leave) => {
-      leave.date = dayjs(leave.date).format('YYYY-MM-DD');
+    const formattedLeaves = leaves.map((leave) => {
+      const formattedLeave = JSON.parse(JSON.stringify(leave));
+      formattedLeave.date = dayjs(leave.date).format('YYYY-MM-DD');
+      return formattedLeave;
     });
-    return leaves;
-  } catch (err) {
-    console.log(err);
+    return formattedLeaves;
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -201,12 +210,14 @@ const checkClassValidLeaves = async (classId, from = null, to = null) => {
       `,
       [classId, from, to],
     );
-    leaves.forEach((leave) => {
-      leave.date = dayjs(leave.date).format('YYYY-MM-DD');
+    const formattedLeaves = leaves.map((leave) => {
+      const formattedLeave = JSON.parse(JSON.stringify(leave));
+      formattedLeave.date = dayjs(leave.date).format('YYYY-MM-DD');
+      return formattedLeave;
     });
-    return leaves;
-  } catch (err) {
-    console.log(err);
+    return formattedLeaves;
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -229,12 +240,11 @@ const backupClassLeaves = async (className, leaves) => {
       ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       ContentEncoding: 'base64',
     }).promise();
-    console.log('upload successed');
-    console.log(uploadResult);
+    new Logger('upload successed').info();
     return { code: 1010, message: 'upload successed', location: uploadResult.Location };
-  } catch (err) {
-    console.log('upload failed');
-    console.log(err);
+  } catch (error) {
+    new Logger('upload failed').error();
+    new Logger(error).error();
     return { code: 2010, message: 'upload failed' };
   }
 };
@@ -243,12 +253,13 @@ const countLeavesHours = async (studentId) => {
   try {
     const [hours] = await promisePool.query('SELECT hours FROM student_leave WHERE student_id = ? AND approval = 1', [studentId]);
     const totalHours = hours.reduce((acc, cur) => {
-      acc += cur.hours;
-      return acc;
+      let newAcc = acc;
+      newAcc += cur.hours;
+      return newAcc;
     }, 0);
     return { leaves_hours: totalHours };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -266,8 +277,8 @@ const countAllLeavesHours = async () => {
       return acc;
     }, {});
     return eachTotalHours;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -276,9 +287,9 @@ const applyLeave = async (leave) => {
   try {
     const [result] = await promisePool.query('INSERT INTO student_leave SET ?', leave);
     return { code: 1010, insert_id: result.insertId };
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno) {
       return 3010;
     }
@@ -294,8 +305,8 @@ const updateLeave = async (leaveId, leave) => {
     }
     await promisePool.query('UPDATE student_leave SET ? WHERE id = ?', [leave, leaveId]);
     return 1020;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return 2020;
   }
 };
@@ -308,8 +319,8 @@ const updateSelfLeave = async (studentId, leaveId, leave) => {
     }
     await promisePool.query('UPDATE student_leave SET ? WHERE id = ?', [leave, leaveId]);
     return 1020;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return 2020;
   }
 };
@@ -322,8 +333,8 @@ const deleteLeave = async (leaveId) => {
     }
     await promisePool.query('DELETE FROM student_leave WHERE id = ?', [leaveId]);
     return 1030;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return 2030;
   }
 };
@@ -336,8 +347,8 @@ const deleteSelfLeave = async (studentId, leaveId) => {
     }
     await promisePool.query('DELETE FROM student_leave WHERE id = ?', [leaveId]);
     return 1030;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return 2030;
   }
 };

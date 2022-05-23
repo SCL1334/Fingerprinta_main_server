@@ -1,3 +1,4 @@
+const dayjs = require('dayjs');
 const { promisePool } = require('./mysqlcon');
 const { MysqlError } = require('../util/custom_error');
 
@@ -71,15 +72,12 @@ const checkYearExist = async (year) => {
   }
 };
 
-const getPunchException = async (year, month) => {
+const getPunchException = async (year = null, month = null) => {
   try {
-    // for demo get all, original:
-    // const [punchExceptions] = await promisePool.query(
-    //   'SELECT * FROM punch_exception WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ? ORDER BY date ASC;',
-    //   [year, month],
-    // );
+    const filter = (year && month) ? 'WHERE YEAR(date(date)) = ? AND MONTH(date(date)) = ?' : '';
     const [punchExceptions] = await promisePool.query(
-      'SELECT * FROM punch_exception  ORDER BY date ASC;',
+      `SELECT * FROM punch_exception ${filter} ORDER BY date ASC;`,
+      [year, month],
     );
     return { data: punchExceptions };
   } catch (error) {
@@ -127,6 +125,32 @@ const checkExceptionExist = async (punchExceptionId) => {
   }
 };
 
+const getExceptionDays = async (searchFrom, searchTo) => {
+  const [exceptionDays] = await promisePool.query(`
+  SELECT class_type_id, batch, date, start, end FROM punch_exception 
+  WHERE date >= ? AND date <= ?; 
+`, [searchFrom, searchTo]);
+  const formattedExceptionDays = exceptionDays.map((day) => {
+    const formattedDay = JSON.parse(JSON.stringify(day));
+    formattedDay.date = dayjs(formattedDay.date);
+    return formattedDay;
+  });
+  return formattedExceptionDays;
+};
+
+const getSchoolDays = async (searchFrom, searchTo) => {
+  const [schoolDays] = await promisePool.query(`
+  SELECT date FROM calendar
+  WHERE need_punch = 1 AND date >= ? AND date <= ?;
+`, [searchFrom, searchTo]);
+  const formattedSchoolDays = schoolDays.map((day) => {
+    const formattedDay = JSON.parse(JSON.stringify(day));
+    formattedDay.date = dayjs(formattedDay.date);
+    return formattedDay;
+  });
+  return formattedSchoolDays;
+};
+
 module.exports = {
   getMonthHolidays,
   initYearHolidays,
@@ -138,4 +162,6 @@ module.exports = {
   createPunchException,
   checkExceptionExist,
   deletePunchException,
+  getExceptionDays,
+  getSchoolDays,
 };

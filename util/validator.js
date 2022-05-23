@@ -1,5 +1,6 @@
 const Joi = require('joi').extend(require('@joi/date'));
-const ResTransformer = require('./response');
+const ResponseTransformer = require('./response');
+const { ValidateError } = require('./custom_error');
 
 // if no date format, e.g. 20220501 will still pass the validator
 // but the date will parse to 1970-01-01 and save todb without error!!
@@ -13,7 +14,7 @@ const timeFormat = /^([01][0-9]|2[0-3]):([0-5][0-9])(:[0-5][0-9]?)?$/;
 // min length of password
 const pwdMin = 4;
 
-// incomplete 上傳檔案 / 多帳號
+// incomplete 上傳檔案
 
 // Schemas
 
@@ -151,13 +152,6 @@ const idSchema = Joi.object({
   id: Joi.number().integer().min(1).required(),
 });
 
-// only sensor server can punch, no need
-// const punchSchema = Joi.object({
-//   student_id: Joi.number().integer().min(1).required(),
-// });
-
-// audit leave may need
-
 // middleware
 const createClassType = async (req, res, next) => {
   const typeName = req.body.type_name;
@@ -166,8 +160,8 @@ const createClassType = async (req, res, next) => {
     res.locals.classType = classType;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -178,8 +172,8 @@ const createClassGroup = async (req, res, next) => {
     res.locals.classGroup = classGroup;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -195,8 +189,8 @@ const createClassRoutine = async (req, res, next) => {
     res.locals.classRoutine = classRoutine;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -218,8 +212,8 @@ const editClassRoutine = async (req, res, next) => {
     res.locals.id = validId.id;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -240,8 +234,8 @@ const createClass = async (req, res, next) => {
     res.locals.clas = validClass;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -264,11 +258,16 @@ const editClass = async (req, res, next) => {
       res.locals.id = validId.id;
       return next();
     } catch (error) {
-      console.log(error);
-      return res.status(400).json({ error: { message: error.details[0].message } });
+      const transformer = new ResponseTransformer(
+        new ValidateError(4000, error.details[0].message),
+      );
+      return res.status(transformer.httpCode).json(transformer.response);
     }
   }
-  return res.status(400).json({ error: { message: 'start_date and end_date need to be provided together' } });
+  const transformer = new ResponseTransformer(
+    new ValidateError(4000, 'start_date and end_date need to be provided together'),
+  );
+  return res.status(transformer.httpCode).json(transformer.response);
 };
 
 const createLeaveType = async (req, res, next) => {
@@ -278,8 +277,8 @@ const createLeaveType = async (req, res, next) => {
     res.locals.leaveType = validLeaveType;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -290,8 +289,8 @@ const createPunchException = async (req, res, next) => {
     res.locals.punchException = validException;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -302,8 +301,8 @@ const createStudent = async (req, res, next) => {
     res.locals.student = validStudent;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -314,27 +313,26 @@ const createStudents = async (req, res, next) => {
   try {
     const validId = await idSchema.validateAsync({ id: classId });
     res.locals.classId = validId.id;
-  } catch (err) {
-    console.log(err);
-    return res.status(400).json({ error: { message: err.details[0].message } });
+  } catch (error) {
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 
-  const verifiedStudents = { valid: [], invalid: [] };
-  for (let i = 0; i < students.length; i += 1) {
-    try {
-      const validStudent = await createMultiStudentsSchema.validateAsync(students[i]);
-      verifiedStudents.valid.push(validStudent);
-    } catch (err) {
-      console.log(err);
-      verifiedStudents.invalid.push([students[i], { error: err.details[0].message }]);
-    }
-  }
+  const verifiedStudents = [];
+  students.forEach((student) => {
+    verifiedStudents.push(
+      createMultiStudentsSchema.validateAsync(student),
+    );
+  });
 
-  if (verifiedStudents.invalid.length > 0) {
-    return res.status(400).json({ error: verifiedStudents.invalid });
+  try {
+    const validStudents = await Promise.all(verifiedStudents);
+    res.locals.students = validStudents;
+    return next();
+  } catch (error) {
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
-  res.locals.students = verifiedStudents.valid;
-  return next();
 };
 
 const editStudent = async (req, res, next) => {
@@ -356,8 +354,8 @@ const editStudent = async (req, res, next) => {
     res.locals.id = validId.id;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -368,8 +366,8 @@ const createStaff = async (req, res, next) => {
     res.locals.staff = validStaff;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -380,8 +378,8 @@ const changePassword = async (req, res, next) => {
     res.locals.passwords = validPasswords;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -392,8 +390,8 @@ const applyResetPassword = async (req, res, next) => {
     res.locals.email = validEmail.email;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -404,8 +402,8 @@ const resetPassword = async (req, res, next) => {
     res.locals.password = validPassword.password;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -416,8 +414,8 @@ const signInInput = async (req, res, next) => {
     res.locals.signIn = validSignIn;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -430,8 +428,8 @@ const createStudentLeave = async (req, res, next) => {
     res.locals.leave = validLeave;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -444,8 +442,8 @@ const createSelfLeave = async (req, res, next) => {
     res.locals.leave = validLeave;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -468,8 +466,8 @@ const editStudentLeave = async (req, res, next) => {
     res.locals.id = validId.id;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 
@@ -494,8 +492,8 @@ const editSelfLeave = async (req, res, next) => {
     res.locals.id = validId.id;
     return next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: { message: error.details[0].message } });
+    const transformer = new ResponseTransformer(new ValidateError(4000, error.details[0].message));
+    return res.status(transformer.httpCode).json(transformer.response);
   }
 };
 

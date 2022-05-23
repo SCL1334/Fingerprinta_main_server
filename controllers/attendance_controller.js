@@ -1,6 +1,8 @@
 const dayjs = require('dayjs');
 const Attendance = require('../models/attendance_model');
+const AttendanceService = require('../service/attendance_service');
 const User = require('../models/user_model');
+const ResponseTransformer = require('../util/response');
 
 const setPunch = async (req, res) => {
   const sensorIp = process.env.FINGERPRINT_HOST;
@@ -14,14 +16,15 @@ const setPunch = async (req, res) => {
 
   const punchResult = await Attendance.setPunch(studentId);
   if (punchResult === 1) {
-    res.status(200).json({ data: { code: 1010, message: 'Punch in successfully' } });
-  } else if (punchResult === 2) {
-    res.status(200).json({ data: { code: 1010, message: 'Punch out successfully' } });
-  } else if (punchResult === -1) {
-    res.status(400).json({ error: { code: 3010, message: 'Punch failed due to invalid input' } });
-  } else if (punchResult === 0) {
-    res.status(500).json({ error: { code: 2010, message: 'Punch failed due to internal server error' } });
+    return res.status(200).json({ data: { code: 1010, message: 'Punch in successfully' } });
   }
+  if (punchResult === 2) {
+    return res.status(200).json({ data: { code: 1010, message: 'Punch out successfully' } });
+  }
+  if (punchResult === -1) {
+    return res.status(400).json({ error: { code: 3010, message: 'Punch failed due to invalid input' } });
+  }
+  return res.status(500).json({ error: { code: 2010, message: 'Punch failed due to internal server error' } });
 };
 
 const getAllPunch = async (req, res) => {
@@ -33,11 +36,10 @@ const getAllPunch = async (req, res) => {
     return res.status(400).json({ error: 'Input lack of parameter' });
   }
   const punches = await Attendance.getAllPunch(from, to);
-  if (!punches) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: punches });
+  if (punches instanceof Error) {
+    return res.status(500).json({ error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ data: punches });
 };
 
 const getClassPunch = async (req, res) => {
@@ -50,11 +52,10 @@ const getClassPunch = async (req, res) => {
     return res.status(400).json({ error: 'Input lack of parameter' });
   }
   const punches = await Attendance.getClassPunch(classId, from, to);
-  if (!punches) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: punches });
+  if (punches instanceof Error) {
+    return res.status(500).json({ error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ data: punches });
 };
 
 const getPersonPunch = async (req, res) => {
@@ -67,11 +68,10 @@ const getPersonPunch = async (req, res) => {
     return res.status(400).json({ error: 'Input lack of parameter' });
   }
   const punches = await Attendance.getPersonPunch(studentId, from, to);
-  if (!punches) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: punches });
+  if (punches instanceof Error) {
+    return res.status(500).json({ error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ data: punches });
 };
 
 const getSelfPunch = async (req, res) => {
@@ -84,11 +84,10 @@ const getSelfPunch = async (req, res) => {
     return res.status(400).json({ error: 'Input lack of parameter' });
   }
   const punches = await Attendance.getPersonPunch(studentId, from, to);
-  if (!punches) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: punches });
+  if (punches instanceof Error) {
+    return res.status(500).json({ error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ data: punches });
 };
 
 const getPersonAttendances = async (req, res) => {
@@ -101,16 +100,13 @@ const getPersonAttendances = async (req, res) => {
   } else if ((from && !to) || (!from && to)) {
     return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
-    from = null;
-    to = null;
+    from = undefined;
+    to = undefined;
   }
 
-  const attendances = await Attendance.getPersonAttendance(studentId, from, to);
-  if (!attendances) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: attendances });
-  }
+  const result = await AttendanceService.getPersonAttendances(studentId, from, to);
+  const transformer = new ResponseTransformer(result);
+  return res.status(transformer.httpCode).json(transformer.response);
 };
 
 const getSelfAttendances = async (req, res) => {
@@ -123,16 +119,13 @@ const getSelfAttendances = async (req, res) => {
   } else if ((from && !to) || (!from && to)) {
     return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
-    from = null;
-    to = null;
+    from = undefined;
+    to = undefined;
   }
 
-  const attendances = await Attendance.getPersonAttendance(studentId, from, to);
-  if (!attendances) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: attendances });
-  }
+  const result = await AttendanceService.getPersonAttendances(studentId, from, to);
+  const transformer = new ResponseTransformer(result);
+  return res.status(transformer.httpCode).json(transformer.response);
 };
 
 const getClassAttendances = async (req, res) => {
@@ -145,16 +138,13 @@ const getClassAttendances = async (req, res) => {
   } else if ((from && !to) || (!from && to)) {
     return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
-    from = null;
-    to = null;
+    from = undefined;
+    to = undefined;
   }
 
-  const attendances = await Attendance.getClassAttendance(classId, from, to);
-  if (!attendances) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: attendances });
-  }
+  const result = await AttendanceService.getClassAttendances(classId, from, to);
+  const transformer = new ResponseTransformer(result);
+  return res.status(transformer.httpCode).json(transformer.response);
 };
 
 const getAllAttendances = async (req, res) => {
@@ -166,16 +156,13 @@ const getAllAttendances = async (req, res) => {
   } else if ((from && !to) || (!from && to)) {
     return res.status(400).json({ error: { message: 'Input lack of parameter' } });
   } else {
-    from = null;
-    to = null;
+    from = undefined;
+    to = undefined;
   }
 
-  const attendances = await Attendance.getAllAttendances(from, to);
-  if (!attendances) {
-    res.status(500).json({ error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ data: attendances });
-  }
+  const result = await AttendanceService.getAllAttendances(from, to);
+  const transformer = new ResponseTransformer(result);
+  return res.status(transformer.httpCode).json(transformer.response);
 };
 
 module.exports = {

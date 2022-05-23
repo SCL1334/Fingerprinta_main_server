@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { wrapAsync } = require('../util/util');
+const { wrapAsync } = require('../util/warpper');
 const Validator = require('../util/validator');
 const {
   createStudent, editStudent, getStudents, getOneStudent, deleteStudent,
@@ -11,7 +11,7 @@ const {
 } = require('../controllers/user_controller');
 
 const {
-  getAllPunch, getPersonPunch, getPersonAttendances, getAllAttendances,
+  getPersonPunch, getPersonAttendances, getAllAttendances,
 } = require('../controllers/attendance_controller');
 
 const { getClasses } = require('../controllers/class_controller');
@@ -19,7 +19,7 @@ const { getClasses } = require('../controllers/class_controller');
 const { getS3UrlForCertificate } = require('../controllers/leave_controller');
 
 const {
-  applyLeave, getAllLeaves, getPersonLeaves,
+  getAllLeaves, getPersonLeaves,
   countLeavesHours, countAllLeavesHours, transferLackAttendance,
 } = require('../controllers/leave_controller');
 
@@ -27,8 +27,8 @@ router.route('/students/:id/s3url').get(wrapAsync(getS3UrlForCertificate));
 router.route('/students/attendances').get(wrapAsync(getAllAttendances));
 router.route('/students/leaves').get(wrapAsync(getAllLeaves));
 router.route('/students/:id/leaves').get(wrapAsync(getPersonLeaves));
+
 // move to my route
-// router.route('/students/:id/leaves').post(Validator.createStudentLeave, wrapAsync(applyLeave));
 router.route('/students/:id/leaves/hours').get(wrapAsync(countLeavesHours));
 router.route('/students/leaves/hours').get(wrapAsync(countAllLeavesHours));
 router.route('/students/:id/punches').get(wrapAsync(getPersonPunch));

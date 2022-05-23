@@ -1,8 +1,10 @@
+const Logger = require('./logger');
+
 class GeneralError extends Error {
   constructor(errCode, message) {
     super(message);
     this.errCode = errCode;
-    console.log(this);
+    new Logger(this).error();
   }
 }
 
@@ -10,8 +12,16 @@ class MysqlError extends Error {
   constructor(errCode, message) {
     super(message);
     this.errCode = errCode;
-    console.log(this);
+    new Logger(this).error();
   }
 }
 
-module.exports = { GeneralError, MysqlError };
+class ValidateError extends Error {
+  constructor(errCode, message) {
+    super(message);
+    this.errCode = errCode;
+    new Logger(this).error();
+  }
+}
+
+module.exports = { GeneralError, MysqlError, ValidateError };

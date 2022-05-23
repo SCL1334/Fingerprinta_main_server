@@ -88,8 +88,7 @@ async function changePassword() {
 
 $(document).ready(async () => {
   const leaveStatusTable = { 0: '審核中', 1: '審核成功', 2: '審核失敗' };
-  const today = dayjs().format('YYYYMMDD');// new Date().toISOString().split('T')[0].replaceAll('-', '');
-  console.log(today);
+  const today = dayjs().format('YYYYMMDD');
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/students/profile');

@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { wrapAsync } = require('../util/util');
+const { wrapAsync } = require('../util/warpper');
 const Validator = require('../util/validator');
 const { getStudentProfile, studentChangePassword, signOut } = require('../controllers/user_controller');
 const { getSelfPunch, getSelfAttendances } = require('../controllers/attendance_controller');

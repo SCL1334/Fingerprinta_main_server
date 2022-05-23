@@ -1,9 +1,9 @@
 const router = require('express').Router();
 
-const { wrapAsync } = require('../util/util');
+const { wrapAsync } = require('../util/warpper');
 const Validator = require('../util/validator');
 const {
-  createType, deleteType, getAllLeaves, auditLeave, updateLeave, deleteLeave,
+  createType, deleteType, auditLeave, updateLeave, deleteLeave,
 } = require('../controllers/leave_controller');
 
 router.route('/leaves/types').post(Validator.createLeaveType, wrapAsync(createType));

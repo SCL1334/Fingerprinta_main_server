@@ -336,9 +336,9 @@ async function setPunchTime() {
 
     await classRoutineTable.DataTable({
       ajax: {
-        url: classRoutineUrl, // 要抓哪個地方的資料
-        type: 'GET', // 使用什麼方式抓
-        dataType: 'json', // 回傳資料的類型
+        url: classRoutineUrl,
+        type: 'GET',
+        dataType: 'json',
       },
       columns: [
         { data: 'class_type_name' },
@@ -668,8 +668,6 @@ async function accountManage() {
 
       $('#create_students_btn').click(async (submit) => {
         submit.preventDefault();
-        // $('#students_list').on('change', (upload) => {
-        // const selectedFile = upload.target.files[0];
 
         const selectedFile = $('#students_list').prop('files')[0];
         if (!selectedFile) { return; }
@@ -733,9 +731,9 @@ async function accountManage() {
     const studentShow = studentTable.DataTable({
       pageLength: 20,
       ajax: {
-        url: studentUrl, // 要抓哪個地方的資料
-        type: 'GET', // 使用什麼方式抓
-        dataType: 'json', // 回傳資料的類型
+        url: studentUrl,
+        type: 'GET',
+        dataType: 'json',
       },
       columns: [
         { data: 'id' },
@@ -815,39 +813,12 @@ async function accountManage() {
             }
           },
         },
-        // {
-        //   targets: 7,
-        //   createdCell(td, cellData, rowData, row, col) {
-        //     if (rowData.finger_id === null) {
-        //       $(td).children().attr('disabled');
-        //     }
-        //   },
-        // },
       ],
       fnDrawCallback(oSettings) {
         $('.finger_enroll').click(async (enrrollEvent) => {
           enrrollEvent.preventDefault();
           const enrollBtn = $(enrrollEvent.target);
           const studentId = enrollBtn.parent().siblings('.student_id').text();
-
-          // const loading = async () => {
-          //   await swal.showLoading();
-          //   try {
-          //     const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
-          //     const enrollFingerResult = enrollFingerRes.data.data;
-          //     if (enrollFingerResult) {
-          //       Swal.fire('配對成功');
-          //       studentManage();
-          //     }
-          //   } catch (err) {
-          //     Swal.fire({
-          //       icon: 'error',
-          //       title: 'Oops...',
-          //       text: '配對失敗',
-          //     });
-          //     console.log(err);
-          //   }
-          // };
 
           try {
             const understand = await Swal.fire({
@@ -873,13 +844,6 @@ async function accountManage() {
               await Swal.fire('配對成功');
               studentManage();
             }
-            // await Swal.fire({
-            //   title: '指紋',
-            //   text: '指紋機燈亮後：放上手指 / 燈熄滅後：收回手指',
-            //   showConfirmButton: false,
-            //   allowOutsideClick: false,
-            //   allowEscapeKey: false,
-            // });
           } catch (err) {
             Swal.fire({
               icon: 'error',
@@ -888,22 +852,6 @@ async function accountManage() {
             });
             console.log(err);
           }
-
-          // try {
-          //   const enrollFingerRes = await axios.post(`${studentUrl}/${studentId}/fingerprint`);
-          //   const enrollFingerResult = enrollFingerRes.data.data;
-          //   if (enrollFingerResult) {
-          //     Swal.fire('配對成功');
-          //     studentManage();
-          //   }
-          // } catch (err) {
-          //   Swal.fire({
-          //     icon: 'error',
-          //     title: 'Oops...',
-          //     text: '配對失敗',
-          //   });
-          //   console.log(err);
-          // }
         });
         $('.finger_remove').click(async (removeEvent) => {
           removeEvent.preventDefault();
@@ -914,7 +862,6 @@ async function accountManage() {
             if (!result) { return; }
             const removeFingerRes = await axios.delete(`${studentUrl}/fingerprint/${fingerId}`);
             const removeFingerResult = removeFingerRes.data.data;
-            console.log(removeFingerResult);
             if (removeFingerResult) {
               Swal.fire('移除成功');
               studentManage();
@@ -1098,9 +1045,9 @@ async function accountManage() {
 
     staffAccountTable.DataTable({
       ajax: {
-        url: staffUrl, // 要抓哪個地方的資料
-        type: 'GET', // 使用什麼方式抓
-        dataType: 'json', // 回傳資料的類型
+        url: staffUrl,
+        type: 'GET',
+        dataType: 'json',
       },
       columns: [
         { data: 'id' },
@@ -1147,7 +1094,6 @@ async function accountManage() {
               staffManage();
             }
           } catch (err) {
-            console.log(err);
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -1303,9 +1249,9 @@ async function classManage() {
       try {
         await classTable.DataTable({
           ajax: {
-            url: classesUrl, // 要抓哪個地方的資料
-            type: 'GET', // 使用什麼方式抓
-            dataType: 'json', // 回傳資料的類型
+            url: classesUrl,
+            type: 'GET',
+            dataType: 'json',
           },
           columns: [
             { data: 'id' },
@@ -1712,7 +1658,6 @@ async function exceptionManage() {
       `;
   } catch (err) {
     console.log(err);
-    console.log(err.response.data);
   }
   $('.content').append(exceptionForm);
   $('.content').append(smallSpace);
@@ -1788,7 +1733,6 @@ async function exceptionManage() {
     const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
     const exceptionResult = exceptionRes.data.data;
     exceptionResult.forEach((edate) => {
-      console.log(edate);
       const tr = $('<tr></tr>');
       const td_class_type = $('<td></td>').text(classTypeTable[edate.class_type_id].name);
       const td_batch = $('<td></td>').text(edate.batch);
@@ -1860,30 +1804,6 @@ function genRuleManage(date) {
     </div>
     `;
     calendarEdit.append(calendarEditForm);
-
-    //   try {
-    //     const createRoutineRes = await axios(classRoutineUrl, {
-    //       method: 'POST',
-    //       data: {
-    //         class_type_id: $(submit.target).parent().children('.class_type').val(),
-    //         weekday: $(submit.target).parent().children('.weekday').val(),
-    //         start_time: $(submit.target).parent().children('.start_time').val(),
-    //         end_time: $(submit.target).parent().children('.end_time').val(),
-    //       },
-    //       headers: {
-    //         'content-type': 'application/json',
-    //       },
-    //     });
-    //     const createRoutineResult = createRoutineRes.data;
-    //     if (createRoutineResult) {
-    //       routineModal.children('.close-modal').click();
-    //       setPunchTime();
-    //     }
-    //   } catch (err) {
-    //     console.log(err);
-    //     alert('create fail');
-    //   }
-    // });
 
     const calenderHead = $('<div></div>').attr('class', 'calendar_head');
     const yearDiv = $('<div></div>').attr('class', 'year text-center text-muted h3').text(`西元${year}年`);
@@ -1988,9 +1908,6 @@ function genRuleManage(date) {
           .attr('class', 'position-relative fs-3 top-0')
           .text(dayjs(cell.date).format('DD'));
         tdDate.append(textDate);
-        //  .css('background-color', schoolDay[cell.need_punch]);
-        // const btn = $(`<a href="${calendarUrl}/${dayjs(cell.date).format('YYYYMMDD')}"
-        // class="btn btn-info" role="button">🔘</a>`);
         const toggle = $(`
           <label class="switch">
             <input type="checkbox">

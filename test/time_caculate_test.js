@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const { timeStringToMinutes, getDefaultLeaveHours } = require('../util/util');
+const { timeStringToMinutes, getDefaultLeaveHours } = require('../util/time_transformer');
 
 describe('test trans string to minutes', () => {
   const str = '10:00:00';

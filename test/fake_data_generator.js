@@ -124,7 +124,7 @@ const createFakeUser2 = async (roleId, classId = null) => {
 // gen 5 teacher
 // createFakeUser(2, 1, 5);
 
-createFakeUser2(1, 1);
+// createFakeUser2(1, 1);
 
 // student_id, punch_in, punch_out
 const createFakePunch = async (days) => {
@@ -143,10 +143,10 @@ const createFakePunch = async (days) => {
         const random = getRandom(50);
         let punchIn = punchInInit.add(randomMin(), 'minute');
         let punchOut = punchOutInit.add(randomMin(), 'minute');
-        if (random <= 5) {
+        if (random <= 2) {
           punchIn = null;
           punchOut = null;
-        } else if (random <= 20) {
+        } else if (random <= 10) {
           punchOut = null;
         }
 
@@ -166,7 +166,7 @@ const createFakePunch = async (days) => {
 };
 
 // each student punch in past 30 days
-// createFakePunch(30);
+createFakePunch(30);
 
 const createLeaveTypes = async () => {
   try {
@@ -228,4 +228,4 @@ const createFakeLeaveApplications = async (days, rate) => {
 };
 
 // createLeaveTypes();
-// createFakeLeaveApplications(15, 15);
+createFakeLeaveApplications(30, 15);

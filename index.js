@@ -1,8 +1,11 @@
 require('dotenv').config();
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
-// Express Initialization
 const express = require('express');
+const Cache = require('./util/cache');
+const { authentication } = require('./util/authentication');
+const ResponseTransformer = require('./util/response');
+const Logger = require('./util/logger');
 
 // routes
 const publicRoute = require('./routes/public_route');
@@ -14,12 +17,7 @@ const sensorRoute = require('./routes/sensor_route');
 const fingerprintRoute = require('./routes/fingerprint_route');
 const myRoute = require('./routes/my_route');
 
-const {
-  PORT, API_VERSION,
-} = process.env;
-
-const Cache = require('./util/cache');
-const { authentication } = require('./util/util');
+const { PORT } = process.env;
 
 const app = express();
 
@@ -33,44 +31,41 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 600, // 設定 session 的有效時間，單位毫秒
+    maxAge: 1000 * 60 * 60 * 10,
   },
 }));
 
 // API routes
 // general use
-app.use(`/api/${API_VERSION}`, publicRoute);
+app.use('/api/1.0', publicRoute);
 // student use 0: all user can access
-app.use(`/api/${API_VERSION}`, authentication(0), myRoute);
+app.use('/api/1.0', authentication(0), myRoute);
 // staff use 1: only staff can access
-app.use(`/api/${API_VERSION}`, authentication(1), [
+app.use('/api/1.0', authentication(1), [
   userRoute, classRoute, calendarRoute, leaveRoute, sensorRoute, fingerprintRoute,
 ]);
 
 // server test
-app.get('/', (req, res) => {
+app.get('/healthCheck', (req, res) => {
   res.send('OK');
 });
 
 // 404 error
-app.use('/api/1.0', (req, res, next) => {
-  res.status(404).json({ error: { message: 'Sorry cant find that!' } });
-});
-
-// for page site
-app.use((req, res, next) => {
-  res.status(301).redirect('/not_found.html');
+app.use((req, res) => {
+  const transformer = new ResponseTransformer({ errCode: 3999 });
+  res.status(transformer.httpCode).json(transformer.response);
 });
 
 // Error handling
 app.use((err, req, res, next) => {
-  console.log(err);
-  res.status(500).json({ error: { message: 'Internal Server Error' } });
+  new Logger(err).error();
+  const transformer = new ResponseTransformer({ errCode: 2999 });
+  res.status(transformer.httpCode).json(transformer.response);
 });
 
 app.listen(PORT, async () => {
   Cache.connect().catch(() => {
-    console.log('Redis connect fail');
+    new Logger('Redis connect fail').error();
   });
-  console.log(`Server is running on port ${PORT}`);
+  new Logger(`Server is running on port ${PORT}`).info();
 });

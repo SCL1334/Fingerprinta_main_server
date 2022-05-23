@@ -1,5 +1,6 @@
 require('dotenv').config();
 const SibApiV3Sdk = require('sib-api-v3-sdk');
+const Logger = require('./logger');
 
 const domain = process.env.DOMAIN;
 
@@ -41,10 +42,10 @@ const sendResetEmail = async (role, name, email, hash) => {
   `;
   try {
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(result);
+    Logger(result).info();
     return { code: 1000 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    Logger(error).error();
     return { code: 2000 };
   }
 };

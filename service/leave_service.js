@@ -1,7 +1,5 @@
-const dayjs = require('dayjs');
 const { GeneralError } = require('../util/custom_error');
 const Leave = require('../models/leave_model');
-const Class = require('../models/class_model');
 
 const getTypes = async () => {
   const types = await Leave.getTypes();

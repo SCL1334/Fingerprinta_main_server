@@ -181,6 +181,11 @@ const ERROR_RESPONSE = {
     httpCode: 500,
     eMessage: 'Delete failed, sensor server error',
   },
+  2999: {
+    status: 'error',
+    httpCode: 500,
+    eMessage: 'Unexpected Server Error',
+  },
 
   3000: {
     status: 'error',
@@ -269,6 +274,16 @@ const ERROR_RESPONSE = {
     status: 'error',
     httpCode: 403,
     eMessage: 'Forbidden',
+  },
+  3999: {
+    status: 'error',
+    httpCode: 404,
+    eMessage: '404 not found',
+  },
+  4000: {
+    status: 'error',
+    httpCode: 400,
+    eMessage: 'Input format does not meet the requirements',
   },
   4411: {
     status: 'error',

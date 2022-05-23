@@ -1,10 +1,12 @@
-require('dotenv').config();
 const dayjs = require('dayjs');
 const Leave = require('../models/leave_model');
 const Class = require('../models/class_model');
-const { timeStringToMinutes, getS3Url } = require('../util/util');
 const LeaveService = require('../service/leave_service');
+const { timeStringToMinutes, getDefaultLeaveHours } = require('../util/time_transformer');
+const { getS3Url } = require('../util/aws_s3');
 const ResponseTransformer = require('../util/response');
+
+const { REST_START, REST_END } = process.env;
 
 // Type Manage
 const getTypes = async (req, res) => {
@@ -38,10 +40,9 @@ const getAllLeaves = async (req, res) => {
   }
   const leaves = await Leave.getAllLeaves(from, to);
   if (!leaves) {
-    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ code: 1000, data: leaves });
+    return res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ code: 1000, data: leaves });
 };
 
 const getClassLeaves = async (req, res) => {
@@ -55,10 +56,9 @@ const getClassLeaves = async (req, res) => {
   }
   const leaves = await Leave.getClassLeaves(classId, from, to);
   if (!leaves) {
-    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ code: 1000, data: leaves });
+    return res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ code: 1000, data: leaves });
 };
 
 const getPersonLeaves = async (req, res) => {
@@ -72,10 +72,9 @@ const getPersonLeaves = async (req, res) => {
   }
   const leaves = await Leave.getPersonLeaves(studentId, from, to);
   if (!leaves) {
-    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ code: 1000, data: leaves });
+    return res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ code: 1000, data: leaves });
 };
 
 const getSelfLeaves = async (req, res) => {
@@ -89,10 +88,9 @@ const getSelfLeaves = async (req, res) => {
   }
   const leaves = await Leave.getPersonLeaves(studentId, from, to);
   if (!leaves) {
-    res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
-  } else {
-    res.status(200).json({ code: 1000, data: leaves });
+    return res.status(500).json({ code: 2000, error: { message: 'Read failed' } });
   }
+  return res.status(200).json({ code: 1000, data: leaves });
 };
 
 const backupClassLeaves = async (req, res) => {
@@ -154,30 +152,17 @@ const transferLackAttendance = async (req, res) => {
   } = leave;
 
   const leaveTypes = await Leave.getTypes();
-  const leaveTypesTable = leaveTypes.reduce((acc, cur) => {
+  if (leaveTypes instanceof Error) {
+    const transformer = new ResponseTransformer(leaveTypes);
+    return res.status(transformer.httpCode).json(transformer.response);
+  }
+  const leaveTypesTable = leaveTypes.data.reduce((acc, cur) => {
     acc[cur.id] = cur;
     return acc;
   }, {});
   let leaveHours = 0;
   if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
-    const startMin = timeStringToMinutes(start);
-    const endMin = timeStringToMinutes(end);
-    const restStart = timeStringToMinutes('12:00:00');
-    const restEnd = timeStringToMinutes('13:00:00');
-
-    const minToHours = (min) => Math.ceil(min / 60);
-
-    if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
-      leaveHours = minToHours(restStart - startMin + endMin - restEnd);
-    } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
-      leaveHours = minToHours(endMin - startMin);
-    } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
-      leaveHours = minToHours(restStart - startMin);
-    } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
-      leaveHours = 0;
-    } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
-      leaveHours = minToHours(endMin - restEnd);
-    }
+    leaveHours = getDefaultLeaveHours(start, end, REST_START, REST_END);
   }
 
   const leaveTransform = {
@@ -194,12 +179,12 @@ const transferLackAttendance = async (req, res) => {
   };
   const result = await Leave.applyLeave(leaveTransform);
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
-  } else if (result.code < 3000) {
-    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
-  } else {
-    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
+    return res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   }
+  if (result.code < 3000) {
+    return res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  }
+  return res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
 };
 
 const applyLeave = async (req, res) => {
@@ -211,41 +196,22 @@ const applyLeave = async (req, res) => {
   } = leave;
   const accLeaveHours = await Leave.countLeavesHours(leave.student_id).leaves_hours;
 
-  // let { hours } = leave;
-
-  // const { user } = req.session;
-  // if (!user || !user.email) { return res.status(401).json({ error: 'Unauthorized' }); }
-  // if (user.role !== 'staff') {
   if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || 0) {
     return res.status(403).json({ error: { message: 'Leave Hours over limit' } });
   }
-  //   hours = null;
-  // }
+
   const leaveTypes = await Leave.getTypes();
-  const leaveTypesTable = leaveTypes.reduce((acc, cur) => {
+  if (leaveTypes instanceof Error) {
+    const transformer = new ResponseTransformer(leaveTypes);
+    return res.status(transformer.httpCode).json(transformer.response);
+  }
+  const leaveTypesTable = leaveTypes.data.reduce((acc, cur) => {
     acc[cur.id] = cur;
     return acc;
   }, {});
   let leaveHours = 0;
   if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
-    const startMin = timeStringToMinutes(start);
-    const endMin = timeStringToMinutes(end);
-    const restStart = timeStringToMinutes('12:00:00');
-    const restEnd = timeStringToMinutes('13:00:00');
-
-    const minToHours = (min) => Math.ceil(min / 60);
-
-    if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
-      leaveHours = minToHours(restStart - startMin + endMin - restEnd);
-    } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
-      leaveHours = minToHours(endMin - startMin);
-    } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
-      leaveHours = minToHours(restStart - startMin);
-    } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
-      leaveHours = 0;
-    } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
-      leaveHours = minToHours(endMin - restEnd);
-    }
+    leaveHours = getDefaultLeaveHours(start, end, REST_START, REST_END);
   }
 
   const leaveTransform = {
@@ -262,12 +228,12 @@ const applyLeave = async (req, res) => {
 
   const result = await Leave.applyLeave(leaveTransform);
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
-  } else if (result.code < 3000) {
-    res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
-  } else {
-    res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
+    return res.status(200).json({ code: result.code, data: { insert_id: result.insert_id, message: 'Create successfully' } });
   }
+  if (result.code < 3000) {
+    return res.status(500).json({ code: result.code, error: { message: 'Create failed' } });
+  }
+  return res.status(400).json({ code: result.code, error: { message: 'Create failed due to invalid input' } });
 };
 
 const auditLeave = async (req, res) => {

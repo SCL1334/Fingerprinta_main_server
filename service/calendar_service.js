@@ -10,10 +10,12 @@ const getMonthHolidays = async (monthWithYear) => {
   const calendar = await Calendar.getMonthHolidays(year, month);
   if (calendar.errCode) { return calendar; }
   // date formatting
-  calendar.data.forEach((date) => {
-    date.date = dayjs(date.date).format('YYYY-MM-DD');
+  const formattedCalendar = calendar.data.map((date) => {
+    const formattedDate = JSON.parse(JSON.stringify(date));
+    formattedDate.date = dayjs(date.date).format('YYYY-MM-DD');
+    return formattedDate;
   });
-  return { code: 1000, data: calendar.data };
+  return { code: 1000, data: formattedCalendar };
 };
 
 const initYearHolidays = async (calendar) => {
@@ -59,15 +61,18 @@ const getPunchException = async (monthWithYear) => {
   if (punchExceptions instanceof Error) { return punchExceptions; }
   // no exception is normal
   if (punchExceptions.data.length === 0) { return { code: 1001 }; }
-  punchExceptions.data.forEach((date) => {
-    date.date = dayjs(date.date).format('YYYY-MM-DD');
+  const formattedPunchException = punchExceptions.data.map((date) => {
+    const formattedDate = JSON.parse(JSON.stringify(date));
+    formattedDate.date = dayjs(date.date).format('YYYY-MM-DD');
+    return formattedDate;
   });
-  return { code: 1000, data: punchExceptions.data };
+  return { code: 1000, data: formattedPunchException };
 };
 
 const createPunchException = async (punchException) => {
-  punchException.date = dayjs(punchException.date).format('YYYY-MM-DD');
-  const result = await Calendar.createPunchException(punchException);
+  const formattedPunchException = JSON.parse(JSON.stringify(punchException));
+  formattedPunchException.date = dayjs(punchException.date).format('YYYY-MM-DD');
+  const result = await Calendar.createPunchException(formattedPunchException);
   if (result.data) { return { code: 1100, data: { insert_id: result.data.insert_id } }; }
   return result;
 };

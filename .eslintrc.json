@@ -13,8 +13,8 @@
     "parserOptions": {
         "ecmaVersion": "latest"
     },
+    "ignorePatterns": ["/public/js/*.js"],
     "rules": {
-        "no-param-reassign": ["error", { "props": false }],
         "max-classes-per-file": ["error", 3]
     }
 }

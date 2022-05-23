@@ -2,6 +2,7 @@ const { NODE_ENV } = process.env;
 const User = require('../models/user_model');
 const Fingerprint = require('../models/fingerprint_model');
 const { sendResetEmail } = require('../util/mailer');
+const Logger = require('../util/logger');
 
 const createStudent = async (req, res) => {
   const {
@@ -107,12 +108,12 @@ const deleteStaff = async (req, res) => {
   if (staffId === self) { return res.status(400).json({ error: { message: 'Could not delete self account' } }); }
   const result = await User.deleteStaff(staffId);
   if (result === 0) {
-    res.status(500).json({ error: 'Delete failed' });
-  } else if (result === -1) {
-    res.status(400).json({ error: 'Delete failed due to invalid input' });
-  } else {
-    res.status(200).json({ data: 'Delete successfully' });
+    return res.status(500).json({ error: 'Delete failed' });
   }
+  if (result === -1) {
+    return res.status(400).json({ error: 'Delete failed due to invalid input' });
+  }
+  return res.status(200).json({ data: 'Delete successfully' });
 };
 
 const studentSignIn = async (req, res) => {
@@ -237,9 +238,9 @@ const staffResetPassword = async (req, res) => {
 
 // maybe put in other route
 const signOut = async (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.log(err);
+  req.session.destroy((error) => {
+    if (error) {
+      new Logger('Redis connect fail').error();
       return res.status(500).json({ error: { message: 'delete session failed' } });
     }
     return res.status(200).json({ data: { message: 'delete session successfully' } });
@@ -331,12 +332,12 @@ const matchFingerprint = async (req, res) => {
   const result = await retryEnrollStatus(tryTime, tryLimit);
 
   if (result.code < 2000) {
-    res.status(200).json({ code: result.code, data: { finger_id: fingerId, message: 'Match successfully' } });
-  } else if (result.code < 3000) {
-    res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
-  } else {
-    res.status(400).json({ code: result.code, error: { message: result.message || 'Match failed due to invalid input' } });
+    return res.status(200).json({ code: result.code, data: { finger_id: fingerId, message: 'Match successfully' } });
   }
+  if (result.code < 3000) {
+    return res.status(500).json({ code: result.code, error: { message: 'Match failed' } });
+  }
+  return res.status(400).json({ code: result.code, error: { message: result.message || 'Match failed due to invalid input' } });
 };
 
 const initFingerData = async (req, res) => {

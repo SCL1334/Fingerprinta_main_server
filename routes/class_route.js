@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { wrapAsync } = require('../util/util');
+const { wrapAsync } = require('../util/warpper');
 const Validator = require('../util/validator');
 const {
   getTypes, createType, deleteType,
@@ -13,7 +13,7 @@ const {
 
 const { getStudents, createClassStudents, getClassTeachers } = require('../controllers/user_controller');
 
-const { getClassPunch, getClassAttendances } = require('../controllers/attendance_controller');
+const { getClassAttendances } = require('../controllers/attendance_controller');
 
 const { getClassLeaves, backupClassLeaves } = require('../controllers/leave_controller');
 

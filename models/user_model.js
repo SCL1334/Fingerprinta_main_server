@@ -4,6 +4,8 @@ const objectHash = require('object-hash');
 const resetExpire = parseInt(process.env.RESET_EXPIRE, 10);
 const { promisePool } = require('./mysqlcon');
 const Cache = require('../util/cache');
+const Logger = require('../util/logger');
+const { GeneralError } = require('../util/custom_error');
 
 // account manage
 const createStudent = async (name, email, password, classId) => {
@@ -17,9 +19,9 @@ const createStudent = async (name, email, password, classId) => {
     };
     const [result] = await promisePool.query('INSERT INTO student SET ?', student);
     return { code: 1010, insert_id: result.insertId };
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
       return { code: 3010 };
     }
@@ -29,29 +31,43 @@ const createStudent = async (name, email, password, classId) => {
 
 // create a list of students
 const createClassStudents = async (students, classId) => {
-  // students [{name, email, birth}, ... , ...]
+  const getHashPassword = async (password) => {
+    try {
+      const hash = await argon2.hash(password);
+      return hash;
+    } catch (error) {
+      return new GeneralError(2001, error.message);
+    }
+  };
+
+  const transferStudentsPassword = async (index, originalStudents) => {
+    if (index === originalStudents.length) { return originalStudents; }
+    const newStudents = JSON.parse(JSON.stringify(originalStudents));
+    const hash = await getHashPassword(newStudents[index].password);
+    if (hash instanceof Error) { return hash; }
+    newStudents[index].password = hash;
+    return transferStudentsPassword(index + 1, newStudents);
+  };
+
+  const processedStudents = await transferStudentsPassword(0, students);
+  if (processedStudents instanceof Error) { return { code: 2010 }; }
+
   try {
-    const forEachAsync = async (array, callback) => {
-      for (let i = 0; i < array.length; i += 1) {
-        await callback(array[i]);
-      }
-    };
-
-    await forEachAsync(students, async (student) => {
-      student.password = await argon2.hash(student.password);
-    });
-
-    const studentAccounts = Object.keys(students).reduce((acc, cur) => {
-      acc.push([students[cur].name, students[cur].email, students[cur].password, classId]);
+    const studentAccounts = Object.keys(processedStudents).reduce((acc, cur) => {
+      acc.push([
+        processedStudents[cur].name,
+        processedStudents[cur].email,
+        processedStudents[cur].password,
+        classId,
+      ]);
       return acc;
     }, []);
-
     await promisePool.query('INSERT INTO student (name, email, password, class_id) VALUES ?', [studentAccounts]);
 
     return { code: 1010 };
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
       return { code: 3010 };
     }
@@ -63,13 +79,13 @@ const editStudent = async (studentId, student) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM student WHERE id = ?', [studentId]);
     if (result.length === 0) {
-      console.log('target not exist');
+      new Logger('target not exist').error();
       return { code: 4020 };
     }
     await promisePool.query('UPDATE student SET ? , last_update = CURRENT_TIMESTAMP WHERE id = ?', [student, studentId]);
     return { code: 1020 };
   } catch (error) {
-    console.log(error);
+    new Logger(error).error();
     return { code: 2020 };
   }
 };
@@ -87,8 +103,8 @@ const getStudents = async (classId = null) => {
     LEFT OUTER JOIN class_type as ct ON ct.id = c.class_type_id
     ${sqlFilter}`, [classId]);
     return students;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -107,8 +123,8 @@ const getOneStudent = async (studentId) => {
     const profileBasic = profilesBasic[0];
 
     return profileBasic;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -118,14 +134,14 @@ const deleteStudent = async (studentId) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM student WHERE id = ?', [studentId]);
     if (result.length === 0) {
-      console.log('student not exist');
+      Logger.error('student not exist');
       return -1;
     }
     await promisePool.query('DELETE FROM student WHERE id = ?', [studentId]);
     return 1;
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
       return -1;
     }
@@ -143,9 +159,9 @@ const createStaff = async (name, email, password) => {
     };
     const [result] = await promisePool.query('INSERT INTO staff SET ?', staff);
     return { code: 1010, insert_id: result.insertId };
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
       return { code: 3010 };
     }
@@ -158,8 +174,8 @@ const getStaffs = async () => {
   try {
     const [staffs] = await promisePool.query('SELECT id, name, email FROM staff');
     return staffs;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -173,8 +189,8 @@ const getClassTeachers = async (classId) => {
     (SELECT teacher_id FROM class_teacher WHERE class_id = ?);
     `, [classId]);
     return teachers;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -184,14 +200,14 @@ const deleteStaff = async (staffId) => {
   try {
     const [result] = await promisePool.query('SELECT id FROM staff WHERE id = ?', [staffId]);
     if (result.length === 0) {
-      console.log('student not exist');
+      Logger.error('student not exist');
       return -1;
     }
     await promisePool.query('DELETE FROM staff WHERE id = ?', [staffId]);
     return 1;
-  } catch (err) {
-    console.log(err);
-    const { errno } = err;
+  } catch (error) {
+    new Logger(error).error();
+    const { errno } = error;
     if (errno === 1452 || errno === 1062 || errno === 1264) {
       return -1;
     }
@@ -207,8 +223,8 @@ const studentSignIn = async (email, password) => {
       if (match) return { code: 1010, student_id: students[0].id };
     }
     return { code: 4010, message: 'email or password not match' };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010, message: 'Internal server error' };
   }
 };
@@ -225,38 +241,38 @@ const changePassword = async (role, id, password, newPassword) => {
       }
     }
     return { code: 4029 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2020 };
   }
 };
 
 const setHashedMail = async (email) => {
   if (!Cache.ready) {
-    console.log('Redis is not ready');
+    Logger.error('Redis is not ready');
     return { code: 2050 };
   }
   try {
     const hash = await objectHash(email);
     await Cache.v4.set(hash, email, { EX: resetExpire, NX: true });
     return { code: 1010, data: { hash } };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
 
 const getMailByHash = async (hash) => {
   if (!Cache.ready) {
-    console.log('Redis is not ready');
+    Logger.error('Redis is not ready');
     return { code: 2050 };
   }
   try {
     const email = await Cache.v4.get(hash);
     await Cache.v4.del(hash);
     return { code: 1000, data: { email } };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2000 };
   }
 };
@@ -270,8 +286,8 @@ const resetPassword = async (role, email, newPassword) => {
       return { code: 1020 };
     }
     return { code: 4029 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2020 };
   }
 };
@@ -284,8 +300,8 @@ const staffSignIn = async (email, password) => {
       if (match) return { code: 1010, staff_id: staffs[0].id };
     }
     return { code: 4010, message: 'email or password not match' };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010, message: 'Internal server error' };
   }
 };
@@ -302,8 +318,8 @@ const getStudentProfile = async (email) => {
       `, [email]);
     const profile = profiles[0];
     return profile;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -312,12 +328,9 @@ const getStaffProfile = async (email) => {
   try {
     const [profiles] = await promisePool.query('SELECT id, name, email FROM staff WHERE email = ?;', [email]);
     const profile = profiles[0];
-    // no need to check staff classes currently
-    // const [classes] = await promisePool.query('SELECT class_id FROM class_teacher WHERE teacher_id = ?', [profile.id]);
-    // profile.classes = classes;
     return profile;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -329,15 +342,15 @@ const matchFingerprint = async (studentId, fingerId) => {
     await conn.query('START TRANSACTION');
     const [result] = await conn.query('SELECT id FROM student WHERE id = ?', [studentId]);
     if (result.length === 0) {
-      console.log('student not exist');
+      new Logger('student not exist').error();
       return { code: 4020 };
     }
     await conn.query('UPDATE student SET finger_id = ? WHERE id = ?', [fingerId, studentId]);
     await conn.query('COMMIT');
     return { code: 1020, finger_id: fingerId };
-  } catch (err) {
+  } catch (error) {
     await conn.query('ROLLBACK');
-    console.log(err);
+    new Logger(error).error();
     return { code: 2020 };
   } finally {
     await conn.release();
@@ -348,12 +361,12 @@ const findByFinger = async (fingerId) => {
   try {
     const [students] = await promisePool.query('SELECT student_id FROM fingerprint WHERE id = ?', [fingerId]);
     if (students.length === 0) {
-      console.log('student not exist');
+      new Logger('student not exist').error();
       return -1;
     }
     return students[0].student_id;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return 0;
   }
 };

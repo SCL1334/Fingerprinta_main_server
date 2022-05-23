@@ -3,6 +3,7 @@ const { promisePool } = require('./mysqlcon');
 
 const { FINGERPRINT_HOST, FINGERPRINT_PORT, SENSOR_API_VERISON } = process.env;
 const sensorFingerUrl = `http://${FINGERPRINT_HOST}:${FINGERPRINT_PORT}/api/${SENSOR_API_VERISON}/fingerprints`;
+const Logger = require('../util/logger');
 
 const enrollFingerprint = async (fingerId) => {
   // fingerprint ID from 0 to 199
@@ -11,7 +12,6 @@ const enrollFingerprint = async (fingerId) => {
       .post(`${sensorFingerUrl}/${fingerId}`);
 
     const sensorResult = sensorRes.data;
-    // console.log(sensorResult);
     const statusCode = sensorResult.code;
     if (statusCode) {
       // success
@@ -24,8 +24,8 @@ const enrollFingerprint = async (fingerId) => {
       return { code: 2011, message: 'Sensor internal error' };
     }
     throw new Error('unexpeted server Error: no sensor status');
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
@@ -34,8 +34,8 @@ const recordMatch = async (studentId, fingerId) => {
   try {
     await promisePool.query('UPDATE fingerprint SET status = 1, student_id = ? WHERE id = ?', [studentId, fingerId]);
     return { code: 1010 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
@@ -48,8 +48,8 @@ const turnOnIdentify = async () => {
       return { code: 1010 };
     }
     return { code: 2010 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
@@ -62,8 +62,8 @@ const stopSensor = async () => {
       return { code: 1010 };
     }
     return { code: 3010 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
@@ -76,8 +76,8 @@ const deleteOneSensorFinger = async (fingerId) => {
     const statusCode = sensorResult.code;
     if (statusCode < 2000) { return { code: 1030 }; }
     return { code: 2030 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2030 };
   }
 };
@@ -97,8 +97,8 @@ const deleteSensorFingerList = async (fingerIdList) => {
     const statusCode = sensorResult.code;
     if (statusCode < 2000) { return { code: 1030 }; }
     return { code: 2030 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2030 };
   }
 };
@@ -112,8 +112,8 @@ const getFingerListOfClass = async (classId) => {
     ORDER BY id ASC;
     `, [classId]);
     return fingerList;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -122,30 +122,18 @@ const getFingerQuota = async () => {
   try {
     const [fingerQuotas] = await promisePool.query('SELECT * FROM fingerprint');
     return fingerQuotas;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
-
-// const matchStudent = async (fingerId, studentId) => {
-//   try {
-//     await promisePool.query('UPDATE fingerprint SET student_id = ?, status = 1 WHERE id = ?', [studentId, fingerId]);
-//     return { code: 1020 };
-//   } catch (err) {
-//     console.log(err);
-//     // mark as abnormal
-//     await promisePool.query('UPDATE fingerprint SET status = 2 WHERE id = ?', [fingerId]);
-//     return { code: 2020 };
-//   }
-// };
 
 const initOneRow = async (fingerId) => {
   try {
     await promisePool.query('UPDATE fingerprint SET student_id = null, status = 0 WHERE id = ?', [fingerId]);
     return { code: 1030 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2030 };
   }
 };
@@ -159,8 +147,8 @@ const initByClass = async (classId) => {
     (SELECT id FROM student WHERE class_id = ?)
     `, [classId]);
     return { code: 1030 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2030 };
   }
 };
@@ -169,8 +157,8 @@ const findStudent = async (fingerId) => {
   try {
     const [students] = await promisePool.query('SELECT * FROM fingerprint WHERE id = ?', [fingerId]);
     return students;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -179,8 +167,8 @@ const checkStudentEnroll = async (studentId) => {
   try {
     const [students] = await promisePool.query('SELECT * FROM fingerprint WHERE student_id = ?', [studentId]);
     return students;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
@@ -202,8 +190,8 @@ const initTable = async () => {
       CALL proc_initData();
     `);
     return { code: 1010 };
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return { code: 2010 };
   }
 };
@@ -212,8 +200,8 @@ const getAvailableId = async () => {
   try {
     const [fingerIds] = await promisePool.query('SELECT id FROM fingerprint WHERE status = 0');
     return fingerIds;
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    new Logger(error).error();
     return null;
   }
 };
