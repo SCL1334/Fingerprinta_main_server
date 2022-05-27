@@ -124,6 +124,8 @@ const manageAttendance = async function () {
       // $('.content').append(editLeaveForm);
       $('body').append(editLeaveForm);
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401) { location.href = '/student_signin.html'; }
       console.log(err);
     }
 
@@ -239,6 +241,8 @@ const manageAttendance = async function () {
                 location.reload();
               }
             } catch (err) {
+              const { status } = err.response;
+              if (status === 401) { location.href = '/student_signin.html'; }
               console.log(err);
               Swal.fire({
                 icon: 'error',
@@ -257,6 +261,8 @@ const manageAttendance = async function () {
             const deleteResult = deleteRes.data;
             if (deleteResult) { location.reload(); }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401) { location.href = '/student_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',

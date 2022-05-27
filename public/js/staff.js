@@ -91,10 +91,15 @@ async function changePassword() {
       }
     } catch (err) {
       console.log(err);
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
+      let message;
+      if (status === 400 || status === 422) { message = '無效輸入，'; }
+      if (status === 500) { message = '伺服器異常，'; }
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
-        text: '密碼更改失敗',
+        text: `${message}密碼更改失敗`,
       });
     }
   });
@@ -143,7 +148,6 @@ async function setLeaveType() {
       const newTypeName = $('#leave_type_name').val();
 
       const newTypeStatus = $('#need_calculate').prop('checked');
-      console.log(newTypeStatus);
       const addTypeRes = await axios(leaveTypeUrl, {
         method: 'POST',
         data: {
@@ -177,12 +181,15 @@ async function setLeaveType() {
         leaveTypeTable.append(tr);
       }
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
+      let message = '伺服器異常，';
+      if (status === 400 || status === 422) { message = '無效輸入，'; }
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
-        text: '新增資料失敗，請稍後再試',
+        text: `${message || ''}新增資料失敗`,
       });
-      console.log(err);
     }
   });
 
@@ -212,6 +219,8 @@ async function setLeaveType() {
     });
   } catch (err) {
     console.log(err);
+    const { status } = err.response;
+    if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
     Swal.fire({
       icon: 'error',
       title: 'Oops...',
@@ -325,6 +334,8 @@ async function setPunchTime() {
           }
         } catch (err) {
           console.log(err);
+          const { status } = err.response;
+          if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
           Swal.fire({
             icon: 'error',
             title: 'Oops...',
@@ -433,6 +444,8 @@ async function setPunchTime() {
               }
             } catch (err) {
               console.log(err);
+              const { status } = err.response;
+              if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
               Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
@@ -454,6 +467,8 @@ async function setPunchTime() {
             }
           } catch (err) {
             console.log(err);
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             Swal.fire({
               icon: 'error',
               title: 'Oops...',
@@ -464,6 +479,8 @@ async function setPunchTime() {
       },
     });
   } catch (err) {
+    const { status } = err.response;
+    if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
     console.log(err);
     Swal.fire({
       icon: 'error',
@@ -510,6 +527,8 @@ async function accountManage() {
       const studentsLeavesHoursRaw = await axios.get('/api/1.0/students/leaves/hours');
       studentsLeavesHoursTable = studentsLeavesHoursRaw.data.data;
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
     }
 
@@ -605,6 +624,8 @@ async function accountManage() {
       </div>    
       `;
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
       Swal.fire({
         icon: 'error',
@@ -657,6 +678,8 @@ async function accountManage() {
             studentManage();
           }
         } catch (err) {
+          const { status } = err.response;
+          if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
           console.log(err);
           Swal.fire({
             icon: 'error',
@@ -701,6 +724,8 @@ async function accountManage() {
               studentManage();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -845,6 +870,8 @@ async function accountManage() {
               studentManage();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             Swal.fire({
               icon: 'error',
               title: 'Oops...',
@@ -867,6 +894,8 @@ async function accountManage() {
               studentManage();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             Swal.fire({
               icon: 'error',
               title: 'Oops...',
@@ -906,6 +935,8 @@ async function accountManage() {
                 studentManage();
               }
             } catch (err) {
+              const { status } = err.response;
+              if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
               console.log(err);
               Swal.fire({
                 icon: 'error',
@@ -929,6 +960,8 @@ async function accountManage() {
               studentManage();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -1033,6 +1066,8 @@ async function accountManage() {
             staffManage();
           }
         } catch (err) {
+          const { status } = err.response;
+          if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
           console.log(err);
           Swal.fire({
             icon: 'error',
@@ -1094,6 +1129,8 @@ async function accountManage() {
               staffManage();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -1235,6 +1272,8 @@ async function classManage() {
               classBasicSetting();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -1356,6 +1395,8 @@ async function classManage() {
                     classBasicSetting();
                   }
                 } catch (err) {
+                  const { status } = err.response;
+                  if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
                   console.log(err);
                   Swal.fire({
                     icon: 'error',
@@ -1377,6 +1418,8 @@ async function classManage() {
                   classBasicSetting();
                 }
               } catch (err) {
+                const { status } = err.response;
+                if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
                 console.log(err);
                 Swal.fire({
                   icon: 'error',
@@ -1407,6 +1450,8 @@ async function classManage() {
                   classBasicSetting();
                 }
               } catch (err) {
+                const { status } = err.response;
+                if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
                 console.log(err);
                 Swal.fire({
                   icon: 'error',
@@ -1418,6 +1463,8 @@ async function classManage() {
           },
         });
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
         Swal.fire({
           icon: 'error',
@@ -1426,6 +1473,8 @@ async function classManage() {
         });
       }
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
       Swal.fire({
         icon: 'error',
@@ -1487,6 +1536,8 @@ async function classManage() {
           table.append(tr);
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
@@ -1517,6 +1568,8 @@ async function classManage() {
         table.append(tr);
       });
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
       Swal.fire({
         icon: 'error',
@@ -1577,6 +1630,8 @@ async function classManage() {
           table.append(tr);
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
@@ -1607,6 +1662,8 @@ async function classManage() {
         table.append(tr);
       });
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
       Swal.fire({
         icon: 'error',
@@ -1718,6 +1775,8 @@ async function exceptionManage() {
         table.append(tr);
       }
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
       Swal.fire({
         icon: 'error',
@@ -1857,6 +1916,8 @@ function genRuleManage(date) {
               $('.rule_setting').click();
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
             Swal.fire({
               icon: 'error',
@@ -1881,6 +1942,8 @@ function genRuleManage(date) {
           $('.rule_setting').click();
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
@@ -1929,6 +1992,8 @@ function genRuleManage(date) {
               btn.prop('checked', wantToBe);
             }
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
             console.log(err);
           }
         });
@@ -1960,6 +2025,8 @@ function genRuleManage(date) {
       });
       tableDiv.append(table);
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
     }
   };
@@ -1995,6 +2062,8 @@ async function auditLeave() {
         </option>`);
       });
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
     }
 
@@ -2074,6 +2143,8 @@ async function auditLeave() {
       // $('.content').append(editLeaveForm);
       $('.content').append(editLeaveForm);
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
       console.log(err);
     }
 
@@ -2100,6 +2171,8 @@ async function auditLeave() {
           studentOptions.append(`<option value=${student.id}>${student.name}</option>`);
         });
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
       }
     });
@@ -2223,6 +2296,8 @@ async function auditLeave() {
                   $('.search_btn').trigger('click');
                 }
               } catch (err) {
+                const { status } = err.response;
+                if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
                 console.log(err);
                 Swal.fire({
                   icon: 'error',
@@ -2241,6 +2316,8 @@ async function auditLeave() {
               const deleteResult = deleteRes.data;
               if (deleteResult) { $('.search_btn').trigger('click'); }
             } catch (err) {
+              const { status } = err.response;
+              if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
               console.log(err);
               Swal.fire({
                 icon: 'error',
@@ -2296,9 +2373,11 @@ $(document).ready(async () => {
         const responseData = await axios.post('/api/1.0/signout');
         const { data } = await responseData;
         if (data) {
-          location.href = location.href.replace('.html', '_signin.html');
+          location.href = '/staff_signin.html';
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
       }
     });
@@ -2312,6 +2391,8 @@ $(document).ready(async () => {
           Swal.fire('指紋機：正在切換到打卡模式');
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
         Swal.fire({
           icon: 'error',
@@ -2329,6 +2410,8 @@ $(document).ready(async () => {
           Swal.fire('指紋機：切換到待機模式');
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
         Swal.fire({
           icon: 'error',
@@ -2397,6 +2480,8 @@ $(document).ready(async () => {
           </option>`);
         });
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
         console.log(err);
       }
 
@@ -2414,6 +2499,8 @@ $(document).ready(async () => {
             studentOptions.append(`<option value=${student.id}>${student.name}</option>`);
           });
         } catch (err) {
+          const { status } = err.response;
+          if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
           console.log(err);
         }
       });
@@ -2503,7 +2590,6 @@ $(document).ready(async () => {
             const td_leave_time = $('<td></td>').attr('class', 'leave_time');
             const td_leave_hours = $('<td></td>').attr('class', 'leave_hours');
             const td_detail_btn = $('<td></td>');
-            const td_note = $('<td></td>').attr('class', 'note');
 
             const detail_btn = $('<button></button>').text('顯示詳細資料').click((detailButtonEvent) => {
               const date = $(detailButtonEvent.target).parent().siblings('.attendance_date').text()
@@ -2573,6 +2659,6 @@ $(document).ready(async () => {
     });
   } catch (err) {
     console.log(err);
-    location.href = '/staff_signin.html';
+    // location.href = '/staff_signin.html';
   }
 });

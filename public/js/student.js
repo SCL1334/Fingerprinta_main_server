@@ -80,6 +80,8 @@ async function changePassword() {
         message.html('密碼更改成功').css('background-color', 'green');
       }
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401) { location.href = '/student_signin.html'; }
       console.log(err);
       message.html('密碼更改失敗').css('background-color', 'red');
     }
@@ -117,9 +119,11 @@ $(document).ready(async () => {
         const responseData = await axios.post('/api/1.0/signout');
         const { data } = await responseData;
         if (data) {
-          location.href = location.href.replace('.html', '_signin.html');
+          location.href = '/student_signin.html';
         }
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401) { location.href = '/student_signin.html'; }
         console.log(err);
       }
     });
@@ -148,6 +152,8 @@ $(document).ready(async () => {
         punchTable.append(row);
       }, $('<tr></tr>'));
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401) { location.href = '/student_signin.html'; }
       console.log(err);
     }
 
@@ -157,6 +163,8 @@ $(document).ready(async () => {
       const leavesTotalResult = leavesTotalRes.data.data;
       $('.leave_total').append($('<h5></h5>').text(`目前已核准請假時數 累計:${leavesTotalResult.leaves_hours}小時`));
     } catch (err) {
+      const { status } = err.response;
+      if (status === 401) { location.href = '/student_signin.html'; }
       console.log(err);
     }
     // get attendance
@@ -242,6 +250,8 @@ $(document).ready(async () => {
             table.append(tr);
           });
         } catch (err) {
+          const { status } = err.response;
+          if (status === 401) { location.href = '/student_signin.html'; }
           console.log(err);
         }
       });
@@ -295,6 +305,8 @@ $(document).ready(async () => {
       </div>
         `;
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401) { location.href = '/student_signin.html'; }
         console.log(err);
         return;
       }
@@ -357,6 +369,8 @@ $(document).ready(async () => {
             $('.leave_form').html('<p class="font-monospace text-center fs-2">請假申請已提交，請等候校務人員審核</p>');
           }
         } catch (err) {
+          const { status } = err.response;
+          if (status === 401) { location.href = '/student_signin.html'; }
           console.log(err);
         }
       });
@@ -444,6 +458,8 @@ $(document).ready(async () => {
 
               $('.content').append(editLeaveForm);
             } catch (err) {
+              const { status } = err.response;
+              if (status === 401) { location.href = '/student_signin.html'; }
               console.log(err);
             }
 
@@ -529,6 +545,8 @@ $(document).ready(async () => {
                         $('.search_btn').trigger('click');
                       }
                     } catch (err) {
+                      const { status } = err.response;
+                      if (status === 401) { location.href = '/student_signin.html'; }
                       console.log(err);
                       Swal.fire({
                         icon: 'error',
@@ -547,6 +565,8 @@ $(document).ready(async () => {
                   const deleteResult = deleteRes.data;
                   if (deleteResult) { $('.search_btn').trigger('click'); }
                 } catch (err) {
+                  const { status } = err.response;
+                  if (status === 401) { location.href = '/student_signin.html'; }
                   console.log(err);
                   Swal.fire({
                     icon: 'error',
@@ -573,10 +593,14 @@ $(document).ready(async () => {
               table.append(trLeave);
             });
           } catch (err) {
+            const { status } = err.response;
+            if (status === 401) { location.href = '/student_signin.html'; }
             console.log(err);
           }
         });
       } catch (err) {
+        const { status } = err.response;
+        if (status === 401) { location.href = '/student_signin.html'; }
         console.log(err);
       }
     });
