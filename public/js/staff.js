@@ -233,7 +233,7 @@ async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
   $('.content').empty();
-
+  $('.content').append(smallSpace);
   // temp remove --------------------
   // $('body').children('.modal').remove();
 
@@ -271,7 +271,7 @@ async function setPunchTime() {
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="class_type" class="form-label">請假類型</label>
+                <label for="class_type" class="form-label">班級培訓形式</label>
                 <select id="routine_class_type" class="form-select class_type" name="class_type">
                   ${classTypeOptions}
                 </select>
@@ -287,7 +287,7 @@ async function setPunchTime() {
                 <input id="routine_start_time" name="start_time" class="form-control start_time" type="time">
               </div>
               <div class="mb-3">
-                <label for="end_time" class="form-label">請假結束時間</label>
+                <label for="end_time" class="form-label">下課時間</label>
                 <input id="routine_end_time" name='end_time' class="form-control end_time" type="time">
               </div>
               <button id="routine_btn" type="submit" class="submit btn btn-dark">送出</button>
