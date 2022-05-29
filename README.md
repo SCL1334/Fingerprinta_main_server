@@ -42,31 +42,31 @@ Below is the pair list of the terms used in school / company scenarios.
 
 ### [Pre-Procedure](/doc/operation_detail.md)  
 Staff need to confirm below setup have been established before starting.
-*  Initiate Calendar 
-*  Set Class components 
-   * Set Class group
-   * Set Class type
-   * Set Class attendance routines
-* Set at least one class
-* Add Students
-  * Add one student
-  * Add students list for one class
-  * Enroll Student's fingerprint  
-* Add staff 
-* Set Leave Type
+*  [Initiate Calendar](/doc/operation_detail.md#initiate_calendar) 
+*  [Set Class components](/doc/operation_detail.md#set_class_components)    
+   * [Set Class group](/doc/operation_detail.md#set_class_group)  
+   * [Set Class type](/doc/operation_detail.md#set_class_type)  
+   * [Set Class attendance routines](/doc/operation_detail.md#set_class_routine)  
+* [Set at least one class](/doc/operation_detail.md#set_class)  
+* [Add Students](/doc/operation_detail.md#add_students)  
+  * [Add one student](/doc/operation_detail.md#add_one_student)  
+  * [Add students list for one class](/doc/operation_detail.md#add_students_list)  
+  * [Enroll Student's fingerprint](/doc/operation_detail.md#enroll_fingerprint)  
+* [Add staff](/doc/operation_detail.md#add_staff)   
+* [Set Leave Type](/doc/operation_detail.md#set_leave_type)  
 
 
-### [Student operations](/doc/operation_detail.md)
-* Punch with fingerprint 
-* Apply leave application 
-* Edit leave application before staff auditting
+### [Student operations](/doc/operation_detail.md#punch_with_fingerprint)
+* [Punch with fingerprint](/doc/operation_detail.md#punch_with_fingerprint)   
+* [Apply leave application](/doc/operation_detail.md#apply_leave_application)   
+* [Edit leave application before staff auditting](/doc/operation_detail.md#edit_leave_application)  
 
-### [Satff operations](/doc/operation_detail.md)
-* Manage Leave Application
-* Manage Attendance
-* Change general attendance role
-* Edit weekly routine role
-* Add exception attendance date 
+### [Satff operations](/doc/operation_detail.md#)
+* [Manage Leave Application](/doc/operation_detail.md#manage_leave_application)  
+* [Manage Attendance](/doc/operation_detail.md#manage_attendance )  
+* [Edit general attendance role](/doc/operation_detail.md#edit_general_rules)  
+* [Edit weekly routine role](/doc/operation_detail.md#edit_routine_rules )  
+* [Add exception attendance date](/doc/operation_detail.md#add_exception_date)  
 
 
 
