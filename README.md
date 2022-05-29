@@ -18,10 +18,10 @@ Below is the pair list of the terms used in school / company scenarios.
 ## Demo Site 
 >Note: Demo Site is building on Amazon EC2 and replacing the sensor part with mock functions.  
 
-| Role    | Entrance  | 
-| :-----: | :----: | 
-| Staff   | https://shihlan.com/staff_signin.html | 
-| Student | https://shihlan.com/student_signin.html | 
+| Role    | Entrance | Test Account | Test Password |
+| :-----: | :------: | :----------: | :-----------: |
+| Staff   | https://shihlan.com/staff_signin.html | cde@staff.com | test | 
+| Student | https://shihlan.com/student_signin.html | GeGuoAn@armyspy.com | test | 
 
 ## Table of Contents
 * [Main Features](#main_features)
@@ -84,9 +84,9 @@ Staff needs to confirm the setup below before starting.
 
 <h2 id="future_features">Future Features</h2> 
 
-* Cache
+* Cache of attendance rules 
 * Clear error message
-* Punch Reminder
+* Punch Reminder for student
 
 <h2 id="contact">Contact</h2>  
 
