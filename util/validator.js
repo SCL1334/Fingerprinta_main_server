@@ -308,8 +308,11 @@ const createStudent = async (req, res, next) => {
 
 const createStudents = async (req, res, next) => {
   const classId = req.params.id;
-  const { students } = req.body;
-
+  const { students: rawStudents } = req.body;
+  if (!rawStudents) {
+    const transformer = new ResponseTransformer(new ValidateError(4000, 'Input is empty'));
+    return res.status(transformer.httpCode).json(transformer.response);
+  }
   try {
     const validId = await idSchema.validateAsync({ id: classId });
     res.locals.classId = validId.id;
@@ -318,6 +321,11 @@ const createStudents = async (req, res, next) => {
     return res.status(transformer.httpCode).json(transformer.response);
   }
 
+  const students = rawStudents.map((rawStudent) => {
+    const student = JSON.parse(JSON.stringify(rawStudent));
+    student.password = String(student.password);
+    return student;
+  });
   const verifiedStudents = [];
   students.forEach((student) => {
     verifiedStudents.push(
