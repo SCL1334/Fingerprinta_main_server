@@ -17,6 +17,9 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
+const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+const oneWeekAgo = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+
 async function doubleCheckAlert(msg, confirm, deny) {
   const decision = await Swal.fire({
     title: msg,
@@ -1705,10 +1708,10 @@ async function exceptionManage() {
               <option value=null>請選擇班級類型</option>
               ${classTypeOptions}
             </select>
-            <input id='exception_batch' name='batch' type='number' value='15'>
-            <input id='exception_date' name='date' type='date' value='2022-05-10'>
-            <input id='exception_start' name='start_time' type='time' value='09:00'>
-            <input id='exception_end' name='end_time' type='time' value='12:00'>
+            <input id='exception_batch' name='batch' type='number' placeholder="batch">
+            <input id='exception_date' name='date' type='date'>
+            <input id='exception_start' name='start_time' type='time'>
+            <input id='exception_end' name='end_time' type='time'>
             <button type="submit">送出</button>
           </form>
         </div>
@@ -2456,8 +2459,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-11');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-17');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val(oneWeekAgo);
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val(yesterday);
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');
