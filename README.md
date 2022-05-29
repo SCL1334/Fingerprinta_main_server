@@ -1,7 +1,7 @@
 # Fingerprinta
 Fingerprinta is a convenient and user-friendly attendance management solution including employee absence and the fingerprint check-in, with the flexibility to apply different attendance rules to generate an accurate attendance status indicators.  
 
-<img width="1371" alt="Explain_Chart" src="https://user-images.githubusercontent.com/93208804/170868900-8b6235e6-1c7d-4c00-bc3c-7214e6891ce0.png">
+<img width="1171" alt="Explain_Chart" src="https://user-images.githubusercontent.com/93208804/170891507-9d5a3286-34b9-49f6-a624-b542e9ad017a.png">
 
 ### Additional
 Below is the pair list of the terms used in school / company scenarios.    
@@ -80,7 +80,7 @@ Staff needs to confirm the setup below before starting.
 
 <h2 id="database_design">Database Design</h2> 
 
-![DB_Schema](https://user-images.githubusercontent.com/93208804/170869607-ebdd6e62-735a-49a4-bc41-16ea47baf633.png)
+![DB_Schema](https://user-images.githubusercontent.com/93208804/170891626-378e93c3-be65-4c0b-9a0f-284278fbdbbb.png)
 
 <h2 id="future_features">Future Features</h2> 
 
