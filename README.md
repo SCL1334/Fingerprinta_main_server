@@ -44,31 +44,31 @@ Below is the pair list of the terms used in school / company scenarios.
 
 Staff needs to confirm the setup below before starting. 
 
-*  [Initiate calendar](/doc/operation_detail.md#initiate_calendar) 
-*  [Set class components](/doc/operation_detail.md#set_class_components)    
-   * [Set class group](/doc/operation_detail.md#set_class_group)  
-   * [Set class type](/doc/operation_detail.md#set_class_type)  
-   * [Set class attendance routines](/doc/operation_detail.md#set_class_routine)  
-* [Set at least one class](/doc/operation_detail.md#set_class)  
-* [Add students](/doc/operation_detail.md#add_students)  
-  * [Add one student](/doc/operation_detail.md#add_one_student)  
-  * [Add students list for one class](/doc/operation_detail.md#add_students_list)  
-  * [Enroll student's fingerprint](/doc/operation_detail.md#enroll_fingerprint)  
-* [Add staff](/doc/operation_detail.md#add_staff)   
-* [Set Leave Type](/doc/operation_detail.md#set_leave_type)  
+*  [Initiate calendar](/doc/operation_detail.md#user-content-initiate_calendar) 
+*  [Set class components](/doc/operation_detail.md#user-content-set_class_components)    
+   * [Set class group](/doc/operation_detail.md#user-content-set_class_group)  
+   * [Set class type](/doc/operation_detail.md#user-content-set_class_type)  
+   * [Set class attendance routines](/doc/operation_detail.md#user-content-set_class_routine)  
+* [Set at least one class](/doc/operation_detail.md#user-content-set_class)  
+* [Add students](/doc/operation_detail.md#user-content-add_students)  
+  * [Add one student](/doc/operation_detail.md#user-content-add_one_student)  
+  * [Add students list for one class](/doc/operation_detail.md#user-content-add_students_list)  
+  * [Enroll student's fingerprint](/doc/operation_detail.md#user-content-enroll_fingerprint)  
+* [Add staff](/doc/operation_detail.md#user-content-add_staff)   
+* [Set Leave Type](/doc/operation_detail.md#user-content-set_leave_type)  
 
 
 ### Student operations
-* [Punch with fingerprint](/doc/operation_detail.md#punch_with_fingerprint)   
-* [Apply leave application](/doc/operation_detail.md#apply_leave_application)   
-* [Edit leave application before staff auditting](/doc/operation_detail.md#edit_leave_application)  
+* [Punch with fingerprint](/doc/operation_detail.md#user-content-punch_with_fingerprint)   
+* [Apply leave application](/doc/operation_detail.md#user-content-apply_leave_application)   
+* [Edit leave application before staff auditting](/doc/operation_detail.md#user-content-edit_leave_application)  
 
 ### Satff operations
-* [Manage Leave application](/doc/operation_detail.md#manage_leave_application)  
-* [Manage attendance](/doc/operation_detail.md#manage_attendance)  
-* [Edit general attendance rules](/doc/operation_detail.md#edit_general_rules)  
-* [Edit weekly routine rules](/doc/operation_detail.md#edit_routine_rules)  
-* [Add exception attendance date](/doc/operation_detail.md#add_exception_date)  
+* [Manage Leave application](/doc/operation_detail.md#user-content-manage_leave_application)  
+* [Manage attendance](/doc/operation_detail.md#user-content-manage_attendance)  
+* [Edit general attendance rules](/doc/operation_detail.md#user-content-edit_general_rules)  
+* [Edit weekly routine rules](/doc/operation_detail.md#user-content-edit_routine_rules)  
+* [Add exception attendance date](/doc/operation_detail.md#user-content-add_exception_date)  
 
 
 
