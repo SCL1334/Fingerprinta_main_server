@@ -171,7 +171,7 @@ const transferLackAttendance = async (req, res) => {
     date: dayjs(date).format('YYYY-MM-DD'),
     start,
     end,
-    hours: hours || leaveHours,
+    hours: (typeof hours === 'number') ? hours : leaveHours,
     reason,
     note,
     certificate_url: certificateUrl,
@@ -257,24 +257,18 @@ const updateLeave = async (req, res) => {
   } = leave;
   const { hours } = leave;
 
-  let leaveHours;
-  const startMin = timeStringToMinutes(start);
-  const endMin = timeStringToMinutes(end);
-  const restStart = timeStringToMinutes('12:00:00');
-  const restEnd = timeStringToMinutes('13:00:00');
-
-  const minToHours = (min) => Math.ceil(min / 60);
-
-  if (startMin <= restStart && endMin >= restEnd) { // 正常情況 start && end 都不在Rest範圍
-    leaveHours = minToHours(restStart - startMin + endMin - restEnd);
-  } else if (startMin >= restEnd || endMin <= restStart) { // 沒有重疊到Rest
-    leaveHours = minToHours(endMin - startMin);
-  } else if (startMin <= restStart && endMin < restEnd) { // end 在 Rest中
-    leaveHours = minToHours(restStart - startMin);
-  } else if (startMin >= restStart && endMin <= restEnd) { // start end 皆落在Rest範圍
-    leaveHours = 0;
-  } else if (startMin >= restStart && endMin > restEnd) { // start 在Rest中
-    leaveHours = minToHours(endMin - restEnd);
+  const leaveTypes = await Leave.getTypes();
+  if (leaveTypes instanceof Error) {
+    const transformer = new ResponseTransformer(leaveTypes);
+    return res.status(transformer.httpCode).json(transformer.response);
+  }
+  const leaveTypesTable = leaveTypes.data.reduce((acc, cur) => {
+    acc[cur.id] = cur;
+    return acc;
+  }, {});
+  let leaveHours = 0;
+  if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
+    leaveHours = getDefaultLeaveHours(start, end, REST_START, REST_END);
   }
 
   const leaveTransform = {
@@ -285,7 +279,7 @@ const updateLeave = async (req, res) => {
     start,
     end,
     approval,
-    hours: hours || leaveHours,
+    hours: (typeof hours === 'number') ? hours : leaveHours,
   };
   const status = await Leave.updateLeave(id, leaveTransform);
   if (status < 2000) {
