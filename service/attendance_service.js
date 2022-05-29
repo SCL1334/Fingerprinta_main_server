@@ -49,7 +49,7 @@ const checkAttendanceStatus = (breakStart, breakEnd, start, end, punches = [], l
       if (i > endHour) { break; }
       if (i === breakStartHour) { breakTime = true; }
       if (i === breakEndHour) { breakTime = false; }
-      if (breakTime === false) { attendance[toTime(i)] = 1; }
+      if (breakTime === false && toTime(i) in attendance) { attendance[toTime(i)] = 1; }
     }
   });
 
