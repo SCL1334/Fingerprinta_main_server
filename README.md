@@ -1,6 +1,8 @@
 # Fingerprinta
 Fingerprinta is a convenient and user-friendly attendance management solution including employee absence and the fingerprint check in, with the flexibility to apply different attendance rules to generate an accurate attendance status indicators.  
 
+<img width="1371" alt="Explain_Chart" src="https://user-images.githubusercontent.com/93208804/170868900-8b6235e6-1c7d-4c00-bc3c-7214e6891ce0.png">
+
 ### Additional
 Below is the pair list of the terms used in school / company scenarios.    
 
@@ -71,10 +73,12 @@ Staff need to confirm below setup have been established before starting.
 <h2 id="architecture">Architecture</h2> 
 
 *Fingerprinta is designed to build on Local Area Network with Raspberry Pi and fingerprint sensor.  
+![Architecture](https://user-images.githubusercontent.com/93208804/170868965-8c533ee2-7dbe-47f2-aa1d-5207276247ce.png)
 
 
 <h2 id="database_design">Database Design</h2> 
 
+![DB_Schema](https://user-images.githubusercontent.com/93208804/170869607-ebdd6e62-735a-49a4-bc41-16ea47baf633.png)
 
 <h2 id="future_features">Future Features</h2> 
 
