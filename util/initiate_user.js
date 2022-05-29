@@ -2,7 +2,7 @@ const argon2 = require('argon2');
 const { promisePool } = require('../models/mysqlcon');
 const Logger = require('./logger');
 
-const initUser = { name: 'admin', email: 'admin@init.com', password: 'test' };
+const initUser = { name: 'admin', email: 'cde@staff.com', password: 'test' };
 const createAdmin = async (user) => {
   try {
     const hashPassword = await argon2.hash(user.password);

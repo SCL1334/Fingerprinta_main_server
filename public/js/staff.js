@@ -17,6 +17,9 @@ function createBtn(clas, text) {
   return `<input type='submit' class='${clas}' value='${text}'>`;
 }
 
+const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+const oneWeekAgo = dayjs().subtract(7, 'day').format('YYYY-MM-DD');
+
 async function doubleCheckAlert(msg, confirm, deny) {
   const decision = await Swal.fire({
     title: msg,
@@ -233,7 +236,7 @@ async function setPunchTime() {
   const classRoutineUrl = '/api/1.0/classes/routines';
   // init
   $('.content').empty();
-
+  $('.content').append(smallSpace);
   // temp remove --------------------
   // $('body').children('.modal').remove();
 
@@ -271,7 +274,7 @@ async function setPunchTime() {
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="class_type" class="form-label">請假類型</label>
+                <label for="class_type" class="form-label">班級培訓形式</label>
                 <select id="routine_class_type" class="form-select class_type" name="class_type">
                   ${classTypeOptions}
                 </select>
@@ -287,7 +290,7 @@ async function setPunchTime() {
                 <input id="routine_start_time" name="start_time" class="form-control start_time" type="time">
               </div>
               <div class="mb-3">
-                <label for="end_time" class="form-label">請假結束時間</label>
+                <label for="end_time" class="form-label">下課時間</label>
                 <input id="routine_end_time" name='end_time' class="form-control end_time" type="time">
               </div>
               <button id="routine_btn" type="submit" class="submit btn btn-dark">送出</button>
@@ -1705,10 +1708,10 @@ async function exceptionManage() {
               <option value=null>請選擇班級類型</option>
               ${classTypeOptions}
             </select>
-            <input id='exception_batch' name='batch' type='number' value='15'>
-            <input id='exception_date' name='date' type='date' value='2022-05-10'>
-            <input id='exception_start' name='start_time' type='time' value='09:00'>
-            <input id='exception_end' name='end_time' type='time' value='12:00'>
+            <input id='exception_batch' name='batch' type='number' placeholder="batch">
+            <input id='exception_date' name='date' type='date'>
+            <input id='exception_start' name='start_time' type='time'>
+            <input id='exception_end' name='end_time' type='time'>
             <button type="submit">送出</button>
           </form>
         </div>
@@ -1836,7 +1839,7 @@ function genRuleManage(date) {
     <div class="calendar_form">
       <div class="create_calendar row">
         <p class="font-monospace text-center fs-5">新增月曆資料</p>
-        <div class="form-text">*請至<a class="link-success" href="https://data.gov.tw/dataset/14718">政府網站</a>下載對應年份的JSON檔案</div>
+        <div class="form-text">*請至<a class="link-success" href="https://data.gov.tw/dataset/14718" target="_blank">政府網站</a>下載對應年份的JSON檔案</div>
         <form action="#" method="GET">
           <div class="mb-3">
             <label for="default_calendar" class="form-label">國定假日資料</label>
@@ -2456,8 +2459,8 @@ $(document).ready(async () => {
 
       const attendance = $('<div></div>').attr('class', 'attendance');
 
-      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val('2022-05-11');
-      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val('2022-05-17');
+      const searchFrom = $('<input>').attr('type', 'date').attr('class', 'search_from').val(oneWeekAgo);
+      const searchTo = $('<input>').attr('type', 'date').attr('class', 'search_to').val(yesterday);
       const searchBtn = $('<button></button>').attr('class', 'search_btn btn btn-outline-dark btn-sm').text('查詢出勤');
       const checkBtn = $('<button></button>').attr('class', 'check_btn float-right btn btn-outline-dark btn-sm').text('查看顏色提示');
       const classOptions = $('<select></select>').attr('class', 'class_options');

@@ -42,10 +42,10 @@ const sendResetEmail = async (role, name, email, hash) => {
   `;
   try {
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    Logger(result).info();
+    new Logger(result).info();
     return { code: 1000 };
   } catch (error) {
-    Logger(error).error();
+    new Logger(error).error();
     return { code: 2000 };
   }
 };

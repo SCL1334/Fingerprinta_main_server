@@ -371,6 +371,13 @@ $(document).ready(async () => {
         } catch (err) {
           const { status } = err.response;
           if (status === 401) { location.href = '/student_signin.html'; }
+          if (status === 423) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: '請假時數超過上限',
+            });
+          }
           console.log(err);
         }
       });
@@ -606,6 +613,6 @@ $(document).ready(async () => {
     });
   } catch (err) {
     console.log(err);
-    location.href = location.href.replace('.html', '_signin.html');
+    location.href = '/student_signin.html';
   }
 });
