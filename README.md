@@ -1,5 +1,5 @@
 # Fingerprinta
-Fingerprinta is a convenient and user-friendly attendance management solution including employee absence and the fingerprint check in, with the flexibility to apply different attendance rules to generate an accurate attendance status indicators.  
+Fingerprinta is a convenient and user-friendly attendance management solution including employee absence and the fingerprint check-in, with the flexibility to apply different attendance rules to generate an accurate attendance status indicators.  
 
 <img width="1371" alt="Explain_Chart" src="https://user-images.githubusercontent.com/93208804/170868900-8b6235e6-1c7d-4c00-bc3c-7214e6891ce0.png">
 
@@ -38,34 +38,36 @@ Below is the pair list of the terms used in school / company scenarios.
 * Clear and visible chart for user attendance.  
 * Flexible to set different attendance roles.
 
-<h2 id="operations">Operations </h2> 
+<h2 id="operations"><a href="/doc/operation_detail.md">Operations</a></h2> 
 
-### [Pre-Procedure](/doc/operation_detail.md)  
-Staff need to confirm below setup have been established before starting.
-*  [Initiate Calendar](/doc/operation_detail.md#initiate_calendar) 
-*  [Set Class components](/doc/operation_detail.md#set_class_components)    
-   * [Set Class group](/doc/operation_detail.md#set_class_group)  
-   * [Set Class type](/doc/operation_detail.md#set_class_type)  
-   * [Set Class attendance routines](/doc/operation_detail.md#set_class_routine)  
+### Pre-Procedure
+
+Staff needs to confirm the setup below before starting. 
+
+*  [Initiate calendar](/doc/operation_detail.md#initiate_calendar) 
+*  [Set class components](/doc/operation_detail.md#set_class_components)    
+   * [Set class group](/doc/operation_detail.md#set_class_group)  
+   * [Set class type](/doc/operation_detail.md#set_class_type)  
+   * [Set class attendance routines](/doc/operation_detail.md#set_class_routine)  
 * [Set at least one class](/doc/operation_detail.md#set_class)  
-* [Add Students](/doc/operation_detail.md#add_students)  
+* [Add students](/doc/operation_detail.md#add_students)  
   * [Add one student](/doc/operation_detail.md#add_one_student)  
   * [Add students list for one class](/doc/operation_detail.md#add_students_list)  
-  * [Enroll Student's fingerprint](/doc/operation_detail.md#enroll_fingerprint)  
+  * [Enroll student's fingerprint](/doc/operation_detail.md#enroll_fingerprint)  
 * [Add staff](/doc/operation_detail.md#add_staff)   
 * [Set Leave Type](/doc/operation_detail.md#set_leave_type)  
 
 
-### [Student operations](/doc/operation_detail.md#punch_with_fingerprint)
+### Student operations
 * [Punch with fingerprint](/doc/operation_detail.md#punch_with_fingerprint)   
 * [Apply leave application](/doc/operation_detail.md#apply_leave_application)   
 * [Edit leave application before staff auditting](/doc/operation_detail.md#edit_leave_application)  
 
-### [Satff operations](/doc/operation_detail.md#)
-* [Manage Leave Application](/doc/operation_detail.md#manage_leave_application)  
-* [Manage Attendance](/doc/operation_detail.md#manage_attendance )  
-* [Edit general attendance role](/doc/operation_detail.md#edit_general_rules)  
-* [Edit weekly routine role](/doc/operation_detail.md#edit_routine_rules )  
+### Satff operations
+* [Manage Leave application](/doc/operation_detail.md#manage_leave_application)  
+* [Manage attendance](/doc/operation_detail.md#manage_attendance)  
+* [Edit general attendance rules](/doc/operation_detail.md#edit_general_rules)  
+* [Edit weekly routine rules](/doc/operation_detail.md#edit_routine_rules)  
 * [Add exception attendance date](/doc/operation_detail.md#add_exception_date)  
 
 
@@ -84,8 +86,7 @@ Staff need to confirm below setup have been established before starting.
 
 * Cache
 * Clear error message
-* Punch Remider
-* Predict leave hours
+* Punch Reminder
 
 <h2 id="contact">Contact</h2>  
 

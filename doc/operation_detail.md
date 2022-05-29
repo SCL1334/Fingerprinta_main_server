@@ -71,7 +71,7 @@ Staff needs to confirm the setup below before starting.
 
   https://user-images.githubusercontent.com/93208804/170870340-df2da4b3-e7d3-463b-86e1-b95b3d798abd.mov
 
-* <h4 id="manage_attendance ">Manage Attendance</h4> 
+* <h4 id="manage_attendance">Manage attendance</h4> 
   
   https://user-images.githubusercontent.com/93208804/170870352-71be8d06-efb9-4f3d-8a31-764cedf12868.mov
 
@@ -79,7 +79,7 @@ Staff needs to confirm the setup below before starting.
   
   https://user-images.githubusercontent.com/93208804/170870361-39099c26-f3ca-42b4-b516-bd24e6d0c9db.mov
 
-* <h4 id="edit_routine_rules ">Edit weekly routine rules</h4> 
+* <h4 id="edit_routine_rules">Edit weekly routine rules</h4> 
   
   https://user-images.githubusercontent.com/93208804/170870369-1db52557-076d-4ff0-9942-23f931e3c8b1.mov
 
