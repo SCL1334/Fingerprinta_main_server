@@ -155,7 +155,8 @@ const buildAttendanceTable = async (
       .map((date) => date.date.format('YYYY-MM-DD'));
     const classRoutines = classesRoutinesAll[clas.class_type_id];
     // get exception days for class
-    const classExceptionDays = (exceptionDaysAll[clas.class_type_id][clas.batch])
+    const classExceptionDays = (exceptionDaysAll[clas.class_type_id]
+      && exceptionDaysAll[clas.class_type_id][clas.batch])
       ? exceptionDaysAll[clas.class_type_id][clas.batch].filter(
         (date) => date.date.isBetween(classSearchFrom, classSearchTo, 'day', '[]'),
       ).map((date) => ({ date: date.date.format('YYYY-MM-DD'), start: date.start, end: date.end })) : [];
