@@ -194,10 +194,10 @@ const applyLeave = async (req, res) => {
   const {
     leave_type_id: leaveTypeId, date, start, end, reason, note, certificate_url: certificateUrl,
   } = leave;
-  const accLeaveHours = await Leave.countLeavesHours(leave.student_id).leaves_hours;
+  const { leaves_hours: accLeaveHours } = await Leave.countLeavesHours(leave.student_id);
 
-  if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || 0) {
-    return res.status(403).json({ error: { message: 'Leave Hours over limit' } });
+  if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || accLeaveHours > 0) {
+    return res.status(423).json({ error: { message: 'Leave Hours over limit' } });
   }
 
   const leaveTypes = await Leave.getTypes();
@@ -283,12 +283,12 @@ const updateLeave = async (req, res) => {
   };
   const status = await Leave.updateLeave(id, leaveTransform);
   if (status < 2000) {
-    res.status(200).json({ code: status, data: { message: 'Update successfully' } });
-  } else if (status < 3000) {
-    res.status(500).json({ code: status, error: { message: 'Updatefailed' } });
-  } else {
-    res.status(400).json({ code: status, error: { message: 'Update failed due to invalid input' } });
+    return res.status(200).json({ code: status, data: { message: 'Update successfully' } });
   }
+  if (status < 3000) {
+    return res.status(500).json({ code: status, error: { message: 'Updatefailed' } });
+  }
+  return res.status(400).json({ code: status, error: { message: 'Update failed due to invalid input' } });
 };
 
 const updateSelfLeave = async (req, res) => {
