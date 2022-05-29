@@ -1836,7 +1836,7 @@ function genRuleManage(date) {
     <div class="calendar_form">
       <div class="create_calendar row">
         <p class="font-monospace text-center fs-5">新增月曆資料</p>
-        <div class="form-text">*請至<a class="link-success" href="https://data.gov.tw/dataset/14718">政府網站</a>下載對應年份的JSON檔案</div>
+        <div class="form-text">*請至<a class="link-success" href="https://data.gov.tw/dataset/14718" target="_blank">政府網站</a>下載對應年份的JSON檔案</div>
         <form action="#" method="GET">
           <div class="mb-3">
             <label for="default_calendar" class="form-label">國定假日資料</label>
