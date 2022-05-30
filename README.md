@@ -24,7 +24,7 @@ Below is the pair list of the terms used in school / company scenarios.
 | Staff   | https://shihlan.com/staff_signin.html | cde@staff.com | test | 
 | Student | https://shihlan.com/student_signin.html | GeGuoAn@armyspy.com | test | 
 
-## Fingerprint Enrollment Demo
+## Fingerprint Check-in Demo
 https://user-images.githubusercontent.com/93208804/170881494-66ecaad8-7662-4a32-ae2a-784919f92262.mov
 
 ## Table of Contents
