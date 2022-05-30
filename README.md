@@ -1,7 +1,8 @@
 # Fingerprinta
 Fingerprinta is a convenient and user-friendly attendance management solution including employee absence and the fingerprint check-in, with the flexibility to apply different attendance rules to generate an accurate attendance status indicators.  
 
-<img width="1171" alt="Explain_Chart" src="https://user-images.githubusercontent.com/93208804/170891507-9d5a3286-34b9-49f6-a624-b542e9ad017a.png">
+![Explain_Chart](https://user-images.githubusercontent.com/93208804/170914550-a4b1e1b9-7d2c-4b98-82e7-bf50838ca3ee.png)
+
 
 ### Additional
 Below is the pair list of the terms used in school / company scenarios.    
@@ -16,12 +17,15 @@ Below is the pair list of the terms used in school / company scenarios.
 | Student     | Employee       | 
 
 ## Demo Site 
->Note: Demo Site is building on Amazon EC2 and replacing the sensor part with mock functions.  
+>Note: The Demo Site is built on Amazon EC2 using dummy functionality in place of the sensor.  
 
 | Role    | Entrance | Test Account | Test Password |
 | :-----: | :------: | :----------: | :-----------: |
 | Staff   | https://shihlan.com/staff_signin.html | cde@staff.com | test | 
 | Student | https://shihlan.com/student_signin.html | GeGuoAn@armyspy.com | test | 
+
+## Fingerprint Enrollment Demo
+https://user-images.githubusercontent.com/93208804/170881494-66ecaad8-7662-4a32-ae2a-784919f92262.mov
 
 ## Table of Contents
 * [Main Features](#main_features)
@@ -80,7 +84,7 @@ Staff needs to confirm the setup below before starting.
 
 <h2 id="database_design">Database Design</h2> 
 
-![DB_Schema](https://user-images.githubusercontent.com/93208804/170891626-378e93c3-be65-4c0b-9a0f-284278fbdbbb.png)
+![DB_Schema](https://user-images.githubusercontent.com/93208804/170914500-c4719e97-f6bc-4e4c-9c8f-b881dd37a9e4.png)
 
 <h2 id="future_features">Future Features</h2> 
 
