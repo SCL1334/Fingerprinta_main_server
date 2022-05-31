@@ -2363,7 +2363,7 @@ $(document).ready(async () => {
   try {
     // init page, check if valid signin
     const profile = await axios.get('/api/1.0/staffs/profile');
-    if (profile.error) { throw new Error('aioxs fail'); }
+    if (profile.error) { location.href = '/staff_signin.html'; }
     const { data } = await profile;
     const {
       id, name, email, leadClasses,
@@ -2662,6 +2662,7 @@ $(document).ready(async () => {
     });
   } catch (err) {
     console.log(err);
-    // location.href = '/staff_signin.html';
+    const { status } = err.response;
+    if (status === 401 || status === 403) { location.href = '/staff_signin.html'; }
   }
 });
