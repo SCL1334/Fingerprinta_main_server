@@ -3,6 +3,7 @@ const Attendance = require('../models/attendance_model');
 const AttendanceService = require('../service/attendance_service');
 const User = require('../models/user_model');
 const ResponseTransformer = require('../util/response');
+const { GeneralError } = require('../util/custom_error');
 
 const setPunch = async (req, res) => {
   const sensorIp = process.env.FINGERPRINT_HOST;
@@ -98,7 +99,8 @@ const getPersonAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
+    const transformer = new ResponseTransformer(new GeneralError(3003, 'Input lack of parameter or invalid date'));
+    return res.status(transformer.httpCode).json(transformer.response);
   } else {
     from = undefined;
     to = undefined;
@@ -117,7 +119,8 @@ const getSelfAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
+    const transformer = new ResponseTransformer(new GeneralError(3003, 'Input lack of parameter or invalid date'));
+    return res.status(transformer.httpCode).json(transformer.response);
   } else {
     from = undefined;
     to = undefined;
@@ -136,7 +139,8 @@ const getClassAttendances = async (req, res) => {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
+    const transformer = new ResponseTransformer(new GeneralError(3003, 'Input lack of parameter or invalid date'));
+    return res.status(transformer.httpCode).json(transformer.response);
   } else {
     from = undefined;
     to = undefined;
@@ -149,12 +153,12 @@ const getClassAttendances = async (req, res) => {
 
 const getAllAttendances = async (req, res) => {
   let { from, to } = req.query;
-
   if (from && to) {
     from = dayjs(from).format('YYYY-MM-DD');
     to = dayjs(to).format('YYYY-MM-DD');
   } else if ((from && !to) || (!from && to)) {
-    return res.status(400).json({ error: { message: 'Input lack of parameter' } });
+    const transformer = new ResponseTransformer(new GeneralError(3003, 'Input lack of parameter or invalid date'));
+    return res.status(transformer.httpCode).json(transformer.response);
   } else {
     from = undefined;
     to = undefined;

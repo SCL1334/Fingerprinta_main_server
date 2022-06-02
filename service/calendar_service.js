@@ -53,11 +53,18 @@ const deleteYearHolidays = async (year) => {
 };
 
 const getPunchException = async (monthWithYear) => {
+  let punchExceptions;
   const targetMonth = dayjs(monthWithYear);
-  if (!targetMonth.isValid()) { return new GeneralError(3003, 'input date is invalid'); }
-  const year = targetMonth.year();
-  const month = targetMonth.month() + 1;
-  const punchExceptions = await Calendar.getPunchException(year, month);
+  if (targetMonth.isValid()) {
+    const year = targetMonth.year();
+    const month = targetMonth.month() + 1;
+    punchExceptions = await Calendar.getPunchException(year, month);
+  } else if (monthWithYear === 'all') {
+    punchExceptions = await Calendar.getPunchException();
+  } else {
+    return new GeneralError(3003, 'input date is invalid');
+  }
+
   if (punchExceptions instanceof Error) { return punchExceptions; }
   // no exception is normal
   if (punchExceptions.data.length === 0) { return { code: 1001 }; }

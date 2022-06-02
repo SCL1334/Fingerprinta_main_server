@@ -1789,10 +1789,11 @@ async function exceptionManage() {
     }
   });
 
-  const date = new Date().toISOString().split('T')[0].split('-');
+  // const date = new Date().toISOString().split('T')[0].split('-');
   // get all exception
   try {
-    const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    // const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    const exceptionRes = await axios.get(`/api/1.0/calendar/punchExceptions/months/all`);
     const exceptionResult = exceptionRes.data.data;
     exceptionResult.forEach((edate) => {
       const tr = $('<tr></tr>');
@@ -2657,6 +2658,15 @@ $(document).ready(async () => {
           });
         } catch (err) {
           console.log(err);
+          let message = '讀取失敗';
+          if (err.response.data.code === 3003) {
+            message += '，日期格式錯誤';
+          }
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: message,
+          });
         }
       });
     });
