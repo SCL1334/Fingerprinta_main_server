@@ -2657,6 +2657,15 @@ $(document).ready(async () => {
           });
         } catch (err) {
           console.log(err);
+          let message = '讀取失敗';
+          if (err.response.data.code === 3003) {
+            message += '，日期格式錯誤';
+          }
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: message,
+          });
         }
       });
     });
