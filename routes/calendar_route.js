@@ -11,7 +11,7 @@ router.route('/calendar/months/:monthWithYear').get(wrapAsync(getMonthHolidays))
 router.route('/calendar').post(wrapAsync(initYearHolidays));
 router.route('/calendar/date/:date').put(wrapAsync(editHoliday));
 router.route('/calendar/years/:year').delete(wrapAsync(deleteYearHolidays));
-router.route('/calendar/months/:monthWithYear/punchExceptions').get(wrapAsync(getPunchException));
+router.route('/calendar/punchExceptions/months/:monthWithYear').get(wrapAsync(getPunchException));
 router.route('/calendar/punchExceptions').post(Validator.createPunchException, wrapAsync(createPunchException));
 router.route('/calendar/punchExceptions/:id').delete(wrapAsync(deletePunchException));
 
