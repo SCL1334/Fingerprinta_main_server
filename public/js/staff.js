@@ -1789,10 +1789,11 @@ async function exceptionManage() {
     }
   });
 
-  const date = new Date().toISOString().split('T')[0].split('-');
+  // const date = new Date().toISOString().split('T')[0].split('-');
   // get all exception
   try {
-    const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    // const exceptionRes = await axios.get(`/api/1.0/calendar/months/${date[0]}${date[1]}/punchExceptions`);
+    const exceptionRes = await axios.get(`/api/1.0/calendar/punchExceptions/months/all`);
     const exceptionResult = exceptionRes.data.data;
     exceptionResult.forEach((edate) => {
       const tr = $('<tr></tr>');
