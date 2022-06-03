@@ -25,7 +25,7 @@ Below is the pair list of the terms used in school / company scenarios.
 | Student | https://shihlan.com/student_signin.html | GeGuoAn@armyspy.com | test | 
 
 ## Fingerprint Check-in Demo
-https://user-images.githubusercontent.com/93208804/170881494-66ecaad8-7662-4a32-ae2a-784919f92262.mov
+https://user-images.githubusercontent.com/93208804/170881523-d3e20f7f-d3bf-4c61-bb05-861340821883.mp4
 
 ## Table of Contents
 * [Main Features](#main_features)
