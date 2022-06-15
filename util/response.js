@@ -218,6 +218,11 @@ const ERROR_RESPONSE = {
     httpCode: 422, // mysql errno 1452
     eMessage: 'Create failed, foreign key constraint fails',
   },
+  3103: {
+    status: 'error',
+    httpCode: 423,
+    eMessage: 'Create failed, against regulation',
+  },
 
   3200: {
     status: 'error',
