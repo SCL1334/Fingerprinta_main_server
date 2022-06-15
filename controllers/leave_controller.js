@@ -196,8 +196,11 @@ const applyLeave = async (req, res) => {
   } = leave;
   const { leaves_hours: accLeaveHours } = await Leave.countLeavesHours(leave.student_id);
 
-  if (accLeaveHours > process.env.LEAVE_HOUR_LIMIT || accLeaveHours > 0) {
-    return res.status(423).json({ error: { message: 'Leave Hours over limit' } });
+  const leaveLimit = (process.env.LEAVE_HOUR_LIMIT)
+    ? parseInt(process.env.LEAVE_HOUR_LIMIT, 10) : Number.POSITIVE_INFINITY;
+
+  if (accLeaveHours > leaveLimit) {
+    return res.status(423).json({ code: 423, error: { message: 'Leave hours over limit' } });
   }
 
   const leaveTypes = await Leave.getTypes();
@@ -205,10 +208,15 @@ const applyLeave = async (req, res) => {
     const transformer = new ResponseTransformer(leaveTypes);
     return res.status(transformer.httpCode).json(transformer.response);
   }
+
   const leaveTypesTable = leaveTypes.data.reduce((acc, cur) => {
     acc[cur.id] = cur;
     return acc;
   }, {});
+
+  if (!(leaveTypeId in leaveTypesTable)) {
+    return res.status(400).json({ code: 3003, error: { message: 'Invalid leave type id' } });
+  }
   let leaveHours = 0;
   if (leaveTypesTable[leaveTypeId].need_calculate === 1) {
     leaveHours = getDefaultLeaveHours(start, end, REST_START, REST_END);
