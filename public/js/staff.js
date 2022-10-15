@@ -83,9 +83,6 @@ async function changePassword() {
           password: $('#password').val(),
           new_password: $('#new_password').val(),
         },
-        headers: {
-          'content-type': 'application/json',
-        },
       });
       const changeResult = await changeRes.data;
       if (changeResult) {
@@ -156,9 +153,6 @@ async function setLeaveType() {
         data: {
           name: newTypeName,
           need_calculate: newTypeStatus,
-        },
-        headers: {
-          'content-type': 'application/json',
         },
       });
       const addTypeResult = addTypeRes.data.data;
@@ -326,9 +320,6 @@ async function setPunchTime() {
               start_time: $('#routine_start_time').val(),
               end_time: $('#routine_end_time').val(),
             },
-            headers: {
-              'content-type': 'application/json',
-            },
           });
           const createRoutineResult = createRoutineRes.data;
           if (createRoutineResult) {
@@ -435,9 +426,6 @@ async function setPunchTime() {
                   weekday: $('#routine_weekday').val(),
                   start_time: $('#routine_start_time').val(),
                   end_time: $('#routine_end_time').val(),
-                },
-                headers: {
-                  'content-type': 'application/json',
                 },
               });
               const editRoutineResult = editRoutineRes.data;
@@ -671,9 +659,6 @@ async function accountManage() {
               email: $('#create_email').val(),
               password: $('#create_password').val(),
             },
-            headers: {
-              'content-type': 'application/json',
-            },
           });
           const studentAccountResult = studentAccountRes.data;
           if (studentAccountResult) {
@@ -716,9 +701,6 @@ async function accountManage() {
               method: 'POST',
               data: {
                 students: studentsList,
-              },
-              headers: {
-                'content-type': 'application/json',
               },
             });
             const studentAccountResult = studentAccountRes.data;
@@ -928,9 +910,6 @@ async function accountManage() {
                   email: $('#edit_email').val(),
                   class_id: $('#edit_class').val(),
                 },
-                headers: {
-                  'content-type': 'application/json',
-                },
               });
               const editStudentResult = editStudentRes.data;
               if (editStudentResult) {
@@ -1058,9 +1037,6 @@ async function accountManage() {
               name: $('#create_name').val(),
               email: $('#create_email').val(),
               password: $('#create_password').val(),
-            },
-            headers: {
-              'content-type': 'application/json',
             },
           });
           const staffAccountResult = staffAccountRes.data;
@@ -1265,9 +1241,6 @@ async function classManage() {
                 start_date: addClassStart,
                 end_date: addClassEnd,
               },
-              headers: {
-                'content-type': 'application/json',
-              },
             });
             const addClassResult = addClassRes.data;
             if (addClassResult) {
@@ -1387,9 +1360,6 @@ async function classManage() {
                       class_group_id: $('#class_group').val(),
                       start_date: $('#class_start_date').val(),
                       end_date: $('#class_end_date').val(),
-                    },
-                    headers: {
-                      'content-type': 'application/json',
                     },
                   });
                   const editClassResult = editClassRes.data;
@@ -1515,9 +1485,6 @@ async function classManage() {
           data: {
             type_name: newType,
           },
-          headers: {
-            'content-type': 'application/json',
-          },
         });
         const addTypeResult = addTypeRes.data;
         if (addTypeResult) {
@@ -1608,9 +1575,6 @@ async function classManage() {
           method: 'POST',
           data: {
             group_name: newGroup,
-          },
-          headers: {
-            'content-type': 'application/json',
           },
         });
         const addGroupResult = addGroupRes.data;
@@ -1749,9 +1713,6 @@ async function exceptionManage() {
           date: addExceptionDate,
           start: addExceptionStart,
           end: addExceptionEnd,
-        },
-        headers: {
-          'content-type': 'application/json',
         },
       });
 
@@ -1908,9 +1869,6 @@ function genRuleManage(date) {
               method: 'POST',
               data: {
                 calendar: jsonCalendar,
-              },
-              headers: {
-                'content-type': 'application/json',
               },
             });
             const initCalendarResult = initCalendarRes.data;
@@ -2289,9 +2247,6 @@ async function auditLeave() {
                     reason: $('#edit_reason').val(),
                     note: $('#edit_note').val(),
                     approval: $('#edit_status').val(),
-                  },
-                  headers: {
-                    'content-type': 'application/json',
                   },
                 });
                 const editLeaveResult = editLeaveRes.data;

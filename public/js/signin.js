@@ -10,9 +10,6 @@ $(document).ready(() => {
           email,
           password,
         },
-        headers: {
-          'content-type': 'application/json',
-        },
       });
       const { data } = await responseData;
       if (data) {

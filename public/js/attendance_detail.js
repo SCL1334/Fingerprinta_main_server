@@ -231,9 +231,6 @@ const manageAttendance = async function () {
                   note: $('#edit_note').val(),
                   approval: $('#edit_status').val(),
                 },
-                headers: {
-                  'content-type': 'application/json',
-                },
               });
               const editLeaveResult = editLeaveRes.data;
               if (editLeaveResult) {
@@ -346,9 +343,6 @@ const manageAttendance = async function () {
             reason,
             note,
             certificate_url: certificateUrl,
-          },
-          headers: {
-            'content-type': 'application/json',
           },
         });
         const leaveCreateResult = await leaveCreateRes.data;
